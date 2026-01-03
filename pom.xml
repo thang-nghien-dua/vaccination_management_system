@@ -8,11 +8,11 @@
         <version>4.0.1</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.example</groupId>
-    <artifactId>VaccinationManagement_System</artifactId>
+    <groupId>ut.edu</groupId>
+    <artifactId>vaccination-management-system</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>VaccinationManagement_System</name>
-    <description>VaccinationManagement_System</description>
+    <name>VaccinationManagementSystem</name>
+    <description>VaccinationManagementSystem</description>
     <url/>
     <licenses>
         <license/>
@@ -42,7 +42,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
