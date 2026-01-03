@@ -1,42 +1,25 @@
-# Compiled class files
-*.class
-
-# Log files
-*.log
-*.log.*
-
-# Maven
+HELP.md
 target/
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
-dependency-reduced-pom.xml
-buildNumber.properties
-.mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-# IDE
-.idea/
-*.iml
-*.iws
-*.ipr
-.vscode/
-.classpath
-.project
-.settings/
-bin/
-
-# STS
+### STS ###
 .apt_generated
+.classpath
 .factorypath
+.project
+.settings
 .springBeans
 .sts4-cache
 
-# NetBeans
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -46,38 +29,5 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-# OS
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
-*~
-
-# Spring Boot
-application-local.properties
-application-dev.properties
-application-*.properties
-!application.properties
-
-# H2 Database (if used)
-*.db
-*.mv.db
-*.trace.db
-
-# Package Files
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
-
-# Temporary files
-*.tmp
-*.temp
-*.bak
-*.backup
-
-# Help files
-HELP.md
+### VS Code ###
+.vscode/
