@@ -15,30 +15,26 @@ import java.util.List;
 @Service
 public class VaccineLotService {
 
-    private final VaccineLotRepository repository;
-    // VaccineRepository chỉ dùng để lookup vaccine
-    // Logic nghiệp vụ vaccine do bạn khác xử lý
+    private final VaccineLotRepository vaccineLotRepository;
     private final VaccineRepository vaccineRepository;
 
-
-    public VaccineLotService(VaccineLotRepository repository,
+    public VaccineLotService(VaccineLotRepository vaccineLotRepository,
                              VaccineRepository vaccineRepository) {
-        this.repository = repository;
+        this.vaccineLotRepository = vaccineLotRepository;
         this.vaccineRepository = vaccineRepository;
     }
-
     // 1. Xem danh sách lô vaccine
     public List<VaccineLotDTO> getAll() {
-        return repository.findAll()
+        return vaccineLotRepository.findAll()
                 .stream()
                 .map(this::toDTO)
                 .toList();
     }
 
-    // 2. Xem chi tiết lô vaccine
+    // 2. Chi tiết lô vaccine
     public VaccineLotDTO getById(Long id) {
-        VaccineLot lot = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy lô vaccine!"));
+        VaccineLot lot = vaccineLotRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lô vaccine"));
         return toDTO(lot);
     }
 
@@ -46,39 +42,39 @@ public class VaccineLotService {
     public VaccineLotDTO create(VaccineLotDTO dto) {
         VaccineLot lot = new VaccineLot();
 
+        Vaccine vaccine = vaccineRepository.findById(dto.getVaccine().getId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy vaccine"));
+
         lot.setLotNumber(dto.getLotNumber());
+        lot.setVaccine(vaccine);
+        lot.setQuantity(dto.getQuantity());
+        lot.setRemainingQuantity(dto.getQuantity());
         lot.setManufacturingDate(dto.getManufacturingDate());
         lot.setImportDate(dto.getImportDate());
         lot.setExpiryDate(dto.getExpiryDate());
-        lot.setQuantity(dto.getQuantity());
-        lot.setRemainingQuantity(dto.getQuantity());
         lot.setSupplier(dto.getSupplier());
         lot.setStatus(VaccineLotStatus.AVAILABLE);
         lot.setCreatedAt(LocalDateTime.now());
 
-        Vaccine vaccine = vaccineRepository.findById(dto.getVaccine().getId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy vaccine!"));
-        lot.setVaccine(vaccine);
-
-        return toDTO(repository.save(lot));
+        return toDTO(vaccineLotRepository.save(lot));
     }
 
     // 4. Cập nhật lô vaccine
     public VaccineLotDTO update(Long id, VaccineLotDTO dto) {
-        VaccineLot lot = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy lô vaccine!"));
+        VaccineLot lot = vaccineLotRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lô vaccine"));
 
         lot.setExpiryDate(dto.getExpiryDate());
         lot.setSupplier(dto.getSupplier());
         lot.setStatus(dto.getStatus());
 
-        return toDTO(repository.save(lot));
+        return toDTO(vaccineLotRepository.save(lot));
     }
 
     // 5. Cảnh báo sắp hết hạn
     public List<VaccineLotDTO> expiringSoon(int days) {
         LocalDate warningDate = LocalDate.now().plusDays(days);
-        return repository.findExpiringBefore(warningDate)
+        return vaccineLotRepository.findExpiringSoon(warningDate)
                 .stream()
                 .map(this::toDTO)
                 .toList();
@@ -86,7 +82,7 @@ public class VaccineLotService {
 
     // 6. Cảnh báo sắp hết số lượng
     public List<VaccineLotDTO> lowStock(int threshold) {
-        return repository.findByRemainingQuantityLessThanEqual(threshold)
+        return vaccineLotRepository.findByRemainingQuantityLessThanEqual(threshold)
                 .stream()
                 .map(this::toDTO)
                 .toList();
