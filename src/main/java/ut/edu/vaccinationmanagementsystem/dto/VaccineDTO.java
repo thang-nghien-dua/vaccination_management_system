@@ -21,6 +21,7 @@ public class VaccineDTO {
     private Integer daysBetweenDoses;
     private String contraindications;
     private String storageTemperature;
+    private String imageUrl;
     private VaccineStatus status;
     
     // Getters and Setters
@@ -120,6 +121,14 @@ public class VaccineDTO {
         this.storageTemperature = storageTemperature;
     }
     
+    public String getImageUrl() {
+        return imageUrl;
+    }
+    
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+    
     public VaccineStatus getStatus() {
         return status;
     }
@@ -128,6 +137,9 @@ public class VaccineDTO {
         this.status = status;
     }
 }
+
+
+
 
 
 

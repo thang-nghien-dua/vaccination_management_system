@@ -1,5 +1,7 @@
 package ut.edu.vaccinationmanagementsystem.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -12,13 +14,15 @@ import java.util.List;
  */
 @Entity
 @Table(name = "appointment_slots")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class AppointmentSlot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // ID tự động tăng
     
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "center_id", nullable = false)
+    @JsonIgnoreProperties({"appointmentSlots", "appointments", "workSchedules", "workingHours", "clinicRooms", "vaccines"})
     private VaccinationCenter center; // Trung tâm y tế
     
     @Column(nullable = false)
@@ -44,6 +48,7 @@ public class AppointmentSlot {
     
     // Relationships
     @OneToMany(mappedBy = "slot")
+    @JsonIgnore
     private List<Appointment> appointments; // Danh sách lịch hẹn trong slot này
     
     // Getters and Setters

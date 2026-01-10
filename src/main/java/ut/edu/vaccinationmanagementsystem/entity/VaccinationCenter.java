@@ -1,5 +1,7 @@
 package ut.edu.vaccinationmanagementsystem.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import ut.edu.vaccinationmanagementsystem.entity.enums.CenterStatus;
 
@@ -39,21 +41,27 @@ public class VaccinationCenter {
     private LocalDateTime createdAt; // Thời gian tạo
     
     // Relationships
+    @JsonIgnore
     @OneToMany(mappedBy = "center")
     private List<AppointmentSlot> appointmentSlots; // Danh sách slot đặt lịch
     
+    @JsonIgnore
     @OneToMany(mappedBy = "center")
     private List<Appointment> appointments; // Danh sách lịch hẹn tại trung tâm này
     
+    @JsonIgnore
     @OneToMany(mappedBy = "center")
     private List<WorkSchedule> workSchedules; // Lịch làm việc của nhân viên tại trung tâm
     
+    @JsonIgnore
     @OneToMany(mappedBy = "center")
     private List<CenterWorkingHours> workingHours; // Giờ làm việc của trung tâm
     
+    @JsonIgnore
     @OneToMany(mappedBy = "center")
     private List<ClinicRoom> clinicRooms; // Danh sách phòng khám của trung tâm
     
+    @JsonIgnore
     @ManyToMany
     @JoinTable(
         name = "center_vaccine",

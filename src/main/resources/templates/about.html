@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html class="scroll-smooth" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Giới thiệu - VacciCare</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0f766e", // Teal 700 - Deep Teal for professional look
+                        "primary-light": "#14b8a6", // Teal 500
+                        "primary-dark": "#134e4a", // Teal 900
+                        "secondary": "#475569", // Slate 600
+                        "accent": "#f59e0b", // Amber 500 for highlights
+                        "surface": "#f8fafc", // Slate 50
+                        "surface-card": "#ffffff", 
+                        "surface-alt": "#e2e8f0", // Slate 200
+                        "text-main": "#0f172a", // Slate 900
+                        "text-muted": "#64748b", // Slate 500
+                    },
+                    fontFamily: {
+                        "sans": ["Inter", "sans-serif"],
+                        "display": ["Manrope", "sans-serif"],
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 40px -10px rgba(0,0,0,0.05)',
+                        'card': '0 20px 40px -15px rgba(15, 118, 110, 0.1)',
+                        'glow': '0 0 30px rgba(20, 184, 166, 0.3)',
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                    },
+                    animation: {
+                        'float': 'float 8s ease-in-out infinite',
+                        'float-delayed': 'float 8s ease-in-out 4s infinite',
+                        'pulse-slow': 'pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' },
+                        }
+                    }
+                },
+            },
+        }
+    </script>
+<style>@keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(60px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInLeft {
+            from { opacity: 0; transform: translateX(-60px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(60px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); filter: blur(4px); }
+            to { opacity: 1; transform: scale(1); filter: blur(0); }
+        }
+        .reveal {
+            opacity: 0; 
+            will-change: opacity, transform;
+            transition: opacity 1s ease-out, transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        @supports (animation-timeline: view()) {
+            .reveal {
+                opacity: 1;animation-timeline: view();
+                animation-range: entry 10% cover 30%;
+                animation-fill-mode: both;
+            }
+            .reveal.fade-up { animation-name: fadeInUp; }
+            .reveal.fade-left { animation-name: fadeInLeft; }
+            .reveal.fade-right { animation-name: fadeInRight; }
+            .reveal.scale-in { animation-name: scaleIn; }
+            .delay-100 { animation-delay: 100ms; }.stagger-1 { animation-range: entry 5% cover 25%; }
+            .stagger-2 { animation-range: entry 15% cover 35%; }
+            .stagger-3 { animation-range: entry 25% cover 45%; }
+        }
+        html { scroll-behavior: smooth; }
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .text-gradient {
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            background-image: linear-gradient(to right, #0f766e, #14b8a6);
+        }.image-mask-soft {
+            mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+        }
+    </style>
+</head>
+<body class="bg-surface text-text-main font-sans antialiased selection:bg-primary-light/30 selection:text-primary-dark overflow-x-hidden">
+<nav class="fixed w-full z-50 top-0 start-0 glass-nav transition-all duration-300 shadow-sm">
+<div class="max-w-[1280px] flex flex-wrap items-center justify-between mx-auto p-4 md:px-8">
+<a class="flex items-center space-x-2 group" href="/about">
+<div class="bg-primary/10 p-2 rounded-xl text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+<span class="material-symbols-outlined text-2xl">vaccines</span>
+</div>
+<span class="self-center text-xl font-display font-bold whitespace-nowrap text-text-main tracking-tight">VacciCare</span>
+</a>
+<div class="flex md:order-2 space-x-3 md:space-x-0 items-center">
+<!-- Hiển thị nếu chưa đăng nhập -->
+<div th:if="${!isAuthenticated}">
+    <a href="/login" class="text-white bg-primary hover:bg-primary-dark focus:ring-4 focus:outline-none focus:ring-primary/30 font-semibold rounded-full text-sm px-6 py-2.5 text-center transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40 transform hover:-translate-y-0.5">Đăng nhập</a>
+</div>
+
+<!-- Hiển thị nếu đã đăng nhập -->
+<div th:if="${isAuthenticated}">
+    <a href="/home" class="text-white bg-primary hover:bg-primary-dark focus:ring-4 focus:outline-none focus:ring-primary/30 font-semibold rounded-full text-sm px-6 py-2.5 text-center transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40 transform hover:-translate-y-0.5 flex items-center gap-2">
+        <span class="material-symbols-outlined text-lg">home</span>
+        Quay lại trang chủ
+    </a>
+</div>
+
+<button aria-controls="navbar-sticky" aria-expanded="false" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200" data-collapse-toggle="navbar-sticky" type="button">
+<span class="sr-only">Open main menu</span>
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+<div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-sticky">
+<ul class="flex flex-col p-4 md:p-0 mt-4 font-medium md:space-x-8 md:flex-row md:mt-0 md:border-0">
+<li><a class="block py-2 px-3 text-text-main hover:text-primary transition-colors font-semibold" href="#gioi-thieu">Giới thiệu</a></li>
+<li><a class="block py-2 px-3 text-text-main hover:text-primary transition-colors font-semibold" href="#tinh-nang">Tính năng</a></li>
+<li><a class="block py-2 px-3 text-text-main hover:text-primary transition-colors font-semibold" href="#loi-ich">Lợi ích</a></li>
+<li><a class="block py-2 px-3 text-text-main hover:text-primary transition-colors font-semibold" href="#quy-trinh">Quy trình</a></li>
+<li><a class="block py-2 px-3 text-text-main hover:text-primary transition-colors font-semibold" href="#tu-van">Tư vấn</a></li>
+<li><a class="block py-2 px-3 text-text-main hover:text-primary transition-colors font-semibold" href="#lien-he">Liên hệ</a></li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="pt-32 pb-20 md:pt-44 md:pb-32 overflow-hidden relative bg-surface" id="gioi-thieu">
+<div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-teal-50/80 to-transparent pointer-events-none"></div>
+<div class="absolute -top-[10%] -right-[10%] w-[800px] h-[800px] rounded-full bg-primary/5 blur-3xl -z-10 animate-pulse-slow"></div>
+<div class="absolute bottom-[10%] left-[5%] w-[400px] h-[400px] rounded-full bg-blue-100/40 blur-3xl -z-10"></div>
+<div class="container mx-auto px-4 md:px-8 max-w-[1280px] relative z-10">
+<div class="grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
+<div class="space-y-8">
+<div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white text-primary-dark text-xs font-bold uppercase tracking-wider border border-primary/10 shadow-sm reveal fade-left stagger-1">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+<span>Hệ thống Quốc gia 4.0</span>
+</div>
+<h1 class="text-4xl md:text-5xl lg:text-6xl font-display font-extrabold leading-[1.15] text-text-main reveal fade-up stagger-1">
+                    Quản lý Tiêm chủng <br/>
+<span class="text-gradient">Thông minh &amp; An toàn</span>
+</h1>
+<p class="text-lg text-text-muted leading-relaxed max-w-lg reveal fade-up stagger-2 font-medium">
+                    Nền tảng số hóa toàn diện giúp tối ưu quy trình tiêm chủng, quản lý hồ sơ sức khỏe trọn đời và kho vắc xin minh bạch cho cộng đồng khỏe mạnh.
+                </p>
+<div class="flex flex-wrap gap-4 pt-2 reveal fade-up stagger-3">
+<a class="group inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white bg-primary hover:bg-primary-dark rounded-full transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-1" href="/register">
+                        Đăng ký ngay
+                        <span class="material-symbols-outlined ml-2 text-xl transition-transform group-hover:translate-x-1">arrow_forward</span>
+</a>
+<a class="group inline-flex items-center justify-center px-8 py-4 text-base font-bold text-text-main bg-white border border-slate-200 hover:bg-slate-50 rounded-full transition-all hover:border-slate-300 hover:shadow-md" href="#">
+<span class="material-symbols-outlined mr-2 text-2xl text-primary group-hover:scale-110 transition-transform">play_circle</span>
+                        Video giới thiệu
+                    </a>
+</div>
+<div class="pt-8 border-t border-slate-200/60 flex items-center gap-8 text-sm font-semibold text-slate-600 reveal fade-up stagger-3">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-primary">verified_user</span>
+<span>Chuẩn Bộ Y Tế</span>
+</div>
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-primary">database</span>
+<span>Dữ liệu tập trung</span>
+</div>
+</div>
+</div>
+<div class="relative reveal scale-in stagger-2">
+<div class="absolute inset-0 bg-gradient-to-tr from-primary/20 to-blue-200/20 rounded-[40px] rotate-3 transform scale-105 blur-2xl -z-10"></div>
+<div class="relative rounded-[32px] overflow-hidden shadow-2xl shadow-slate-400/20 border border-white/80 bg-white z-10 group">
+<img alt="Medical Technology Dashboard Illustration" class="w-full h-auto object-cover transform transition-transform duration-1000 group-hover:scale-105" loading="lazy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFmEwfB3sWNXLPGcMlrOyVcETC7YIzjx9nf81N7Hxy4dWSw-wr3mby85LUIdOQVUsdvRC6fRX43o0QX6ImKYm7P_G-seW58RQdeXL-sKWZ4xYz-20MyNsXaDQkGvAuKcYXO-sleIO-1LJ7oabsOb8PQetq8HugamjLLRemi0WQAsC7CHJp4Ofoek6T4pZsBLUpETm8eHPAjd1gNw5ZRqgyNm71Zgx8oXsF1k4MDgAnWjFFNWQKToCzSBHqFPV8NAVpMdq9aTeN5zE"/>
+<div class="absolute bottom-8 left-8 p-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-lg border border-slate-100 flex items-center gap-4 animate-float">
+<div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-700 shrink-0">
+<span class="material-symbols-outlined text-2xl">check_circle</span>
+</div>
+<div>
+<p class="text-xs text-slate-500 font-bold uppercase tracking-wide mb-0.5">Hoạt động</p>
+<p class="text-base font-extrabold text-slate-800">100% Ổn định</p>
+</div>
+</div>
+<div class="absolute top-8 right-8 p-3 pr-5 bg-white/95 backdrop-blur-md rounded-xl shadow-lg border border-slate-100 flex items-center gap-3 animate-float-delayed">
+<div class="flex -space-x-3">
+<img alt="User Avatar" class="w-8 h-8 rounded-full border-2 border-white bg-slate-100" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2qlz1iXzVFzaEYQP_JfI67JNoBiLhFvByKsWq1IE3EV7hAx8eh7mZ6qvrSSx7Rer8qYXuaXEG7cwKW9p8y1Qvwkl3dg86rUjI748RvDJ1E1wV0m2vT02SOINEHJ6gOlPiYDkN3pp8Y8tSe_moqZa_ry7EBMqRRA6u6bqxvX1XQjWOaVN0Of-d5vTOStxAy8XTku_C6H7dsM21fc7BA2arWvwm0eQpPli1Ynd4zCGeixTBK9d3IBBMoib-zbiA5SfYME1mNp86bIE"/>
+<img alt="User Avatar" class="w-8 h-8 rounded-full border-2 border-white bg-slate-100" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbWmO3Jm0bZQmc0Qe3wo3zTB8hofDOgG3DcN4zPaNYn4bL7EyVMWVLmdH8X-PC-_k28Hzd6dXz4bBB5FQ5sW4HytJC1iG2ZO8d9cFCByaVX_7s8AfIzcXvMWvx92YazGMw9-kYwVFtgLF3HmDQPntpiCsmGcSIJ9jOvmI7tB-N_QtaNuwlnUkCGPnZtKurVaX2FNxFKn4XeCNeMNsIw2RVa22HGVtycWqXAF9G--qGKnorK0_gRJ-2-kk1aqG8ydljhozKfXOLNWY"/>
+<div class="w-8 h-8 rounded-full border-2 border-white bg-primary text-white text-xs flex items-center justify-center font-bold">+2k</div>
+</div>
+<p class="text-xs font-bold text-slate-700">Người dùng mới</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-20 relative overflow-hidden bg-slate-900">
+<div class="absolute inset-0 z-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=2000')] bg-cover bg-fixed bg-center mix-blend-overlay"></div>
+<div class="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-[100px] pointer-events-none"></div>
+<div class="absolute bottom-0 left-0 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
+<div class="container mx-auto px-4 md:px-8 max-w-[1280px] relative z-10 text-white">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 divide-y sm:divide-y-0 sm:divide-x divide-slate-700/50">
+<div class="px-6 py-4 text-center reveal fade-up group">
+<div class="inline-flex p-4 rounded-2xl bg-slate-800/50 text-sky-400 mb-4 group-hover:scale-110 transition-transform shadow-inner border border-slate-700 backdrop-blur-sm">
+<span class="material-symbols-outlined text-3xl">apartment</span>
+</div>
+<p class="text-4xl font-display font-extrabold mb-2 tracking-tight">500+</p>
+<p class="text-sm font-bold text-slate-400 uppercase tracking-wide">Cơ sở y tế</p>
+</div>
+<div class="px-6 py-4 text-center reveal fade-up stagger-1 group">
+<div class="inline-flex p-4 rounded-2xl bg-slate-800/50 text-emerald-400 mb-4 group-hover:scale-110 transition-transform shadow-inner border border-slate-700 backdrop-blur-sm">
+<span class="material-symbols-outlined text-3xl">vaccines</span>
+</div>
+<p class="text-4xl font-display font-extrabold mb-2 tracking-tight">1M+</p>
+<p class="text-sm font-bold text-slate-400 uppercase tracking-wide">Mũi tiêm an toàn</p>
+</div>
+<div class="px-6 py-4 text-center reveal fade-up stagger-2 group">
+<div class="inline-flex p-4 rounded-2xl bg-slate-800/50 text-purple-400 mb-4 group-hover:scale-110 transition-transform shadow-inner border border-slate-700 backdrop-blur-sm">
+<span class="material-symbols-outlined text-3xl">folder_shared</span>
+</div>
+<p class="text-4xl font-display font-extrabold mb-2 tracking-tight">2M+</p>
+<p class="text-sm font-bold text-slate-400 uppercase tracking-wide">Hồ sơ điện tử</p>
+</div>
+<div class="px-6 py-4 text-center reveal fade-up stagger-3 group">
+<div class="inline-flex p-4 rounded-2xl bg-slate-800/50 text-amber-400 mb-4 group-hover:scale-110 transition-transform shadow-inner border border-slate-700 backdrop-blur-sm">
+<span class="material-symbols-outlined text-3xl">map</span>
+</div>
+<p class="text-4xl font-display font-extrabold mb-2 tracking-tight">63</p>
+<p class="text-sm font-bold text-slate-400 uppercase tracking-wide">Tỉnh thành</p>
+</div>
+</div>
+</div>
+</section>
+<section class="py-24 bg-surface-alt/50 relative overflow-hidden">
+<div class="container mx-auto px-4 md:px-8 max-w-[1280px]">
+<div class="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
+<div class="lg:w-1/2 space-y-8 reveal fade-right">
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full text-primary font-bold text-xs uppercase tracking-wider">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                    Tầm nhìn &amp; Sứ mệnh
+                </div>
+<h2 class="text-3xl md:text-5xl font-display font-bold text-text-main leading-tight">
+                    Tiên phong chuyển đổi số <br/>
+<span class="text-gradient">Vì sức khỏe cộng đồng</span>
+</h2>
+<p class="text-text-muted text-lg leading-relaxed">
+                    Chúng tôi không chỉ cung cấp phần mềm, chúng tôi mang đến một nền tảng y tế số vững chắc, nơi dữ liệu trở thành nguồn lực quý giá để bảo vệ sức khỏe toàn dân.
+                </p>
+<div class="grid sm:grid-cols-2 gap-6 mt-6">
+<div class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
+<div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl">visibility</span>
+</div>
+<h4 class="text-lg font-bold text-text-main mb-2">Tầm nhìn</h4>
+<p class="text-text-muted text-sm">Hệ sinh thái y tế thông minh, tiếp cận dễ dàng cho mọi người dân.</p>
+</div>
+<div class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
+<div class="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl">flag</span>
+</div>
+<h4 class="text-lg font-bold text-text-main mb-2">Sứ mệnh</h4>
+<p class="text-text-muted text-sm">Tối ưu hóa nguồn lực y tế, giảm tải áp lực hành chính.</p>
+</div>
+</div>
+</div>
+<div class="lg:w-1/2 reveal fade-left stagger-1">
+<div class="relative grid grid-cols-2 gap-4">
+<div class="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] bg-gradient-to-tr from-teal-200/40 to-blue-200/40 rounded-full blur-3xl"></div>
+<div class="space-y-4 mt-8">
+<div class="rounded-2xl overflow-hidden h-48 relative shadow-lg group">
+<div class="absolute inset-0 bg-slate-900/40 group-hover:bg-slate-900/20 transition-colors z-10"></div>
+<img alt="Cyber Security Illustration" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5m69zJleBKS4LAx7YUnaJnU-4JUOitnISM_9WXg94Vc228NFuWA5E3LFQLACYBGwGYRlg-s_YidOcCtq-u2LnznfUv8lnFbgekNTFxqApChqKXAKBJw_sBRwNpyJesSyqWlWcNs1rBZNnpPcT8pGw0xN5_eMaq4l94uKA8HbXjyr0SsQY1G3xmMVZSGZ_7RdXyXVFvt0vsdymkG1AXQvpkHe7hbQ142XmlqyeUYHoEs_-R46wJcoBwhZuMCsK13NDY_5mNWL833k"/>
+<div class="absolute bottom-4 left-4 z-20 text-white">
+<span class="material-symbols-outlined mb-1">security</span>
+<p class="font-bold text-sm">Bảo mật dữ liệu</p>
+</div>
+</div>
+<div class="bg-white rounded-2xl p-6 shadow-lg border border-slate-100 flex flex-col justify-center h-48">
+<span class="material-symbols-outlined text-4xl text-primary mb-3">speed</span>
+<span class="font-bold text-text-main text-lg">Tốc độ cao</span>
+<p class="text-sm text-text-muted mt-1">Xử lý hàng triệu request đồng thời.</p>
+</div>
+</div>
+<div class="space-y-4">
+<div class="bg-primary rounded-2xl p-6 shadow-lg shadow-primary/20 flex flex-col justify-center h-48 text-white relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-150 duration-700"></div>
+<span class="material-symbols-outlined text-4xl mb-3 relative z-10">groups</span>
+<span class="font-bold text-lg relative z-10">Vì cộng đồng</span>
+<p class="text-sm text-white/80 mt-1 relative z-10">Kết nối người dân và y tế.</p>
+</div>
+<div class="rounded-2xl overflow-hidden h-48 relative shadow-lg group">
+<div class="absolute inset-0 bg-slate-900/40 group-hover:bg-slate-900/20 transition-colors z-10"></div>
+<img alt="Medical Standard Illustration" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4Ubl1H8QbqglCss02YC70VArzJw1JNSEnOT-g9FMvKZZo6olzKP8iCtDgyVPiEnqZQtLq8Em53kVlewPeopqSONJ-dPezPH1FZN3lRkvTifgDchPQ66jWE4nv-VJit6WBmWvRq3zwy2C5ERnESFO3ejmQ6N2AA6-intpjQPir6mYi36TVaTS0ED5KYr_DYQNN3BuHqooiiJf5ToP51fr8clfiHKnUDswIZ5oLfuDGdryiw81hhJHOqF-eZNGluboi6kc0MVmrvl0"/>
+<div class="absolute bottom-4 left-4 z-20 text-white">
+<span class="material-symbols-outlined mb-1">public</span>
+<p class="font-bold text-sm">Tiêu chuẩn Quốc tế</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-24 bg-slate-50 relative" id="tinh-nang">
+<div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+<div class="container mx-auto px-4 md:px-8 max-w-[1280px]">
+<div class="text-center max-w-3xl mx-auto mb-20 space-y-4 reveal fade-up">
+<span class="text-primary font-bold tracking-wider uppercase text-sm bg-primary/10 px-3 py-1 rounded-full border border-primary/20">Tính năng nổi bật</span>
+<h2 class="text-3xl md:text-5xl font-display font-bold text-text-main">Giải pháp Y tế Dự phòng Toàn diện</h2>
+<p class="text-text-muted text-lg">Thiết kế tối giản với tông màu dịu nhẹ, tập trung vào hiệu quả sử dụng.</p>
+</div>
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+<div class="group bg-white p-8 rounded-3xl shadow-soft hover:shadow-card transition-all duration-300 hover:-translate-y-1 border border-slate-100 reveal scale-in stagger-1">
+<div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 transition-all group-hover:bg-blue-600 group-hover:text-white">
+<span class="material-symbols-outlined text-3xl">inventory_2</span>
+</div>
+<h3 class="text-xl font-bold text-text-main mb-3">Quản lý kho vắc xin</h3>
+<p class="text-text-muted leading-relaxed text-sm">Theo dõi chi tiết xuất nhập tồn, lô hạn sử dụng và cảnh báo mức tồn kho tối thiểu.</p>
+</div>
+<div class="group bg-white p-8 rounded-3xl shadow-soft hover:shadow-card transition-all duration-300 hover:-translate-y-1 border border-slate-100 reveal scale-in stagger-2">
+<div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-6 transition-all group-hover:bg-amber-500 group-hover:text-white">
+<span class="material-symbols-outlined text-3xl">notifications_active</span>
+</div>
+<h3 class="text-xl font-bold text-text-main mb-3">Nhắc lịch tự động</h3>
+<p class="text-text-muted leading-relaxed text-sm">Hệ thống gửi tin nhắn đa kênh (SMS/Zalo) nhắc lịch tiêm chủng đúng hạn.</p>
+</div>
+<div class="group bg-white p-8 rounded-3xl shadow-soft hover:shadow-card transition-all duration-300 hover:-translate-y-1 border border-slate-100 reveal scale-in stagger-3">
+<div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mb-6 transition-all group-hover:bg-purple-600 group-hover:text-white">
+<span class="material-symbols-outlined text-3xl">bar_chart</span>
+</div>
+<h3 class="text-xl font-bold text-text-main mb-3">Báo cáo thông minh</h3>
+<p class="text-text-muted leading-relaxed text-sm">Dashboard trực quan với biểu đồ động, hỗ trợ trích xuất báo cáo nhanh chóng.</p>
+</div>
+<div class="group bg-white p-8 rounded-3xl shadow-soft hover:shadow-card transition-all duration-300 hover:-translate-y-1 border border-slate-100 reveal scale-in stagger-1">
+<div class="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mb-6 transition-all group-hover:bg-rose-500 group-hover:text-white">
+<span class="material-symbols-outlined text-3xl">verified_user</span>
+</div>
+<h3 class="text-xl font-bold text-text-main mb-3">Bảo mật đa lớp</h3>
+<p class="text-text-muted leading-relaxed text-sm">Dữ liệu được mã hóa đầu cuối, phân quyền chi tiết đảm bảo an toàn tuyệt đối.</p>
+</div>
+<div class="group bg-white p-8 rounded-3xl shadow-soft hover:shadow-card transition-all duration-300 hover:-translate-y-1 border border-slate-100 reveal scale-in stagger-2">
+<div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6 transition-all group-hover:bg-emerald-500 group-hover:text-white">
+<span class="material-symbols-outlined text-3xl">calendar_month</span>
+</div>
+<h3 class="text-xl font-bold text-text-main mb-3">Đặt lịch trực tuyến</h3>
+<p class="text-text-muted leading-relaxed text-sm">Cổng thông tin cho phép người dân tra cứu và đăng ký lịch tiêm dễ dàng.</p>
+</div>
+<div class="group bg-white p-8 rounded-3xl shadow-soft hover:shadow-card transition-all duration-300 hover:-translate-y-1 border border-slate-100 reveal scale-in stagger-3">
+<div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-6 transition-all group-hover:bg-indigo-500 group-hover:text-white">
+<span class="material-symbols-outlined text-3xl">integration_instructions</span>
+</div>
+<h3 class="text-xl font-bold text-text-main mb-3">Kết nối liên thông</h3>
+<p class="text-text-muted leading-relaxed text-sm">Đồng bộ dữ liệu hai chiều với Cơ sở dữ liệu Quốc gia về Dân cư.</p>
+</div>
+</div>
+</div>
+</section>
+<section class="py-24 bg-surface" id="loi-ich">
+<div class="container mx-auto px-4 md:px-8 max-w-[1280px]">
+<div class="bg-gradient-to-br from-blue-50 to-slate-100 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden reveal fade-up">
+<div class="grid lg:grid-cols-2">
+<div class="relative min-h-[400px] lg:min-h-full">
+<img alt="Community Health Illustration" class="absolute inset-0 w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8i4FEaqPnfNIQf_seJv7aFt1N0SstEMF2C7P9HPQ0Zh7Vu8t_FVYkBKnKYYAc2O--WCZrhkyyHCxtsjMllUAd904064C4JJUkRBrWLtpRW6nrXDA2QxwraOTwpsG2w5R67wt5teUlCoA1vGPTiSR6lN_EztzYZQC-Jka15OCeC1dfpJcTajxK3274yQz2NU-xkHJU1m5xvEKM4I_vaHPQp54nBJVNDJ1_rE9Ja_vLigladly0r7cMpu_fS6vl65opBXgoQEIG-CY"/>
+<div class="absolute inset-0 bg-gradient-to-r from-transparent to-blue-50/20 lg:to-blue-50"></div>
+</div>
+<div class="p-8 md:p-12 lg:p-16 relative">
+<div class="mb-10">
+<h3 class="text-3xl md:text-4xl font-display font-bold text-text-main mb-4">Giá trị thực tế</h3>
+<p class="text-text-muted">Tối ưu hóa lợi ích cho tất cả các bên tham gia vào hệ sinh thái tiêm chủng.</p>
+</div>
+<div class="space-y-8">
+<div class="flex gap-4 group">
+<div class="w-12 h-12 rounded-full bg-white text-blue-600 flex items-center justify-center shadow-md shrink-0 border border-slate-100 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">medical_services</span>
+</div>
+<div>
+<h4 class="text-xl font-bold text-text-main mb-2">Cho Cơ sở Y tế</h4>
+<ul class="space-y-2 text-text-muted text-sm">
+<li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>Giảm 70% thời gian xử lý thủ tục.</li>
+<li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>Quản lý chính xác kho, hạn chế hao hụt.</li>
+</ul>
+</div>
+</div>
+<div class="flex gap-4 group">
+<div class="w-12 h-12 rounded-full bg-white text-purple-600 flex items-center justify-center shadow-md shrink-0 border border-slate-100 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">face</span>
+</div>
+<div>
+<h4 class="text-xl font-bold text-text-main mb-2">Cho Người dân</h4>
+<ul class="space-y-2 text-text-muted text-sm">
+<li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>Lịch sử tiêm chủng số hóa trọn đời.</li>
+<li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>Chủ động đặt lịch, không chờ đợi.</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Consultation Form Section for Guests -->
+<section class="py-24 bg-gradient-to-br from-primary/5 to-blue-50/50 relative overflow-hidden" id="tu-van">
+    <div class="container mx-auto px-4 md:px-8 max-w-[1280px]">
+        <div class="max-w-2xl mx-auto">
+            <div class="text-center mb-12 reveal fade-up">
+                <span class="text-primary font-bold tracking-wider uppercase text-sm bg-primary/10 px-3 py-1 rounded-full border border-primary/20">Tư vấn miễn phí</span>
+                <h2 class="text-3xl md:text-4xl font-display font-bold text-text-main mt-4 mb-4">Cần tư vấn về vaccine?</h2>
+                <p class="text-text-muted text-lg">Điền form bên dưới, chúng tôi sẽ liên hệ tư vấn cho bạn trong thời gian sớm nhất</p>
+            </div>
+            
+            <div class="bg-white rounded-3xl shadow-xl border border-slate-200 p-8 md:p-10 reveal scale-in">
+                <form id="consultationForm" class="space-y-6">
+                    <!-- Họ và tên -->
+                    <div>
+                        <label class="block text-sm font-bold text-text-main mb-2">
+                            Họ và tên <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="guestFullName" name="guestFullName" required
+                               class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                               placeholder="Nhập họ và tên">
+                    </div>
+                    
+                    <!-- Email và SĐT -->
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-text-main mb-2">
+                                Email <span class="text-red-500">*</span>
+                            </label>
+                            <input type="email" id="guestEmail" name="guestEmail" required
+                                   class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                   placeholder="email@example.com">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-text-main mb-2">
+                                Số điện thoại <span class="text-red-500">*</span>
+                            </label>
+                            <input type="tel" id="consultationPhone" name="consultationPhone" required
+                                   class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                   placeholder="0901234567">
+                        </div>
+                    </div>
+                    
+                    <!-- Ngày sinh và Giới tính -->
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-text-main mb-2">
+                                Ngày sinh <span class="text-red-500">*</span>
+                            </label>
+                            <input type="date" id="guestDayOfBirth" name="guestDayOfBirth" required
+                                   class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-text-main mb-2">
+                                Giới tính <span class="text-red-500">*</span>
+                            </label>
+                            <select id="guestGender" name="guestGender" required
+                                    class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                                <option value="">Chọn giới tính</option>
+                                <option value="MALE">Nam</option>
+                                <option value="FEMALE">Nữ</option>
+                                <option value="OTHER">Khác</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Vaccine quan tâm -->
+                    <div>
+                        <label class="block text-sm font-bold text-text-main mb-2">
+                            Vaccine quan tâm (tùy chọn)
+                        </label>
+                        <select id="vaccineId" name="vaccineId"
+                                class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                            <option value="">Chưa xác định</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Lý do cần tư vấn -->
+                    <div>
+                        <label class="block text-sm font-bold text-text-main mb-2">
+                            Lý do cần tư vấn (tùy chọn)
+                        </label>
+                        <textarea id="reason" name="reason" rows="3"
+                                  class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+                                  placeholder="Ví dụ: Cần tư vấn về lịch tiêm cho trẻ 2 tuổi..."></textarea>
+                    </div>
+                    
+                    <!-- Ghi chú thêm -->
+                    <div>
+                        <label class="block text-sm font-bold text-text-main mb-2">
+                            Ghi chú thêm (tùy chọn)
+                        </label>
+                        <textarea id="notes" name="notes" rows="2"
+                                  class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+                                  placeholder="Thông tin bổ sung..."></textarea>
+                    </div>
+                    
+                    <p class="text-xs text-slate-500 text-center italic">
+                        Bạn có thể chủ động liên hệ qua hotline <strong>999-999-9999</strong> để nhận được tư vấn
+                    </p>
+                    
+                    <!-- Submit Button -->
+                    <div class="pt-4">
+                        <button type="submit" id="submitConsultationBtn"
+                                class="w-full bg-primary hover:bg-primary-dark text-white px-6 py-4 rounded-xl font-bold text-lg transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span id="submitText">Gửi yêu cầu tư vấn</span>
+                            <span id="submitSpinner" class="hidden animate-spin material-symbols-outlined">sync</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Success/Error Message -->
+                    <div id="consultationMessage" class="hidden p-4 rounded-xl text-sm font-semibold"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-24 bg-surface-alt/30" id="quy-trinh">
+<div class="container mx-auto px-4 md:px-8 max-w-[1280px]">
+<div class="flex flex-col md:flex-row gap-16 lg:gap-24 items-center">
+<div class="md:w-1/2 space-y-8">
+<div class="space-y-4 reveal fade-left">
+<span class="text-primary font-bold tracking-wider uppercase text-sm bg-primary/10 px-3 py-1 rounded-full">Quy trình 3 bước</span>
+<h2 class="text-3xl md:text-5xl font-display font-bold text-text-main">Tiêm chủng <br/>Nhanh chóng &amp; Đơn giản</h2>
+<p class="text-text-muted text-lg">Giảm thiểu thủ tục giấy tờ, tập trung vào sự an toàn và tiện lợi cho người dân.</p>
+</div>
+<div class="space-y-8 mt-8 relative pl-4">
+<div class="absolute left-[27px] top-6 bottom-6 w-0.5 bg-slate-200 -z-10"></div>
+<div class="flex gap-6 group reveal fade-left stagger-1">
+<div class="w-12 h-12 rounded-full bg-white border-4 border-primary text-primary flex items-center justify-center shrink-0 shadow-lg z-10 group-hover:scale-110 transition-transform">
+<span class="font-bold text-lg">1</span>
+</div>
+<div class="pt-1 w-full">
+<h4 class="text-xl font-bold text-text-main mb-1 group-hover:text-primary transition-colors">Đăng ký &amp; Khai báo</h4>
+<p class="text-text-muted text-sm leading-relaxed">Đăng ký tài khoản và khai báo y tế trực tuyến qua website hoặc ứng dụng mobile.</p>
+</div>
+</div>
+<div class="flex gap-6 group reveal fade-left stagger-2">
+<div class="w-12 h-12 rounded-full bg-white border-4 border-slate-300 text-slate-500 flex items-center justify-center shrink-0 z-10 group-hover:border-primary group-hover:text-primary transition-colors group-hover:scale-110">
+<span class="font-bold text-lg">2</span>
+</div>
+<div class="pt-1 w-full">
+<h4 class="text-xl font-bold text-text-main mb-1 group-hover:text-primary transition-colors">Đặt lịch &amp; Khám sàng lọc</h4>
+<p class="text-text-muted text-sm leading-relaxed">Chọn lịch hẹn phù hợp. Bác sĩ khám sàng lọc và chỉ định vắc xin trên hệ thống.</p>
+</div>
+</div>
+<div class="flex gap-6 group reveal fade-left stagger-3">
+<div class="w-12 h-12 rounded-full bg-white border-4 border-slate-300 text-slate-500 flex items-center justify-center shrink-0 z-10 group-hover:border-primary group-hover:text-primary transition-colors group-hover:scale-110">
+<span class="font-bold text-lg">3</span>
+</div>
+<div class="pt-1 w-full">
+<h4 class="text-xl font-bold text-text-main mb-1 group-hover:text-primary transition-colors">Tiêm chủng &amp; Theo dõi</h4>
+<p class="text-text-muted text-sm leading-relaxed">Thực hiện tiêm an toàn. Cập nhật kết quả lên CSDL Quốc gia và theo dõi sau tiêm.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="md:w-1/2 relative w-full reveal fade-right stagger-2">
+<div class="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-300/40 group">
+<img alt="Vaccination Safety Process Illustration" class="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBADNwElf3iYsRQvcSJMPDM53WdpnmwsceijpuyFVvf7NCBK79E9dEOmZERmP4JnJqaMsMJtCmMSQn3NMBUnXcG5yDVpx9Z4iOP2S0QoqoM4N9pbm-dTR_KD_VZT6sGYqcr3Y6fljczoJa3L6Ujv6U9LbeLvSPMspwBshLKJbzS5qr53Y3KlkdHJ1xaReIWJhuD19fpmCOoQVk1ViOzwmafsPyaq2OZquQOnwwvlr7ERRzH_gtPUxonzOQEehOXo2ldsJ4ibBS2n9o"/>
+<div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
+<div class="absolute bottom-8 left-8 right-8 text-white">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-green-400">shield</span>
+<span class="font-bold text-sm uppercase tracking-wide text-green-400">An toàn tuyệt đối</span>
+</div>
+<p class="text-2xl font-display font-bold">Quy trình khép kín &amp; minh bạch</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<footer class="bg-slate-900 pt-20 pb-10 reveal fade-up text-slate-300 border-t border-slate-800" id="lien-he">
+<div class="container mx-auto px-4 md:px-8 max-w-[1280px]">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+<div class="space-y-6">
+<div class="flex items-center gap-2">
+<div class="bg-primary/20 p-2 rounded-xl text-primary">
+<span class="material-symbols-outlined text-2xl">vaccines</span>
+</div>
+<span class="font-display font-bold text-xl text-white">VacciCare</span>
+</div>
+<p class="text-slate-400 text-sm leading-relaxed">
+                    Hệ thống quản lý thông tin tiêm chủng quốc gia, hướng tới một cộng đồng khỏe mạnh và an toàn.
+                </p>
+<div class="flex gap-4">
+<a class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 hover:-translate-y-1" href="#">
+<span class="font-bold text-sm">f</span>
+</a>
+<a class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 hover:-translate-y-1" href="#">
+<span class="font-bold text-sm">in</span>
+</a>
+</div>
+</div>
+<div>
+<h4 class="font-bold text-white text-lg mb-6 relative inline-block after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-10 after:h-0.5 after:bg-primary">Liên kết nhanh</h4>
+<ul class="space-y-4 text-sm text-slate-400">
+<li><a class="hover:text-primary transition-colors block hover:translate-x-1 transition-transform" href="/about">Về chúng tôi</a></li>
+<li><a class="hover:text-primary transition-colors block hover:translate-x-1 transition-transform" href="#tinh-nang">Tính năng hệ thống</a></li>
+<li><a class="hover:text-primary transition-colors block hover:translate-x-1 transition-transform" href="#">Bảng giá dịch vụ</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold text-white text-lg mb-6 relative inline-block after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-10 after:h-0.5 after:bg-primary">Hỗ trợ</h4>
+<ul class="space-y-4 text-sm text-slate-400">
+<li><a class="hover:text-primary transition-colors block hover:translate-x-1 transition-transform" href="#">Trung tâm trợ giúp</a></li>
+<li><a class="hover:text-primary transition-colors block hover:translate-x-1 transition-transform" href="#">Tài liệu hướng dẫn</a></li>
+<li><a class="hover:text-primary transition-colors block hover:translate-x-1 transition-transform" href="#">Chính sách bảo mật</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold text-white text-lg mb-6 relative inline-block after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-10 after:h-0.5 after:bg-primary">Liên hệ</h4>
+<ul class="space-y-4 text-sm text-slate-400">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-lg mt-0.5">location_on</span>
+<span>Tầng 10, Tòa nhà Innovation, Quận Cầu Giấy, Hà Nội</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-lg">call</span>
+<span class="font-semibold text-white">1900 1234 5678</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-lg">mail</span>
+<span>hotro@tiemchung.gov.vn</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="text-sm text-slate-500">© 2023 VacciCare. All rights reserved.</p>
+<div class="flex gap-8 text-sm text-slate-500 font-medium">
+<a class="hover:text-primary transition-colors" href="#">Quyền riêng tư</a>
+<a class="hover:text-primary transition-colors" href="#">Sitemap</a>
+</div>
+</div>
+</div>
+</footer>
+
+<script>
+    // Load danh sách vaccine cho dropdown
+    async function loadVaccines() {
+        try {
+            const response = await fetch('/api/vaccines', {
+                credentials: 'include'
+            });
+            if (response.ok) {
+                const vaccines = await response.json();
+                const select = document.getElementById('vaccineId');
+                vaccines.forEach(vaccine => {
+                    if (vaccine.status === 'AVAILABLE') {
+                        const option = document.createElement('option');
+                        option.value = vaccine.id;
+                        option.textContent = vaccine.name;
+                        select.appendChild(option);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error loading vaccines:', error);
+        }
+    }
+    
+    // Handle form submission
+    document.getElementById('consultationForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('submitConsultationBtn');
+        const submitText = document.getElementById('submitText');
+        const submitSpinner = document.getElementById('submitSpinner');
+        const messageDiv = document.getElementById('consultationMessage');
+        
+        // Disable button and show loading
+        submitBtn.disabled = true;
+        submitText.textContent = 'Đang gửi...';
+        submitSpinner.classList.remove('hidden');
+        messageDiv.classList.add('hidden');
+        
+        // Collect form data
+        const formData = {
+            guestFullName: document.getElementById('guestFullName').value,
+            guestEmail: document.getElementById('guestEmail').value,
+            guestDayOfBirth: document.getElementById('guestDayOfBirth').value,
+            guestGender: document.getElementById('guestGender').value,
+            consultationPhone: document.getElementById('consultationPhone').value,
+            vaccineId: document.getElementById('vaccineId').value || null,
+            reason: document.getElementById('reason').value || null,
+            notes: document.getElementById('notes').value || null
+        };
+        
+        try {
+            const response = await fetch('/api/appointments/consultation-request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(formData)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                // Success
+                messageDiv.className = 'p-4 rounded-xl text-sm font-semibold bg-green-50 text-green-700 border border-green-200';
+                messageDiv.textContent = 'Gửi yêu cầu tư vấn thành công! Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.';
+                messageDiv.classList.remove('hidden');
+                
+                // Reset form
+                document.getElementById('consultationForm').reset();
+            } else {
+                // Error
+                messageDiv.className = 'p-4 rounded-xl text-sm font-semibold bg-red-50 text-red-700 border border-red-200';
+                messageDiv.textContent = result.error || 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+                messageDiv.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error submitting consultation request:', error);
+            messageDiv.className = 'p-4 rounded-xl text-sm font-semibold bg-red-50 text-red-700 border border-red-200';
+            messageDiv.textContent = 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+            messageDiv.classList.remove('hidden');
+        } finally {
+            // Re-enable button
+            submitBtn.disabled = false;
+            submitText.textContent = 'Gửi yêu cầu tư vấn';
+            submitSpinner.classList.add('hidden');
+        }
+    });
+    
+    // Load vaccines on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        loadVaccines();
+    });
+</script>
+</body></html>
+

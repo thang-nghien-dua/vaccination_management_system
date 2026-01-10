@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký - Hệ thống Tiêm chủng Quốc gia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0f766e",
+                        "primary-light": "#14b8a6",
+                        "primary-dark": "#134e4a",
+                        "text-main": "#0f172a",
+                        "text-muted": "#64748b",
+                    },
+                    fontFamily: {
+                        "sans": ["Inter", "sans-serif"],
+                        "display": ["Manrope", "sans-serif"],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+        }
+        .bg-image-overlay {
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.8) 0%, rgba(20, 184, 166, 0.6) 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen font-sans relative overflow-y-auto" 
+      style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBADNwElf3iYsRQvcSJMPDM53WdpnmwsceijpuyFVvf7NCBK79E9dEOmZERmP4JnJqaMsMJtCmMSQn3NMBUnXcG5yDVpx9Z4iOP2S0QoqoM4N9pbm-dTR_KD_VZT6sGYqcr3Y6fljczoJa3L6Ujv6U9LbeLvSPMspwBshLKJbzS5qr53Y3KlkdHJ1xaReIWJhuD19fpmCOoQVk1ViOzwmafsPyaq2OZquQOnwwvlr7ERRzH_gtPUxonzOQEehOXo2ldsJ4ibBS2n9o'); background-size: cover; background-position: center; background-attachment: fixed;">
+    <!-- Overlay -->
+    <div class="absolute inset-0 bg-image-overlay"></div>
+    
+    <!-- Content -->
+    <div class="relative z-10 min-h-screen flex items-center justify-center p-4 md:p-8">
+        <div class="w-full max-w-2xl">
+            <!-- Logo và tiêu đề -->
+            <div class="text-center mb-8">
+                <a href="/" class="inline-flex items-center space-x-3 mb-6">
+                    <div class="bg-white/20 backdrop-blur-sm p-3 rounded-2xl text-white">
+                        <span class="material-symbols-outlined text-4xl">vaccines</span>
+                    </div>
+                    <span class="text-3xl font-display font-bold text-white">TiêmChủng<span class="text-teal-200">QG</span></span>
+                </a>
+                <h1 class="text-4xl md:text-5xl font-display font-bold text-white mb-3">Đăng ký tài khoản</h1>
+                <p class="text-lg text-white/90">Tạo tài khoản để quản lý lịch tiêm chủng của bạn</p>
+            </div>
+
+                <!-- Form đăng ký -->
+                <div class="glass-effect rounded-3xl shadow-xl border border-white/80 p-6 md:p-8">
+                    <!-- Thông báo lỗi -->
+                    <div id="errorMessage" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                        <span id="errorText"></span>
+                    </div>
+
+                    <!-- Thông báo thành công -->
+                    <div id="successMessage" class="hidden mb-4 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
+                        <span id="successText"></span>
+                    </div>
+                    
+                    <!-- Dialog xử lý email đã tồn tại -->
+                    <div id="emailExistsDialog" class="hidden mb-4 p-6 bg-blue-50 border border-blue-200 rounded-xl">
+                        <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-blue-600 text-2xl">info</span>
+                            <div class="flex-1">
+                                <h3 class="font-bold text-blue-900 mb-2" id="dialogTitle">Email đã được sử dụng</h3>
+                                <p class="text-blue-800 text-sm mb-4" id="dialogMessage"></p>
+                                <div id="dialogActions" class="flex gap-3">
+                                    <!-- Actions sẽ được thêm động -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form đăng ký -->
+                    <form id="registerForm" class="space-y-4">
+                        <input type="hidden" id="isReregister" value="false">
+                        <div>
+                            <label for="fullName" class="block text-sm font-semibold text-text-main mb-2">Họ và tên <span class="text-red-500">*</span></label>
+                            <input type="text" id="fullName" name="fullName" required
+                                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                   placeholder="Nguyễn Văn A">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-semibold text-text-main mb-2">Email <span class="text-red-500">*</span></label>
+                            <input type="email" id="email" name="email" required
+                                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                   placeholder="your.email@example.com">
+                        </div>
+                        <div>
+                            <label for="password" class="block text-sm font-semibold text-text-main mb-2">Mật khẩu <span class="text-red-500">*</span></label>
+                            <input type="password" id="password" name="password" required minlength="6"
+                                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                   placeholder="Tối thiểu 6 ký tự">
+                        </div>
+                        <div>
+                            <label for="confirmPassword" class="block text-sm font-semibold text-text-main mb-2">Xác nhận mật khẩu <span class="text-red-500">*</span></label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required
+                                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                   placeholder="Nhập lại mật khẩu">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="dayOfBirth" class="block text-sm font-semibold text-text-main mb-2">Ngày sinh</label>
+                                <input type="date" id="dayOfBirth" name="dayOfBirth"
+                                       class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                            </div>
+                            <div>
+                                <label for="gender" class="block text-sm font-semibold text-text-main mb-2">Giới tính</label>
+                                <select id="gender" name="gender"
+                                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                                    <option value="">Chọn</option>
+                                    <option value="MALE">Nam</option>
+                                    <option value="FEMALE">Nữ</option>
+                                    <option value="OTHER">Khác</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="address" class="block text-sm font-semibold text-text-main mb-2">Địa chỉ</label>
+                            <textarea id="address" name="address" rows="2"
+                                      class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                      placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"></textarea>
+                        </div>
+                        <div>
+                            <label for="citizenId" class="block text-sm font-semibold text-text-main mb-2">Số CMND/CCCD</label>
+                            <input type="text" id="citizenId" name="citizenId"
+                                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                   placeholder="012345678901">
+                        </div>
+                        <div class="flex items-start">
+                            <input type="checkbox" id="agreeTerms" required
+                                   class="mt-1 rounded border-slate-300 text-primary focus:ring-primary">
+                            <label for="agreeTerms" class="ml-2 text-sm text-text-muted">
+                                Tôi đồng ý với <a href="#" class="text-primary hover:text-primary-dark font-semibold">Điều khoản</a> và <a href="#" class="text-primary hover:text-primary-dark font-semibold">Chính sách bảo mật</a>
+                            </label>
+                        </div>
+                        <button type="submit" id="registerBtn"
+                                class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 flex items-center justify-center gap-2">
+                            <span id="registerBtnText">Đăng ký</span>
+                            <span id="registerBtnSpinner" class="hidden">
+                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                        </button>
+                    </form>
+
+                    <!-- Divider -->
+                    <div class="my-6 flex items-center">
+                        <div class="flex-1 border-t border-slate-200"></div>
+                        <span class="px-4 text-sm text-text-muted">hoặc</span>
+                        <div class="flex-1 border-t border-slate-200"></div>
+                    </div>
+
+                    <!-- OAuth2 Buttons -->
+                    <div class="space-y-3">
+                        <a href="/oauth2/authorization/google" 
+                           class="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-text-main font-semibold py-3 px-6 rounded-xl border border-slate-200 hover:border-slate-300 transition-all shadow-sm hover:shadow-md">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            Đăng ký với Google
+                        </a>
+                        <a href="/oauth2/authorization/facebook" 
+                           class="w-full flex items-center justify-center gap-3 bg-[#1877F2] hover:bg-[#166FE5] text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                            Đăng ký với Facebook
+                        </a>
+                    </div>
+
+                    <!-- Link đăng nhập -->
+                    <div class="mt-6 text-center">
+                        <p class="text-sm text-text-muted">
+                            Đã có tài khoản? 
+                            <a href="/login" class="text-primary hover:text-primary-dark font-semibold">Đăng nhập ngay</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            const emailExistsDialog = document.getElementById('emailExistsDialog');
+            const registerBtn = document.getElementById('registerBtn');
+            const registerBtnText = document.getElementById('registerBtnText');
+            const registerBtnSpinner = document.getElementById('registerBtnSpinner');
+            
+            // Ẩn thông báo cũ
+            errorDiv.classList.add('hidden');
+            successDiv.classList.add('hidden');
+            emailExistsDialog.classList.add('hidden');
+            
+            // Kiểm tra mật khẩu khớp
+            if (password !== confirmPassword) {
+                errorDiv.classList.remove('hidden');
+                document.getElementById('errorText').textContent = 'Mật khẩu xác nhận không khớp!';
+                return;
+            }
+            
+            // Hiển thị loading
+            registerBtn.disabled = true;
+            registerBtnText.textContent = 'Đang xử lý...';
+            registerBtnSpinner.classList.remove('hidden');
+            
+            // Lấy dữ liệu form
+            const formData = {
+                email: document.getElementById('email').value,
+                password: password,
+                fullName: document.getElementById('fullName').value,
+                dayOfBirth: document.getElementById('dayOfBirth').value || null,
+                gender: document.getElementById('gender').value || null,
+                address: document.getElementById('address').value || null,
+                citizenId: document.getElementById('citizenId').value || null
+            };
+            
+            // Kiểm tra có phải đăng ký lại không
+            const isReregister = document.getElementById('isReregister').value === 'true';
+            const apiEndpoint = isReregister ? '/api/auth/reregister' : '/api/auth/register';
+            
+            try {
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Đăng ký thành công
+                    successDiv.classList.remove('hidden');
+                    const successMessage = isReregister 
+                        ? 'Đăng ký lại thành công!<br>Vui lòng kiểm tra email để xác thực tài khoản trước khi đăng nhập.<br>Email xác thực đã được gửi đến: <strong>' + formData.email + '</strong>'
+                        : 'Đăng ký thành công!<br>Vui lòng kiểm tra email để xác thực tài khoản trước khi đăng nhập.<br>Email xác thực đã được gửi đến: <strong>' + formData.email + '</strong>';
+                    document.getElementById('successText').innerHTML = successMessage;
+                    
+                    // Reset flag
+                    document.getElementById('isReregister').value = 'false';
+                    
+                    // Ẩn form
+                    document.getElementById('registerForm').style.display = 'none';
+                } else if (response.status === 409 && data.isActive) {
+                    // Email đã tồn tại và đã ACTIVE
+                    emailExistsDialog.classList.remove('hidden');
+                    document.getElementById('dialogTitle').textContent = 'Email đã được sử dụng';
+                    document.getElementById('dialogMessage').textContent = data.message || 'Email này đã được sử dụng. Bạn có muốn đăng nhập không?';
+                    
+                    const actionsDiv = document.getElementById('dialogActions');
+                    actionsDiv.innerHTML = `
+                        <a href="/login" class="px-4 py-2 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-all">
+                            Đăng nhập
+                        </a>
+                        <button type="button" onclick="document.getElementById('emailExistsDialog').classList.add('hidden')" 
+                                class="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-300 transition-all">
+                            Hủy
+                        </button>
+                    `;
+                } else if (response.status === 409 && data.isInactive) {
+                    // Email đã tồn tại nhưng chưa xác thực (INACTIVE)
+                    // Reset flag nếu đang đăng ký lại
+                    document.getElementById('isReregister').value = 'false';
+                    
+                    emailExistsDialog.classList.remove('hidden');
+                    document.getElementById('dialogTitle').textContent = 'Email chưa được xác thực';
+                    document.getElementById('dialogMessage').textContent = data.message || 'Email này đã được đăng ký nhưng chưa xác thực. Bạn muốn làm gì?';
+                    
+                    const actionsDiv = document.getElementById('dialogActions');
+                    actionsDiv.innerHTML = `
+                        <button type="button" id="resendVerificationBtn" 
+                                class="px-4 py-2 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                            <span id="resendBtnText">Gửi lại email xác thực</span>
+                            <span id="resendBtnSpinner" class="hidden">
+                                <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                        </button>
+                        <button type="button" id="reregisterBtn" 
+                                class="px-4 py-2 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                            <span id="reregisterBtnText">Đăng ký lại với thông tin mới</span>
+                            <span id="reregisterBtnSpinner" class="hidden">
+                                <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                        </button>
+                        <button type="button" id="cancelDialogBtn" onclick="document.getElementById('emailExistsDialog').classList.add('hidden')" 
+                                class="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-300 transition-all">
+                            Hủy
+                        </button>
+                    `;
+                    
+                    // Xử lý gửi lại email xác thực
+                    document.getElementById('resendVerificationBtn').onclick = async function() {
+                        const resendBtn = document.getElementById('resendVerificationBtn');
+                        const resendBtnText = document.getElementById('resendBtnText');
+                        const resendBtnSpinner = document.getElementById('resendBtnSpinner');
+                        const cancelBtn = document.getElementById('cancelDialogBtn');
+                        
+                        // Hiển thị loading
+                        resendBtn.disabled = true;
+                        resendBtnText.textContent = 'Đang gửi...';
+                        resendBtnSpinner.classList.remove('hidden');
+                        cancelBtn.disabled = true;
+                        
+                        try {
+                            const resendResponse = await fetch('/api/auth/resend-verification', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ email: formData.email })
+                            });
+                            
+                            const resendData = await resendResponse.json();
+                            
+                            if (resendResponse.ok) {
+                                emailExistsDialog.classList.add('hidden');
+                                successDiv.classList.remove('hidden');
+                                document.getElementById('successText').innerHTML = 
+                                    'Email xác thực đã được gửi lại đến <strong>' + formData.email + '</strong>.<br>' +
+                                    'Vui lòng kiểm tra hộp thư của bạn và click vào link trong email.';
+                            } else {
+                                errorDiv.classList.remove('hidden');
+                                document.getElementById('errorText').textContent = resendData.error || 'Không thể gửi lại email. Vui lòng thử lại sau.';
+                            }
+                        } catch (error) {
+                            errorDiv.classList.remove('hidden');
+                            document.getElementById('errorText').textContent = 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+                        } finally {
+                            // Ẩn loading và enable button
+                            resendBtn.disabled = false;
+                            resendBtnText.textContent = 'Gửi lại email xác thực';
+                            resendBtnSpinner.classList.add('hidden');
+                            cancelBtn.disabled = false;
+                        }
+                    };
+                    
+                    // Xử lý đăng ký lại
+                    document.getElementById('reregisterBtn').onclick = function() {
+                        // Đóng dialog
+                        emailExistsDialog.classList.add('hidden');
+                        
+                        // Đánh dấu là đang đăng ký lại
+                        document.getElementById('isReregister').value = 'true';
+                        
+                        // Hiển thị thông báo cho user biết có thể chỉnh sửa thông tin
+                        successDiv.classList.remove('hidden');
+                        document.getElementById('successText').innerHTML = 
+                            '<strong>Bạn có thể chỉnh sửa thông tin và nhấn "Đăng ký" để đăng ký lại.</strong><br>' +
+                            'Tài khoản cũ sẽ được thay thế bằng thông tin mới.';
+                        
+                        // Focus vào field đầu tiên để user dễ chỉnh sửa
+                        setTimeout(() => {
+                            document.getElementById('fullName').focus();
+                        }, 100);
+                    };
+                } else {
+                    // Hiển thị lỗi
+                    errorDiv.classList.remove('hidden');
+                    document.getElementById('errorText').textContent = data.error || 'Đăng ký thất bại. Vui lòng thử lại.';
+                }
+            } catch (error) {
+                errorDiv.classList.remove('hidden');
+                document.getElementById('errorText').textContent = 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+            } finally {
+                // Ẩn loading và enable button
+                registerBtn.disabled = false;
+                registerBtnText.textContent = 'Đăng ký';
+                registerBtnSpinner.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

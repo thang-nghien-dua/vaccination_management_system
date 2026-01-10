@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html class="light" lang="vi" xmlns:th="http://www.thymeleaf.org"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Trang Tổng quan Người dùng - Hệ thống Tiêm chủng</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0f766e",
+                        "primary-light": "#14b8a6",
+                        "primary-dark": "#134e4a",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav {
+            background-color: #f0f4f2;
+            border-left: 4px solid #0f766e;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen text-[#111813] dark:text-white font-display">
+<div class="flex min-h-screen">
+<aside class="w-72 bg-white dark:bg-[#1a2e21] border-r border-[#f0f4f2] dark:border-[#2d3f33] hidden lg:flex flex-col fixed h-full z-40">
+<div class="p-6 flex items-center gap-3">
+<div class="size-8 text-primary">
+<svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M24 4C25.7818 14.2173 33.7827 22.2182 44 24C33.7827 25.7818 25.7818 33.7827 24 44C22.2182 33.7827 14.2173 25.7818 4 24C14.2173 22.2182 22.2182 14.2173 24 4Z" fill="currentColor"></path>
+</svg>
+</div>
+<h1 class="text-xl font-bold tracking-tight">VacciCare</h1>
+</div>
+<div class="px-4 mb-6" th:if="${isAuthenticated}">
+<div class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark rounded-xl">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 bg-primary/20 flex items-center justify-center text-primary font-bold text-lg" th:if="${currentUser?.fullName != null}">
+<span th:text="${#strings.substring(currentUser.fullName, 0, 1)}"></span>
+</div>
+<div class="flex flex-col overflow-hidden">
+<p class="text-sm font-bold truncate" th:text="${currentUser?.fullName ?: currentUser?.email}">Tên người dùng</p>
+<p class="text-xs text-[#61896f] truncate" th:text="${currentUser?.role?.name() == 'CUSTOMER' ? 'Người dùng cá nhân' : (currentUser?.role?.name() == 'ADMIN' ? 'Quản trị viên' : 'Nhân viên y tế')}">Người dùng cá nhân</p>
+</div>
+</div>
+</div>
+        <nav class="flex-1 px-2 space-y-1">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg active-nav text-primary font-bold" href="/home">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span class="text-sm">Tổng quan</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/profile">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">person</span>
+                <span class="text-sm font-medium">Thông tin cá nhân</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/appointments">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">calendar_month</span>
+                <span class="text-sm font-medium">Đặt lịch</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/vaccination-history">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">history_edu</span>
+                <span class="text-sm font-medium">Hồ sơ tiêm chủng</span>
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/family-members">
+<span class="material-symbols-outlined text-[#111813] dark:text-white">group</span>
+<span class="text-sm font-medium">Người thân</span>
+</a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/vaccines">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">vaccines</span>
+                <span class="text-sm font-medium">Vaccine</span>
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="#">
+<span class="material-symbols-outlined text-[#111813] dark:text-white">notifications</span>
+<span class="text-sm font-medium">Thông báo</span>
+</a>
+</nav>
+        <div class="p-4 border-t border-[#f0f4f2] dark:border-[#2d3f33]">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="#">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">settings</span>
+                <span class="text-sm font-medium">Cài đặt</span>
+            </a>
+<form th:action="@{/api/auth/logout}" method="post" class="inline">
+<button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-50 transition-colors">
+<span class="material-symbols-outlined">logout</span>
+<span class="text-sm font-medium">Đăng xuất</span>
+</button>
+</form>
+</div>
+</aside>
+<main class="flex-1 lg:ml-72 flex flex-col min-h-screen">
+<header class="sticky top-0 z-50 bg-white/90 dark:bg-[#102216]/90 backdrop-blur-xl border-b border-[#f0f4f2] dark:border-[#2d3f33] px-8 py-4 flex items-center justify-between transition-all">
+<div class="flex items-center gap-4">
+<h2 class="text-xl font-bold">Bảng điều khiển</h2>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#61896f] text-xl">search</span>
+<input class="pl-10 pr-4 py-2 bg-background-light dark:bg-[#1a2e21] border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary/50" placeholder="Tìm kiếm dịch vụ, vaccine..." type="text"/>
+</div>
+<button class="p-2 rounded-lg bg-background-light dark:bg-[#1a2e21] hover:bg-[#e0e7e3] transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2.5 right-2.5 size-2 bg-red-500 rounded-full border-2 border-white dark:border-[#1a2e21]"></span>
+</button>
+<button class="p-2 rounded-lg bg-background-light dark:bg-[#1a2e21] hover:bg-[#e0e7e3] transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+</header>
+<div class="p-8 space-y-8 max-w-6xl mx-auto w-full">
+<div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl p-4 flex items-start gap-4">
+<span class="material-symbols-outlined text-blue-600">info</span>
+<div>
+<p class="text-sm font-bold text-blue-900 dark:text-blue-100">Lời nhắc sức khỏe</p>
+<p class="text-sm text-blue-700 dark:text-blue-300">Bạn có 1 mũi tiêm nhắc lại (Cúm mùa) vào tháng tới. Đừng quên đặt lịch nhé!</p>
+</div>
+</div>
+<section class="relative overflow-hidden bg-primary/10 dark:bg-primary/5 rounded-2xl border border-primary/20 p-8 md:p-12">
+<div class="relative z-10 flex flex-col md:flex-row items-center gap-8">
+<div class="flex-1 space-y-6">
+<h1 class="text-3xl md:text-5xl font-black leading-tight">
+                                 Chào mừng quay lại,<br/><span class="text-primary" th:text="${currentUser?.fullName ?: currentUser?.email}">Tên người dùng</span>!
+</h1>
+<p class="text-lg text-[#61896f] dark:text-gray-300 max-w-lg">
+                                Hãy bảo vệ sức khỏe của bạn và gia đình bằng cách theo dõi lịch tiêm chủng định kỳ. Hôm nay là một ngày tuyệt vời để chủ động phòng bệnh.
+                            </p>
+<div class="flex flex-wrap gap-4">
+<button class="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-xl font-bold flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined">add_circle</span>
+                                    Đặt lịch tiêm mới
+                                </button>
+<button class="bg-white dark:bg-[#1a2e21] hover:bg-gray-50 border border-[#f0f4f2] dark:border-[#2d3f33] px-8 py-4 rounded-xl font-bold transition-all">
+                                    Xem hướng dẫn
+                                </button>
+</div>
+</div>
+<div class="w-full md:w-1/3 aspect-square bg-contain bg-center bg-no-repeat" data-alt="Flat illustration of a friendly doctor holding a health shield" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBIZ7axClcVDpu-qFpxGpPPi1K46LqJDTqKPJ_7kebVmQ6QhGqkIwTeF6SscbfvXBkG1b86GkflsBivp87Id1oStLrCiRnfGAQpNBShsiS73SEgk3tI0et64TbnaGMvlHyYDyZNkHJuLCs7OP9DrWay1-jiyvUchXwaqbie6zGLN-FUpnIEYzG1qkQ-o4uuDwTJpW6MVjoLarNLNtS9BCK9w8uRvH12F0yPwpQL4l-2p6sanvsWgjr1qz8BRmkZ06UIpvs50f_bSjw");'></div>
+</div>
+<div class="absolute -top-12 -right-12 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="lg:col-span-2 space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="text-xl font-bold">Lịch hẹn sắp tới</h3>
+<a class="text-sm font-bold text-primary hover:underline" href="#">Xem tất cả</a>
+</div>
+<div class="bg-white dark:bg-[#1a2e21] rounded-2xl p-6 shadow-sm border border-[#f0f4f2] dark:border-[#2d3f33]">
+<div class="flex flex-col md:flex-row justify-between gap-6">
+<div class="space-y-4 flex-1">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs font-bold uppercase tracking-wider">
+<span class="size-1.5 rounded-full bg-orange-600 animate-pulse"></span>
+                                        Chưa check-in
+</div>
+<div>
+<p class="text-sm text-[#61896f] mb-1">Mã đặt chỗ</p>
+<h4 class="text-2xl font-black text-[#111813] dark:text-white">VNVC-123456</h4>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<p class="text-xs text-[#61896f] uppercase font-bold tracking-widest mb-1">Vaccine</p>
+<p class="text-sm font-bold">VNVC Influenza (Cúm)</p>
+</div>
+<div>
+<p class="text-xs text-[#61896f] uppercase font-bold tracking-widest mb-1">Thời gian</p>
+<p class="text-sm font-bold">25/10/2023 - 09:00</p>
+</div>
+</div>
+<div class="pt-4 flex gap-3">
+<button class="flex-1 bg-[#f0f4f2] dark:bg-[#2d3f33] hover:bg-[#e0e7e3] text-[#111813] dark:text-white py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined">qr_code_2</span>
+                                            Tải QR check-in
+                                        </button>
+<button class="bg-[#f0f4f2] dark:bg-[#2d3f33] p-3 rounded-xl hover:bg-[#e0e7e3]">
+<span class="material-symbols-outlined text-xl">directions</span>
+</button>
+</div>
+</div>
+<div class="w-full md:w-48 aspect-square bg-background-light dark:bg-background-dark rounded-xl flex items-center justify-center border-2 border-dashed border-[#f0f4f2] dark:border-[#2d3f33]">
+<div class="text-center p-4">
+<div class="bg-white p-2 rounded-lg shadow-sm mb-2 inline-block">
+<img alt="QR Code" class="size-24 opacity-80" data-alt="QR Code for vaccine appointment check-in" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXVkh8Tw1Vvd6uL5Yw6XECMmblAUbHb0Kywd_S54fZZX3HfBmSvg0iNyW8vmkkYkACV2WmYZ-hTExTOhlrdR7_OMvpkPbXvb9PfgBJq6hydg_DItPtYDAAGprscioA6X7xYeqPKjsDOGucbdhrX7YIjPB0xZ0FBvltXBSnb50u_TOlnY00md5NAgsZvE8ByVt_ZbkWWVmZSuNOYpZvX_jGCq9LmrldgY_5L4qj7XakxsN7L_V7kqUck4iCIGzSJf4XcUvu45Qvgq4"/>
+</div>
+<p class="text-[10px] text-[#61896f] font-medium">Quét tại quầy tiếp đón</p>
+</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mt-6">
+<div class="bg-white dark:bg-[#1a2e21] p-4 rounded-xl border border-[#f0f4f2] dark:border-[#2d3f33] flex items-center gap-4">
+<div class="size-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined">vaccines</span>
+</div>
+<div>
+<p class="text-2xl font-black">08</p>
+<p class="text-xs text-[#61896f] font-medium">Mũi tiêm đã hoàn tất</p>
+</div>
+</div>
+<div class="bg-white dark:bg-[#1a2e21] p-4 rounded-xl border border-[#f0f4f2] dark:border-[#2d3f33] flex items-center gap-4">
+<div class="size-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined">family_restroom</span>
+</div>
+<div>
+<p class="text-2xl font-black">03</p>
+<p class="text-xs text-[#61896f] font-medium">Người thân đã đăng ký</p>
+</div>
+</div>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="text-xl font-bold">Lịch sử gần đây</h3>
+<a class="text-sm font-bold text-primary hover:underline" href="#">Xem sổ tiêm</a>
+</div>
+<div class="bg-white dark:bg-[#1a2e21] rounded-2xl overflow-hidden shadow-sm border border-[#f0f4f2] dark:border-[#2d3f33]">
+<div class="divide-y divide-[#f0f4f2] dark:divide-[#2d3f33]">
+<div class="p-4 hover:bg-gray-50 dark:hover:bg-[#233d2c] transition-colors cursor-pointer group">
+<div class="flex gap-4">
+<div class="flex flex-col items-center">
+<div class="size-2 bg-primary rounded-full mb-1"></div>
+<div class="w-0.5 flex-1 bg-gray-100 dark:bg-gray-800"></div>
+</div>
+<div class="flex-1 pb-4">
+<p class="text-xs text-[#61896f] font-bold">15/09/2023</p>
+<h5 class="font-bold group-hover:text-primary transition-colors">Vero Cell (COVID-19)</h5>
+<p class="text-xs text-[#61896f]">Mũi 4 (Nhắc lại) • VNVC Hoàng Văn Thụ</p>
+</div>
+</div>
+</div>
+<div class="p-4 hover:bg-gray-50 dark:hover:bg-[#233d2c] transition-colors cursor-pointer group">
+<div class="flex gap-4">
+<div class="flex flex-col items-center">
+<div class="size-2 bg-primary rounded-full mb-1"></div>
+<div class="w-0.5 flex-1 bg-gray-100 dark:bg-gray-800"></div>
+</div>
+<div class="flex-1 pb-4">
+<p class="text-xs text-[#61896f] font-bold">20/05/2023</p>
+<h5 class="font-bold group-hover:text-primary transition-colors">Engerix-B (Viêm gan B)</h5>
+<p class="text-xs text-[#61896f]">Mũi 3 • VNVC Long Biên</p>
+</div>
+</div>
+</div>
+<div class="p-4 hover:bg-gray-50 dark:hover:bg-[#233d2c] transition-colors cursor-pointer group">
+<div class="flex gap-4">
+<div class="flex flex-col items-center">
+<div class="size-2 bg-primary rounded-full mb-1"></div>
+<div class="w-0.5 h-full bg-transparent"></div>
+</div>
+<div class="flex-1">
+<p class="text-xs text-[#61896f] font-bold">10/01/2023</p>
+<h5 class="font-bold group-hover:text-primary transition-colors">Vaxigrip Tetra (Cúm)</h5>
+<p class="text-xs text-[#61896f]">Tiêm nhắc hàng năm • VNVC Quận 7</p>
+</div>
+</div>
+</div>
+</div>
+<div class="p-4 bg-gray-50 dark:bg-[#233d2c] text-center">
+<button class="text-sm font-bold text-[#61896f] hover:text-[#111813] flex items-center justify-center gap-1 mx-auto">
+<span class="material-symbols-outlined text-lg">expand_more</span>
+                                    Tải báo cáo PDF
+                                </button>
+</div>
+</div>
+<div class="bg-[#111813] dark:bg-[#08110b] rounded-2xl p-6 text-white relative overflow-hidden group">
+<div class="relative z-10 space-y-3">
+<h4 class="font-bold">Kiến thức vaccine</h4>
+<p class="text-xs text-gray-400">Tại sao nên tiêm nhắc lại cúm hàng năm cho người trưởng thành?</p>
+<button class="text-primary text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
+                                    Đọc thêm <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-20 transform group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-8xl">book_4</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<footer class="mt-auto py-8 px-8 border-t border-[#f0f4f2] dark:border-[#2d3f33]">
+<div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-[#61896f]">
+<p>© 2023 VacciCare. Bảo vệ sức khỏe cộng đồng.</p>
+<div class="flex gap-6">
+<a class="hover:text-primary transition-colors" href="#">Điều khoản</a>
+<a class="hover:text-primary transition-colors" href="#">Bảo mật</a>
+<a class="hover:text-primary transition-colors" href="#">Liên hệ hỗ trợ</a>
+</div>
+</div>
+</footer>
+</main>
+</div>
+
+</body></html>

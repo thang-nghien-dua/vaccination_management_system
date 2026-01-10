@@ -8,3 +8,8 @@ import ut.edu.vaccinationmanagementsystem.entity.VaccinationCenter;
 public interface VaccinationCenterRepository extends JpaRepository<VaccinationCenter, Long> {
 }
 
+
+
+
+
+

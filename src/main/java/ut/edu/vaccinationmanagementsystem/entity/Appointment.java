@@ -2,6 +2,7 @@ package ut.edu.vaccinationmanagementsystem.entity;
 
 import jakarta.persistence.*;
 import ut.edu.vaccinationmanagementsystem.entity.enums.AppointmentStatus;
+import ut.edu.vaccinationmanagementsystem.entity.enums.Gender;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -22,34 +23,38 @@ public class Appointment {
     private String bookingCode; // Mã booking (duy nhất, ví dụ: "BK-20241216-001")
     
     @ManyToOne
-    @JoinColumn(name = "booked_by_user_id", nullable = false)
-    private User bookedByUser; // Người đặt lịch (người đăng nhập và thực hiện đặt)
+    @JoinColumn(name = "booked_by_user_id", nullable = true)
+    private User bookedByUser; // Người đặt lịch (null = guest chưa đăng nhập, có giá trị = user đã đăng nhập)
     
     @ManyToOne
     @JoinColumn(name = "booked_for_user_id", nullable = true)
     private User bookedForUser; // Đặt cho ai (null = tự đặt cho mình, có giá trị = đặt cho người thân)
     
     @ManyToOne
-    @JoinColumn(name = "vaccine_id", nullable = false)
-    private Vaccine vaccine; // Vaccine muốn tiêm
+    @JoinColumn(name = "family_member_id", nullable = true)
+    private FamilyMember familyMember; // Đặt cho người thân (nullable, chỉ có khi đặt cho người thân)
     
     @ManyToOne
-    @JoinColumn(name = "center_id", nullable = false)
-    private VaccinationCenter center; // Trung tâm y tế đặt lịch
+    @JoinColumn(name = "vaccine_id", nullable = true)
+    private Vaccine vaccine; // Vaccine muốn tiêm (nullable khi consultation request)
     
     @ManyToOne
-    @JoinColumn(name = "slot_id", nullable = false)
-    private AppointmentSlot slot; // Slot thời gian đã chọn
+    @JoinColumn(name = "center_id", nullable = true)
+    private VaccinationCenter center; // Trung tâm y tế đặt lịch (nullable khi consultation request)
+    
+    @ManyToOne
+    @JoinColumn(name = "slot_id", nullable = true)
+    private AppointmentSlot slot; // Slot thời gian đã chọn (nullable khi consultation request)
     
     @ManyToOne
     @JoinColumn(name = "room_id", nullable = true)
     private ClinicRoom room; // Phòng khám được chỉ định (nullable vì có thể gán khi check-in)
     
-    @Column(nullable = false)
-    private LocalDate appointmentDate; // Ngày hẹn tiêm
+    @Column(nullable = true)
+    private LocalDate appointmentDate; // Ngày hẹn tiêm (nullable khi consultation request)
     
-    @Column(nullable = false)
-    private LocalTime appointmentTime; // Giờ hẹn tiêm
+    @Column(nullable = true)
+    private LocalTime appointmentTime; // Giờ hẹn tiêm (nullable khi consultation request)
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -63,6 +68,26 @@ public class Appointment {
     
     @Column(nullable = true, columnDefinition = "TEXT")
     private String notes; // Ghi chú đặc biệt
+    
+    @Column(nullable = false)
+    private Boolean requiresConsultation; // true = cần tư vấn qua điện thoại, false = tự đặt trực tiếp
+    
+    @Column(nullable = true)
+    private String consultationPhone; // Số điện thoại ưu tiên để lễ tân gọi tư vấn (nullable)
+    
+    // Thông tin guest (chỉ dùng khi bookedByUser = null)
+    @Column(nullable = true)
+    private String guestFullName; // Họ tên người guest (khi chưa đăng nhập)
+    
+    @Column(nullable = true)
+    private String guestEmail; // Email người guest (khi chưa đăng nhập)
+    
+    @Column(nullable = true)
+    private LocalDate guestDayOfBirth; // Ngày sinh người guest
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = true)
+    private Gender guestGender; // Giới tính người guest
     
     @Column(nullable = true)
     private String qrCode; // Mã QR code để check-in
@@ -119,6 +144,14 @@ public class Appointment {
     
     public void setBookedForUser(User bookedForUser) {
         this.bookedForUser = bookedForUser;
+    }
+    
+    public FamilyMember getFamilyMember() {
+        return familyMember;
+    }
+    
+    public void setFamilyMember(FamilyMember familyMember) {
+        this.familyMember = familyMember;
     }
     
     public Vaccine getVaccine() {
@@ -199,6 +232,54 @@ public class Appointment {
     
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+    
+    public Boolean getRequiresConsultation() {
+        return requiresConsultation;
+    }
+    
+    public void setRequiresConsultation(Boolean requiresConsultation) {
+        this.requiresConsultation = requiresConsultation;
+    }
+    
+    public String getConsultationPhone() {
+        return consultationPhone;
+    }
+    
+    public void setConsultationPhone(String consultationPhone) {
+        this.consultationPhone = consultationPhone;
+    }
+    
+    public String getGuestFullName() {
+        return guestFullName;
+    }
+    
+    public void setGuestFullName(String guestFullName) {
+        this.guestFullName = guestFullName;
+    }
+    
+    public String getGuestEmail() {
+        return guestEmail;
+    }
+    
+    public void setGuestEmail(String guestEmail) {
+        this.guestEmail = guestEmail;
+    }
+    
+    public LocalDate getGuestDayOfBirth() {
+        return guestDayOfBirth;
+    }
+    
+    public void setGuestDayOfBirth(LocalDate guestDayOfBirth) {
+        this.guestDayOfBirth = guestDayOfBirth;
+    }
+    
+    public Gender getGuestGender() {
+        return guestGender;
+    }
+    
+    public void setGuestGender(Gender guestGender) {
+        this.guestGender = guestGender;
     }
     
     public String getQrCode() {

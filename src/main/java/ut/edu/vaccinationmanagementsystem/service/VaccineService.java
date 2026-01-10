@@ -4,11 +4,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ut.edu.vaccinationmanagementsystem.dto.VaccineDTO;
+import ut.edu.vaccinationmanagementsystem.entity.Disease;
+import ut.edu.vaccinationmanagementsystem.entity.Promotion;
 import ut.edu.vaccinationmanagementsystem.entity.Vaccine;
+import ut.edu.vaccinationmanagementsystem.repository.DiseaseRepository;
+import ut.edu.vaccinationmanagementsystem.repository.PromotionRepository;
+import ut.edu.vaccinationmanagementsystem.repository.VaccinationRecordRepository;
 import ut.edu.vaccinationmanagementsystem.repository.VaccineRepository;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 /**
  * Service xử lý business logic cho Vaccine
@@ -19,6 +26,15 @@ public class VaccineService {
     
     @Autowired
     private VaccineRepository vaccineRepository;
+    
+    @Autowired
+    private DiseaseRepository diseaseRepository;
+    
+    @Autowired
+    private PromotionRepository promotionRepository;
+    
+    @Autowired
+    private VaccinationRecordRepository vaccinationRecordRepository;
     
     //Lấy tất cả danh sách vaccine
     public List<Vaccine> getAllVaccines() {
@@ -79,13 +95,13 @@ public class VaccineService {
         vaccine.setDaysBetweenDoses(dto.getDaysBetweenDoses());
         vaccine.setContraindications(dto.getContraindications());
         vaccine.setStorageTemperature(dto.getStorageTemperature());
+        vaccine.setImageUrl(dto.getImageUrl());
         vaccine.setStatus(dto.getStatus());
         vaccine.setCreatedAt(java.time.LocalDateTime.now());
         
         try {
             return vaccineRepository.save(vaccine);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException("Failed to save vaccine: " + e.getMessage(), e);
         }
     }
@@ -113,6 +129,7 @@ public class VaccineService {
         vaccine.setDaysBetweenDoses(dto.getDaysBetweenDoses());
         vaccine.setContraindications(dto.getContraindications());
         vaccine.setStorageTemperature(dto.getStorageTemperature());
+        vaccine.setImageUrl(dto.getImageUrl());
         vaccine.setStatus(dto.getStatus());
         
         return vaccineRepository.save(vaccine);
@@ -127,6 +144,34 @@ public class VaccineService {
     //Kiểm tra vaccine có tồn tại không
     public boolean existsById(Long id) {
         return vaccineRepository.existsById(id);
+    }
+    
+    //Lấy tất cả diseases
+    public List<Disease> getAllDiseases() {
+        return diseaseRepository.findAll();
+    }
+    
+    //Lấy promotion đang hoạt động cho một vaccine
+    public List<Promotion> getActivePromotionsForVaccine(Long vaccineId) {
+        return promotionRepository.findActivePromotionsByVaccine(vaccineId, LocalDateTime.now());
+    }
+    
+    //Tính số lượng đã tiêm cho một vaccine (để xác định "bán chạy nhất")
+    public long getVaccinationCountForVaccine(Long vaccineId) {
+        Vaccine vaccine = getVaccineById(vaccineId);
+        return vaccinationRecordRepository.countByVaccine(vaccine);
+    }
+    
+    //Lấy map vaccineId -> vaccinationCount để tính "bán chạy nhất"
+    public Map<Long, Long> getVaccinationCountMap() {
+        Map<Long, Long> countMap = new HashMap<>();
+        List<Object[]> results = vaccinationRecordRepository.findVaccinesWithVaccinationCount();
+        for (Object[] result : results) {
+            Vaccine vaccine = (Vaccine) result[0];
+            Long count = (Long) result[1];
+            countMap.put(vaccine.getId(), count);
+        }
+        return countMap;
     }
 }
 

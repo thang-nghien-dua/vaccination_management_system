@@ -6,6 +6,7 @@ import ut.edu.vaccinationmanagementsystem.entity.enums.Role;
 import ut.edu.vaccinationmanagementsystem.entity.enums.UserStatus;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -21,8 +22,8 @@ public class User {
     @Column(nullable = true)
     private String password;
 
-    @Column(unique = true,nullable = false)
-    private String fireBaseUid;
+    @Column(unique = true, nullable = true)
+    private String providerUserId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -33,6 +34,15 @@ public class User {
 
     @Column(nullable = true)
     private String phoneNumber;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean phoneVerified = false; // Số điện thoại đã được xác thực chưa
+
+    @Column(nullable = true, length = 10)
+    private String phoneVerificationCode; // Mã OTP xác thực
+
+    @Column(nullable = true)
+    private LocalDateTime phoneVerificationExpiresAt; // Thời gian hết hạn mã OTP
 
     @Column(nullable = true)
     private LocalDate dayOfBirth;
@@ -112,12 +122,12 @@ public class User {
         this.password = password;
     }
 
-    public String getFireBaseUid() {
-        return fireBaseUid;
+    public String getProviderUserId() {
+        return providerUserId;
     }
 
-    public void setFireBaseUid(String fireBaseUid) {
-        this.fireBaseUid = fireBaseUid;
+    public void setProviderUserId(String providerUserId) {
+        this.providerUserId = providerUserId;
     }
 
     public AuthProvider getAuthProvider() {
@@ -142,6 +152,30 @@ public class User {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public Boolean getPhoneVerified() {
+        return phoneVerified;
+    }
+
+    public void setPhoneVerified(Boolean phoneVerified) {
+        this.phoneVerified = phoneVerified;
+    }
+
+    public String getPhoneVerificationCode() {
+        return phoneVerificationCode;
+    }
+
+    public void setPhoneVerificationCode(String phoneVerificationCode) {
+        this.phoneVerificationCode = phoneVerificationCode;
+    }
+
+    public LocalDateTime getPhoneVerificationExpiresAt() {
+        return phoneVerificationExpiresAt;
+    }
+
+    public void setPhoneVerificationExpiresAt(LocalDateTime phoneVerificationExpiresAt) {
+        this.phoneVerificationExpiresAt = phoneVerificationExpiresAt;
     }
 
     public LocalDate getDayOfBirth() {

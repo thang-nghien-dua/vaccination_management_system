@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html class="light" lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Vaccine - VacciCare</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0f766e",
+                        "primary-light": "#14b8a6",
+                        "primary-dark": "#134e4a",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav {
+            background-color: #f0f4f2;
+            border-left: 4px solid #0f766e;
+        }
+        .active-tab {
+            background-color: #0f766e;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen text-[#111813] dark:text-white font-display">
+<div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="w-72 bg-white dark:bg-[#1a2e21] border-r border-[#f0f4f2] dark:border-[#2d3f33] hidden lg:flex flex-col fixed h-full z-40">
+        <div class="p-6 flex items-center gap-3">
+            <div class="size-8 text-primary">
+                <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M24 4C25.7818 14.2173 33.7827 22.2182 44 24C33.7827 25.7818 25.7818 33.7827 24 44C22.2182 33.7827 14.2173 25.7818 4 24C14.2173 22.2182 22.2182 14.2173 24 4Z" fill="currentColor"></path>
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold tracking-tight">VacciCare</h1>
+        </div>
+        <div class="px-4 mb-6" th:if="${isAuthenticated}">
+            <div class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark rounded-xl">
+                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 bg-primary/20 flex items-center justify-center text-primary font-bold text-lg" th:if="${currentUser?.fullName != null}">
+                    <span th:text="${#strings.substring(currentUser.fullName, 0, 1)}"></span>
+                </div>
+                <div class="flex flex-col overflow-hidden">
+                    <p class="text-sm font-bold truncate" th:text="${currentUser?.fullName ?: currentUser?.email}">Tên người dùng</p>
+                    <p class="text-xs text-[#61896f] truncate" th:text="${currentUser?.role?.name() == 'CUSTOMER' ? 'Người dùng cá nhân' : (currentUser?.role?.name() == 'ADMIN' ? 'Quản trị viên' : 'Nhân viên y tế')}">Người dùng cá nhân</p>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 px-2 space-y-1">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/home">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">dashboard</span>
+                <span class="text-sm font-medium">Tổng quan</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/profile">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">person</span>
+                <span class="text-sm font-medium">Thông tin cá nhân</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/appointments">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">calendar_month</span>
+                <span class="text-sm font-medium">Đặt lịch</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/vaccination-history">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">history_edu</span>
+                <span class="text-sm font-medium">Hồ sơ tiêm chủng</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/family-members">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">group</span>
+                <span class="text-sm font-medium">Người thân</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg active-nav text-primary font-bold" href="/vaccines">
+                <span class="material-symbols-outlined">search</span>
+                <span class="text-sm">Vaccine</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="#">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">notifications</span>
+                <span class="text-sm font-medium">Thông báo</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-[#f0f4f2] dark:border-[#2d3f33]">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="#">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">settings</span>
+                <span class="text-sm font-medium">Cài đặt</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/logout">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">logout</span>
+                <span class="text-sm font-medium">Đăng xuất</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-72 flex flex-col min-h-screen">
+        <header class="sticky top-0 z-50 bg-white/90 dark:bg-[#102216]/90 backdrop-blur-xl border-b border-[#f0f4f2] dark:border-[#2d3f33] px-8 py-6 transition-all">
+            <h2 class="text-2xl font-bold text-[#111813] dark:text-white mb-1">Danh mục Vaccine</h2>
+            <p class="text-sm text-[#61896f]">Tìm kiếm và tra cứu thông tin vaccine</p>
+        </header>
+
+        <div class="p-8 space-y-6 w-full">
+            <!-- Search and Filters -->
+            <div class="space-y-4">
+                <!-- Search Bar -->
+                <div class="flex gap-3 items-center">
+                    <div class="flex-[2] min-w-[300px] relative">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#61896f] pointer-events-none">search</span>
+                        <input type="text" id="searchInput" placeholder="Tìm tên vaccine hoặc bệnh phòng ngừa..." 
+                               class="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                    </div>
+                    <div class="relative w-[200px] flex-shrink-0">
+                        <select id="targetGroupFilter" class="w-full px-4 py-3 pr-10 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white cursor-pointer" style="appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: none;">
+                            <option value="">Nhóm đối tượng</option>
+                            <option value="all">Tất cả</option>
+                            <option value="children">Trẻ em</option>
+                            <option value="adults">Người lớn</option>
+                            <option value="elderly">Người cao tuổi</option>
+                        </select>
+                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[#61896f] pointer-events-none z-10">expand_more</span>
+                    </div>
+                    <div class="relative w-[180px] flex-shrink-0">
+                        <select id="diseaseTypeFilter" class="w-full px-4 py-3 pr-10 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white cursor-pointer" style="appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: none;">
+                            <option value="">Loại bệnh</option>
+                            <option value="all">Tất cả</option>
+                        </select>
+                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[#61896f] pointer-events-none z-10">expand_more</span>
+                    </div>
+                    <button id="filterBtn" class="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40 whitespace-nowrap flex-shrink-0">
+                        <span class="material-symbols-outlined">tune</span>
+                        Lọc kết quả
+                    </button>
+                </div>
+
+                <!-- Category Tabs -->
+                <div class="flex gap-3">
+                    <button class="category-tab active-tab px-6 py-2 rounded-xl font-bold text-sm transition-all" data-category="all">
+                        Tất cả
+                    </button>
+                    <button class="category-tab px-6 py-2 rounded-xl font-bold text-sm transition-all bg-white dark:bg-[#1a2e21] border-2 border-[#e2e8f0] dark:border-[#2d3f33] hover:border-primary/50" data-category="bestseller">
+                        Bán chạy nhất
+                    </button>
+                    <button class="category-tab px-6 py-2 rounded-xl font-bold text-sm transition-all bg-white dark:bg-[#1a2e21] border-2 border-[#e2e8f0] dark:border-[#2d3f33] hover:border-primary/50" data-category="new">
+                        Mới cập nhật
+                    </button>
+                    <button class="category-tab px-6 py-2 rounded-xl font-bold text-sm transition-all bg-white dark:bg-[#1a2e21] border-2 border-[#e2e8f0] dark:border-[#2d3f33] hover:border-primary/50" data-category="package">
+                        Gói vaccine ưu đãi
+                    </button>
+                </div>
+            </div>
+
+            <!-- Vaccine Grid -->
+            <div id="vaccinesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Sẽ được load bằng JavaScript -->
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="hidden text-center py-16">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <p class="mt-4 text-[#61896f]">Đang tải...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-16">
+                <span class="material-symbols-outlined text-6xl text-[#61896f] mb-4">vaccines</span>
+                <h3 class="text-xl font-bold mb-2">Không tìm thấy vaccine</h3>
+                <p class="text-[#61896f]">Thử tìm kiếm với từ khóa khác</p>
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="flex justify-center items-center gap-2 mt-8">
+                <!-- Sẽ được load bằng JavaScript -->
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    let currentPage = 1;
+    const itemsPerPage = 12;
+    let allVaccines = [];
+    let filteredVaccines = [];
+    let allDiseases = [];
+
+    // Load diseases
+    async function loadDiseases() {
+        try {
+            const response = await fetch('/api/vaccines/diseases', {
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                allDiseases = await response.json();
+                populateDiseaseFilter();
+            } else {
+                console.error('Failed to load diseases');
+            }
+        } catch (error) {
+            console.error('Error loading diseases:', error);
+        }
+    }
+    
+    // Populate disease filter dropdown
+    function populateDiseaseFilter() {
+        const diseaseFilter = document.getElementById('diseaseTypeFilter');
+        if (!diseaseFilter) return;
+        
+        // Clear existing options except "Loại bệnh" and "Tất cả"
+        diseaseFilter.innerHTML = '<option value="">Loại bệnh</option><option value="all">Tất cả</option>';
+        
+        // Add diseases from database
+        allDiseases.forEach(disease => {
+            const option = document.createElement('option');
+            option.value = disease.code;
+            option.textContent = disease.name;
+            diseaseFilter.appendChild(option);
+        });
+    }
+    
+    // Load vaccines khi trang được tải
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDiseases();
+        loadVaccines();
+        
+        // Search input event
+        document.getElementById('searchInput').addEventListener('input', debounce(function(e) {
+            filterVaccines();
+        }, 300));
+
+        // Filter button
+        document.getElementById('filterBtn').addEventListener('click', filterVaccines);
+
+        // Category tabs
+        document.querySelectorAll('.category-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.category-tab').forEach(t => {
+                    t.classList.remove('active-tab');
+                    t.classList.add('bg-white', 'dark:bg-[#1a2e21]', 'border-2', 'border-[#e2e8f0]', 'dark:border-[#2d3f33]');
+                });
+                this.classList.add('active-tab');
+                this.classList.remove('bg-white', 'dark:bg-[#1a2e21]', 'border-2', 'border-[#e2e8f0]', 'dark:border-[#2d3f33]');
+                
+                const category = this.dataset.category;
+                filterByCategory(category);
+            });
+        });
+    });
+
+    // Load vaccines từ API
+    async function loadVaccines() {
+        const loadingState = document.getElementById('loadingState');
+        const vaccinesGrid = document.getElementById('vaccinesGrid');
+        const emptyState = document.getElementById('emptyState');
+        
+        loadingState.classList.remove('hidden');
+        vaccinesGrid.innerHTML = '';
+        emptyState.classList.add('hidden');
+
+        try {
+            console.log('Fetching vaccines from /api/vaccines...');
+            const response = await fetch('/api/vaccines', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            });
+            
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            
+            if (response.ok) {
+                const contentType = response.headers.get('content-type');
+                console.log('Content-Type:', contentType);
+                
+                let data;
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    console.log('Response text:', text);
+                    try {
+                        data = JSON.parse(text);
+                    } catch (e) {
+                        console.error('Failed to parse JSON:', e);
+                        throw new Error('Invalid JSON response');
+                    }
+                }
+                
+                console.log('Vaccines loaded:', data);
+                console.log('Data type:', Array.isArray(data) ? 'Array' : typeof data);
+                console.log('Data length:', Array.isArray(data) ? data.length : 'N/A');
+                
+                if (Array.isArray(data)) {
+                    if (data.length > 0) {
+                        allVaccines = data;
+                        filteredVaccines = [...allVaccines];
+                        renderVaccines();
+                    } else {
+                        console.warn('Vaccines array is empty');
+                        vaccinesGrid.innerHTML = '';
+                        emptyState.classList.remove('hidden');
+                    }
+                } else {
+                    console.error('Response is not an array:', data);
+                    vaccinesGrid.innerHTML = '';
+                    emptyState.classList.remove('hidden');
+                }
+            } else {
+                const errorText = await response.text();
+                console.error('Failed to load vaccines. Status:', response.status);
+                console.error('Error response:', errorText);
+                vaccinesGrid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error loading vaccines:', error);
+            console.error('Error stack:', error.stack);
+            vaccinesGrid.innerHTML = '';
+            emptyState.classList.remove('hidden');
+        } finally {
+            loadingState.classList.add('hidden');
+        }
+    }
+
+    // Filter vaccines
+    function filterVaccines() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const targetGroup = document.getElementById('targetGroupFilter').value;
+        const diseaseType = document.getElementById('diseaseTypeFilter').value;
+
+        // Lấy category tab hiện tại
+        const activeTab = document.querySelector('.category-tab.active-tab');
+        const currentCategory = activeTab ? activeTab.dataset.category : 'all';
+
+        filteredVaccines = allVaccines.filter(vaccine => {
+            // Search filter
+            const matchesSearch = !searchTerm || 
+                vaccine.name.toLowerCase().includes(searchTerm) ||
+                (vaccine.description && vaccine.description.toLowerCase().includes(searchTerm)) ||
+                (vaccine.manufacturer && vaccine.manufacturer.toLowerCase().includes(searchTerm)) ||
+                (vaccine.code && vaccine.code.toLowerCase().includes(searchTerm));
+
+            // Target group filter (dựa trên minAge và maxAge)
+            let matchesTargetGroup = true;
+            if (targetGroup && targetGroup !== 'all') {
+                if (targetGroup === 'children') {
+                    // Trẻ em: minAge <= 18 hoặc không có minAge và maxAge <= 18
+                    matchesTargetGroup = (vaccine.minAge === null || vaccine.minAge <= 18) && 
+                                        (vaccine.maxAge === null || vaccine.maxAge <= 18);
+                } else if (targetGroup === 'adults') {
+                    // Người lớn: minAge >= 18 và maxAge >= 18 hoặc không có maxAge
+                    matchesTargetGroup = (vaccine.minAge === null || vaccine.minAge >= 18) && 
+                                        (vaccine.maxAge === null || vaccine.maxAge >= 18);
+                } else if (targetGroup === 'elderly') {
+                    // Người cao tuổi: minAge >= 50 hoặc không có minAge
+                    matchesTargetGroup = vaccine.minAge === null || vaccine.minAge >= 50;
+                }
+            }
+
+            // Disease type filter (dựa trên diseases từ database)
+            let matchesDiseaseType = true;
+            if (diseaseType && diseaseType !== 'all') {
+                // Kiểm tra xem vaccine có disease với code này không
+                if (vaccine.diseases && Array.isArray(vaccine.diseases)) {
+                    matchesDiseaseType = vaccine.diseases.some(disease => disease.code === diseaseType);
+                } else {
+                    matchesDiseaseType = false;
+                }
+            }
+
+            return matchesSearch && matchesTargetGroup && matchesDiseaseType;
+        });
+
+        // Apply category filter
+        applyCategoryFilter(currentCategory);
+
+        currentPage = 1;
+        renderVaccines();
+    }
+
+    // Helper function to get price as number
+    function getPriceAsNumber(price) {
+        if (!price) return 0;
+        if (typeof price === 'number') return price;
+        if (typeof price === 'string') return parseFloat(price) || 0;
+        // If it's a BigDecimal object from Java
+        if (price.scale !== undefined) {
+            return parseFloat(price.toString()) || 0;
+        }
+        return 0;
+    }
+
+    // Apply category filter
+    function applyCategoryFilter(category) {
+        if (category === 'all') {
+            // Không sort, giữ nguyên thứ tự
+            return;
+        } else if (category === 'bestseller') {
+            // Bán chạy nhất: Sort theo số lượng đã tiêm (vaccinationCount) từ cao xuống thấp
+            filteredVaccines.sort((a, b) => {
+                // Ưu tiên vaccine có status AVAILABLE
+                if (a.status === 'AVAILABLE' && b.status !== 'AVAILABLE') return -1;
+                if (a.status !== 'AVAILABLE' && b.status === 'AVAILABLE') return 1;
+                // Sau đó sort theo số lượng đã tiêm (từ cao xuống thấp)
+                const countA = a.vaccinationCount || 0;
+                const countB = b.vaccinationCount || 0;
+                return countB - countA;
+            });
+        } else if (category === 'new') {
+            // Mới cập nhật: Sort theo createdAt mới nhất
+            filteredVaccines.sort((a, b) => {
+                const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+                const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+                return dateB - dateA;
+            });
+        } else if (category === 'package') {
+            // Gói vaccine ưu đãi: Filter các vaccine có promotion đang hoạt động
+            filteredVaccines = filteredVaccines.filter(vaccine => {
+                return vaccine.promotions && vaccine.promotions.length > 0;
+            });
+            // Sort theo giá sau ưu đãi từ thấp đến cao
+            filteredVaccines.sort((a, b) => {
+                const priceA = getPriceAsNumber(a.finalPrice || a.price);
+                const priceB = getPriceAsNumber(b.finalPrice || b.price);
+                return priceA - priceB;
+            });
+        }
+    }
+
+    // Filter by category tab
+    function filterByCategory(category) {
+        // Reset filters trước khi apply category
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const targetGroup = document.getElementById('targetGroupFilter').value;
+        const diseaseType = document.getElementById('diseaseTypeFilter').value;
+
+        // Apply all filters first
+        filteredVaccines = allVaccines.filter(vaccine => {
+            const matchesSearch = !searchTerm || 
+                vaccine.name.toLowerCase().includes(searchTerm) ||
+                (vaccine.description && vaccine.description.toLowerCase().includes(searchTerm)) ||
+                (vaccine.manufacturer && vaccine.manufacturer.toLowerCase().includes(searchTerm)) ||
+                (vaccine.code && vaccine.code.toLowerCase().includes(searchTerm));
+
+            let matchesTargetGroup = true;
+            if (targetGroup && targetGroup !== 'all') {
+                if (targetGroup === 'children') {
+                    matchesTargetGroup = (vaccine.minAge === null || vaccine.minAge <= 18) && 
+                                        (vaccine.maxAge === null || vaccine.maxAge <= 18);
+                } else if (targetGroup === 'adults') {
+                    matchesTargetGroup = (vaccine.minAge === null || vaccine.minAge >= 18) && 
+                                        (vaccine.maxAge === null || vaccine.maxAge >= 18);
+                } else if (targetGroup === 'elderly') {
+                    matchesTargetGroup = vaccine.minAge === null || vaccine.minAge >= 50;
+                }
+            }
+
+            let matchesDiseaseType = true;
+            if (diseaseType && diseaseType !== 'all') {
+                // Kiểm tra xem vaccine có disease với code này không
+                if (vaccine.diseases && Array.isArray(vaccine.diseases)) {
+                    matchesDiseaseType = vaccine.diseases.some(disease => disease.code === diseaseType);
+                } else {
+                    matchesDiseaseType = false;
+                }
+            }
+
+            return matchesSearch && matchesTargetGroup && matchesDiseaseType;
+        });
+
+        // Apply category filter
+        applyCategoryFilter(category);
+
+        currentPage = 1;
+        renderVaccines();
+    }
+
+    // Render vaccines
+    function renderVaccines() {
+        const vaccinesGrid = document.getElementById('vaccinesGrid');
+        const emptyState = document.getElementById('emptyState');
+        const pagination = document.getElementById('pagination');
+
+        if (filteredVaccines.length === 0) {
+            vaccinesGrid.innerHTML = '';
+            emptyState.classList.remove('hidden');
+            pagination.innerHTML = '';
+            return;
+        }
+
+        emptyState.classList.add('hidden');
+
+        // Pagination
+        const totalPages = Math.ceil(filteredVaccines.length / itemsPerPage);
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const pageVaccines = filteredVaccines.slice(startIndex, endIndex);
+
+        // Render vaccine cards
+        const vaccinesHTML = pageVaccines.map(vaccine => {
+            const isAvailable = vaccine.status === 'AVAILABLE';
+            const originMap = {
+                'Mỹ': 'MỸ',
+                'Pháp': 'PHÁP',
+                'Bỉ': 'BỈ',
+                'Hà Lan': 'HÀ LAN',
+                'Việt Nam': 'VIỆT NAM',
+                'Anh/Thụy Điển': 'ANH',
+                'Nhật Bản': 'NHẬT BẢN',
+                'Ấn Độ': 'ẤN ĐỘ',
+                'Hàn Quốc': 'HÀN QUỐC'
+            };
+            const originBadge = originMap[vaccine.origin] || vaccine.origin?.toUpperCase() || '';
+
+            return `
+                <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-[#e2e8f0] dark:border-[#2d3f33] p-5 hover:shadow-xl hover:border-primary/50 transition-all duration-300 group flex flex-col">
+                    <!-- Badges -->
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${isAvailable ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}">
+                            ${isAvailable ? 'CÒN HÀNG' : 'HẾT HÀNG'}
+                        </span>
+                        ${originBadge ? `<span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">${originBadge}</span>` : ''}
+                    </div>
+
+                    <!-- Image -->
+                    <div class="w-full h-48 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl mb-4 flex items-center justify-center overflow-hidden">
+                        ${vaccine.imageUrl ? 
+                            `<img src="${vaccine.imageUrl}" alt="${vaccine.name}" class="w-full h-full object-contain">` :
+                            `<span class="material-symbols-outlined text-6xl text-primary/50">vaccines</span>`
+                        }
+                    </div>
+
+                    <!-- Category -->
+                    <div class="mb-2">
+                        <span class="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded">${getCategoryLabel(vaccine)}</span>
+                    </div>
+
+                    <!-- Name -->
+                    <h3 class="font-bold text-lg text-[#111813] dark:text-white mb-2 line-clamp-2 min-h-[3.5rem]">${vaccine.name}</h3>
+
+                    <!-- Description -->
+                    <p class="text-sm text-[#61896f] mb-4 line-clamp-2 flex-1">${vaccine.description || 'Vaccine phòng bệnh hiệu quả'}</p>
+
+                    <!-- Price -->
+                    <div class="mb-4">
+                        ${vaccine.promotions && vaccine.promotions.length > 0 ? 
+                            `<div class="flex items-center gap-2">
+                                <span class="text-lg line-through text-gray-400">${formatPrice(vaccine.price)}</span>
+                                <span class="text-2xl font-bold text-primary">${formatPrice(vaccine.finalPrice)}</span>
+                            </div>
+                            <div class="mt-1">
+                                <span class="text-xs font-bold text-red-600 bg-red-100 dark:bg-red-900/30 px-2 py-1 rounded">
+                                    ${vaccine.promotions[0].type === 'PERCENTAGE' && vaccine.promotions[0].discountPercentage ? 
+                                        `Giảm ${vaccine.promotions[0].discountPercentage}%` : 
+                                        vaccine.promotions[0].type === 'FIXED_AMOUNT' && vaccine.promotions[0].discountAmount ? 
+                                        `Giảm ${formatPrice(vaccine.promotions[0].discountAmount)}` : 
+                                        'Ưu đãi'}
+                                </span>
+                            </div>` :
+                            `<span class="text-2xl font-bold text-primary">${formatPrice(vaccine.price)}</span>`
+                        }
+                    </div>
+
+                    <!-- Action Button -->
+                    ${isAvailable ? 
+                        `<button onclick="viewVaccineDetail(${vaccine.id})" class="w-full bg-primary hover:bg-primary-dark text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg">
+                            <span>Xem chi tiết</span>
+                            <span class="material-symbols-outlined">arrow_forward</span>
+                        </button>` :
+                        `<button class="w-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-4 py-3 rounded-xl font-bold transition-all cursor-not-allowed">
+                            Nhận thông báo
+                        </button>`
+                    }
+                </div>
+            `;
+        }).join('');
+
+        vaccinesGrid.innerHTML = vaccinesHTML;
+
+        // Render pagination
+        if (totalPages > 1) {
+            let paginationHTML = '<button onclick="changePage(' + (currentPage > 1 ? currentPage - 1 : 1) + ')" class="px-4 py-2 rounded-lg border border-[#e2e8f0] dark:border-[#2d3f33] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-all disabled:opacity-50" ' + (currentPage === 1 ? 'disabled' : '') + '><span class="material-symbols-outlined">chevron_left</span></button>';
+            
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    paginationHTML += `<button onclick="changePage(${i})" class="px-4 py-2 rounded-lg font-bold transition-all ${i === currentPage ? 'bg-primary text-white' : 'border border-[#e2e8f0] dark:border-[#2d3f33] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33]'}">${i}</button>`;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    paginationHTML += '<span class="px-2">...</span>';
+                }
+            }
+            
+            paginationHTML += '<button onclick="changePage(' + (currentPage < totalPages ? currentPage + 1 : totalPages) + ')" class="px-4 py-2 rounded-lg border border-[#e2e8f0] dark:border-[#2d3f33] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-all disabled:opacity-50" ' + (currentPage === totalPages ? 'disabled' : '') + '><span class="material-symbols-outlined">chevron_right</span></button>';
+            
+            pagination.innerHTML = paginationHTML;
+        } else {
+            pagination.innerHTML = '';
+        }
+    }
+
+    // Helper functions
+    function getCategoryLabel(vaccine) {
+        // Lấy tên disease đầu tiên từ database
+        if (vaccine.diseases && vaccine.diseases.length > 0) {
+            // Nếu có nhiều diseases, hiển thị tất cả
+            return vaccine.diseases.map(d => d.name.toUpperCase()).join(' - ');
+        }
+        return 'VACCINE';
+    }
+
+    function formatPrice(price) {
+        if (!price) return '0₫';
+        const priceNum = getPriceAsNumber(price);
+        return new Intl.NumberFormat('vi-VN').format(priceNum) + '₫';
+    }
+
+    function changePage(page) {
+        currentPage = page;
+        renderVaccines();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function viewVaccineDetail(id) {
+        window.location.href = '/vaccines/' + id;
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+</script>
+</body>
+</html>
+

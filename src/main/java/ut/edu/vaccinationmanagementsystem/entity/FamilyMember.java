@@ -37,6 +37,15 @@ public class FamilyMember {
     
     @Column(nullable = true)
     private String phoneNumber; // Số điện thoại người thân
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean phoneVerified = false; // Số điện thoại đã được xác thực chưa
+
+    @Column(nullable = true, length = 10)
+    private String phoneVerificationCode; // Mã OTP xác thực
+
+    @Column(nullable = true)
+    private LocalDateTime phoneVerificationExpiresAt; // Thời gian hết hạn mã OTP
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -96,6 +105,30 @@ public class FamilyMember {
     
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public Boolean getPhoneVerified() {
+        return phoneVerified;
+    }
+
+    public void setPhoneVerified(Boolean phoneVerified) {
+        this.phoneVerified = phoneVerified;
+    }
+
+    public String getPhoneVerificationCode() {
+        return phoneVerificationCode;
+    }
+
+    public void setPhoneVerificationCode(String phoneVerificationCode) {
+        this.phoneVerificationCode = phoneVerificationCode;
+    }
+
+    public LocalDateTime getPhoneVerificationExpiresAt() {
+        return phoneVerificationExpiresAt;
+    }
+
+    public void setPhoneVerificationExpiresAt(LocalDateTime phoneVerificationExpiresAt) {
+        this.phoneVerificationExpiresAt = phoneVerificationExpiresAt;
     }
     
     public Relationship getRelationship() {

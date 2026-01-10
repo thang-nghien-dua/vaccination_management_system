@@ -1,5 +1,6 @@
 package ut.edu.vaccinationmanagementsystem.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import ut.edu.vaccinationmanagementsystem.entity.enums.VaccineStatus;
 
@@ -53,6 +54,9 @@ public class Vaccine {
     @Column(nullable = true)
     private String storageTemperature; // Nhiệt độ bảo quản (ví dụ: "2-8°C")
     
+    @Column(nullable = true, length = 500)
+    private String imageUrl; // URL hình ảnh vaccine
+    
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private VaccineStatus status; // Trạng thái (AVAILABLE, UNAVAILABLE, DISCONTINUED)
@@ -62,16 +66,27 @@ public class Vaccine {
     
     // Relationships
     @OneToMany(mappedBy = "vaccine")
+    @JsonIgnore
     private List<VaccineLot> vaccineLots; // Danh sách lô vaccine
     
     @OneToMany(mappedBy = "vaccine")
+    @JsonIgnore
     private List<VaccinationRecord> vaccinationRecords; // Lịch sử tiêm vaccine này
     
     @OneToMany(mappedBy = "vaccine")
+    @JsonIgnore
     private List<Appointment> appointments; // Danh sách lịch hẹn tiêm vaccine này
     
     @ManyToMany(mappedBy = "vaccines")
     private List<VaccinationCenter> centers; // Danh sách trung tâm có vaccine này
+    
+    @ManyToMany
+    @JoinTable(
+        name = "vaccine_disease",
+        joinColumns = @JoinColumn(name = "vaccine_id"),
+        inverseJoinColumns = @JoinColumn(name = "disease_id")
+    )
+    private List<Disease> diseases; // Danh sách bệnh mà vaccine này phòng ngừa
     
     // Getters and Setters
     public Long getId() {
@@ -175,6 +190,14 @@ public class Vaccine {
         this.storageTemperature = storageTemperature;
     }
     
+    public String getImageUrl() {
+        return imageUrl;
+    }
+    
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+    
     public VaccineStatus getStatus() {
         return status;
     }
@@ -221,6 +244,14 @@ public class Vaccine {
     
     public void setCenters(List<VaccinationCenter> centers) {
         this.centers = centers;
+    }
+    
+    public List<Disease> getDiseases() {
+        return diseases;
+    }
+    
+    public void setDiseases(List<Disease> diseases) {
+        this.diseases = diseases;
     }
 }
 

@@ -1,45 +1,47 @@
-package ut.edu.vaccinationmanagementsystem.controller;
+package ut.edu.vaccinationmanagementsystem.controller.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ut.edu.vaccinationmanagementsystem.dto.VaccineDTO;
-import ut.edu.vaccinationmanagementsystem.entity.Vaccine;
-import ut.edu.vaccinationmanagementsystem.service.VaccineService;
+import ut.edu.vaccinationmanagementsystem.dto.VaccinationCenterDTO;
+import ut.edu.vaccinationmanagementsystem.entity.VaccinationCenter;
+import ut.edu.vaccinationmanagementsystem.service.VaccinationCenterService;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 @RestController
-@RequestMapping("/api/vaccines")
-public class VaccineController {
+@RequestMapping("/api/centers")
+public class VaccinationCenterController {
     
     @Autowired
-    private VaccineService vaccineService;
+    private VaccinationCenterService vaccinationCenterService;
     
-
+    /**
+     * GET /api/centers
+     * Xem danh sách trung tâm
+     */
     @GetMapping
-    public ResponseEntity<List<Vaccine>> getAllVaccines() {
+    public ResponseEntity<List<VaccinationCenter>> getAllCenters() {
         try {
-            List<Vaccine> vaccines = vaccineService.getAllVaccines();
-            return ResponseEntity.ok(vaccines);
+            List<VaccinationCenter> centers = vaccinationCenterService.getAllCenters();
+            return ResponseEntity.ok(centers);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
     
     /**
-     * GET /api/vaccines/{id}
-     * Xem chi tiết vaccine theo ID
+     * GET /api/centers/{id}
+     * Chi tiết trung tâm
      */
     @GetMapping("/{id}")
-    public ResponseEntity<?> getVaccineById(@PathVariable Long id) {
+    public ResponseEntity<?> getCenterById(@PathVariable Long id) {
         try {
-            Vaccine vaccine = vaccineService.getVaccineById(id);
-            return ResponseEntity.ok(vaccine);
+            VaccinationCenter center = vaccinationCenterService.getCenterById(id);
+            return ResponseEntity.ok(center);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
@@ -52,28 +54,14 @@ public class VaccineController {
     }
     
     /**
-     * GET /api/vaccines/search?keyword={keyword}
-     * Tìm kiếm vaccine theo từ khóa
-     */
-    @GetMapping("/search")
-    public ResponseEntity<List<Vaccine>> searchVaccines(@RequestParam(required = false) String keyword) {
-        try {
-            List<Vaccine> vaccines = vaccineService.searchVaccines(keyword);
-            return ResponseEntity.ok(vaccines);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-    
-    /**
-     * POST /api/vaccines
-     * Tạo vaccine mới
+     * POST /api/centers
+     * Tạo trung tâm mới
      */
     @PostMapping
-    public ResponseEntity<?> createVaccine(@RequestBody VaccineDTO dto) {
+    public ResponseEntity<?> createCenter(@RequestBody VaccinationCenterDTO dto) {
         try {
-            Vaccine createdVaccine = vaccineService.createVaccine(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdVaccine);
+            VaccinationCenter createdCenter = vaccinationCenterService.createCenter(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdCenter);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
@@ -86,14 +74,14 @@ public class VaccineController {
     }
     
     /**
-     * PUT /api/vaccines/{id}
-     * Cập nhật vaccine
+     * PUT /api/centers/{id}
+     * Cập nhật trung tâm
      */
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateVaccine(@PathVariable Long id, @RequestBody VaccineDTO dto) {
+    public ResponseEntity<?> updateCenter(@PathVariable Long id, @RequestBody VaccinationCenterDTO dto) {
         try {
-            Vaccine updatedVaccine = vaccineService.updateVaccine(id, dto);
-            return ResponseEntity.ok(updatedVaccine);
+            VaccinationCenter updatedCenter = vaccinationCenterService.updateCenter(id, dto);
+            return ResponseEntity.ok(updatedCenter);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
@@ -106,15 +94,15 @@ public class VaccineController {
     }
     
     /**
-     * DELETE /api/vaccines/{id}
-     * Xóa vaccine
+     * DELETE /api/centers/{id}
+     * Xóa trung tâm
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteVaccine(@PathVariable Long id) {
+    public ResponseEntity<?> deleteCenter(@PathVariable Long id) {
         try {
-            vaccineService.deleteVaccine(id);
+            vaccinationCenterService.deleteCenter(id);
             Map<String, String> message = new HashMap<>();
-            message.put("message", "Vaccine deleted successfully");
+            message.put("message", "Vaccination center deleted successfully");
             return ResponseEntity.ok(message);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
@@ -127,4 +115,5 @@ public class VaccineController {
         }
     }
 }
+
 
