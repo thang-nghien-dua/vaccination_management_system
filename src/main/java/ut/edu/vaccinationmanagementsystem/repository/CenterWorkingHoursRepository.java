@@ -21,3 +21,11 @@ public interface CenterWorkingHoursRepository extends JpaRepository<CenterWorkin
     boolean existsByCenterAndDayOfWeek(VaccinationCenter center, DayOfWeek dayOfWeek);
 }
 
+
+
+
+
+
+
+
+

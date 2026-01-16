@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html class="light" lang="vi" xmlns:th="http://www.thymeleaf.org"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Trang Tổng quan Người dùng - Hệ thống Tiêm chủng</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+    // Kiểm tra library đã load chưa
+    window.addEventListener('load', function() {
+        if (typeof QRCode !== 'undefined') {
+            console.log('✅ QRCode library loaded successfully');
+        } else {
+            console.error('❌ QRCode library failed to load');
+        }
+    });
+</script>
+<script src="/js/sidebar.js"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0f766e",
+                        "primary-light": "#14b8a6",
+                        "primary-dark": "#134e4a",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav {
+            background-color: #f0f4f2;
+            border-left: 4px solid #0f766e;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen text-[#111813] dark:text-white font-display">
+<div class="flex min-h-screen">
+<!-- Sidebar Overlay (mobile) -->
+<div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden"></div>
+
+<!-- Sidebar -->
+<aside id="sidebar" class="w-72 bg-white dark:bg-[#1a2e21] border-r border-[#f0f4f2] dark:border-[#2d3f33] fixed h-full z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
+<div class="p-6 flex items-center gap-3">
+<button id="sidebarToggleBtn" class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors flex-shrink-0" title="Menu">
+<span class="material-symbols-outlined text-xl">menu</span>
+</button>
+<h1 id="sidebarLogoText" class="text-xl font-bold tracking-tight flex-1 lg:block">VacciCare</h1>
+<button id="sidebarCloseBtn" class="lg:hidden p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors flex-shrink-0" title="Đóng sidebar">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div id="sidebarUserProfile" class="px-4 mb-6" th:if="${isAuthenticated}">
+<div class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark rounded-xl">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 bg-primary/20 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0" th:if="${currentUser?.fullName != null}">
+<span th:text="${#strings.substring(currentUser.fullName, 0, 1)}"></span>
+</div>
+<div class="flex flex-col overflow-hidden min-w-0 lg:block">
+<p id="sidebarUserName" class="text-sm font-bold truncate" th:text="${currentUser?.fullName ?: currentUser?.email}">Tên người dùng</p>
+<p id="sidebarUserRole" class="text-xs text-[#61896f] truncate" th:text="${currentUser?.role?.name() == 'CUSTOMER' ? 'Người dùng cá nhân' : (currentUser?.role?.name() == 'ADMIN' ? 'Quản trị viên' : 'Nhân viên y tế')}">Người dùng cá nhân</p>
+</div>
+</div>
+</div>
+        <nav class="flex-1 px-2 space-y-1 overflow-y-auto">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg active-nav text-primary font-bold" href="/home">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span id="navTextHome" class="text-sm">Tổng quan</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/profile">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">person</span>
+                <span id="navTextProfile" class="text-sm font-medium">Thông tin cá nhân</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/appointments">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">calendar_month</span>
+                <span id="navTextAppointments" class="text-sm font-medium">Đặt lịch</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/vaccination-history">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">history_edu</span>
+                <span id="navTextHistory" class="text-sm font-medium">Hồ sơ tiêm chủng</span>
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/family-members">
+<span class="material-symbols-outlined text-[#111813] dark:text-white">group</span>
+<span id="navTextFamily" class="text-sm font-medium">Người thân</span>
+</a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/vaccines">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">vaccines</span>
+                <span id="navTextVaccines" class="text-sm font-medium">Vaccine</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors relative" href="/notifications">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">notifications</span>
+                <span id="navTextNotifications" class="text-sm font-medium">Thông báo</span>
+                <span id="notificationBadge" class="hidden absolute top-1.5 right-1.5 bg-gradient-to-r from-red-500 to-red-600 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 leading-none shadow-lg">0</span>
+            </a>
+        </nav>
+        <div class="mt-auto p-4 border-t border-[#f0f4f2] dark:border-[#2d3f33] space-y-2">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="#">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">settings</span>
+                <span id="navTextSettings" class="text-sm font-medium">Cài đặt</span>
+            </a>
+<form th:action="@{/api/auth/logout}" method="post" class="inline">
+<button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-50 transition-colors">
+<span class="material-symbols-outlined">logout</span>
+<span id="navTextLogout" class="text-sm font-medium">Đăng xuất</span>
+</button>
+</form>
+</div>
+</aside>
+<main class="flex-1 flex flex-col min-h-screen">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-30 bg-gradient-to-r from-primary/10 via-primary/5 to-white/90 dark:from-primary/20 dark:via-primary/10 dark:to-[#102216]/90 backdrop-blur-xl border-b border-primary/20 dark:border-primary/30 px-4 lg:px-8 py-6 flex items-center justify-between transition-all">
+<div class="flex items-center gap-4">
+<div class="size-12 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-white text-2xl">dashboard</span>
+</div>
+<div>
+<h2 class="text-2xl font-bold text-[#111813] dark:text-white mb-1">Bảng điều khiển</h2>
+<p class="text-sm text-[#61896f]">Tổng quan về lịch hẹn và thống kê tiêm chủng</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#61896f] text-xl">search</span>
+<input id="dashboardSearchInput" class="pl-10 pr-4 py-2 bg-background-light dark:bg-[#1a2e21] border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary/50" placeholder="Tìm kiếm dịch vụ, vaccine..." type="text"/>
+</div>
+<a href="/notifications" class="p-2 rounded-lg bg-background-light dark:bg-[#1a2e21] hover:bg-[#e0e7e3] transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span id="dashboardNotificationBadge" class="hidden absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 leading-none border-2 border-white dark:border-[#1a2e21]">0</span>
+</a>
+<button class="p-2 rounded-lg bg-background-light dark:bg-[#1a2e21] hover:bg-[#e0e7e3] transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+</header>
+<div class="p-6 lg:p-8 space-y-6 max-w-6xl mx-auto w-full">
+<div id="healthReminder" class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl p-4 flex items-start gap-4 hidden">
+<span class="material-symbols-outlined text-blue-600">info</span>
+<div>
+<p class="text-sm font-bold text-blue-900 dark:text-blue-100">Lời nhắc sức khỏe</p>
+<p id="healthReminderText" class="text-sm text-blue-700 dark:text-blue-300"></p>
+</div>
+</div>
+<section class="relative overflow-hidden bg-primary/10 dark:bg-primary/5 rounded-2xl border border-primary/20 p-6 md:p-10">
+<div class="relative z-10 flex flex-col md:flex-row items-center gap-8">
+<div class="flex-1 space-y-6">
+<h1 class="text-3xl md:text-5xl font-black leading-tight">
+                                 Chào mừng quay lại,<br/><span class="text-primary" th:text="${currentUser?.fullName ?: currentUser?.email}">Tên người dùng</span>!
+</h1>
+<p class="text-lg text-[#61896f] dark:text-gray-300 max-w-lg">
+                                Hãy bảo vệ sức khỏe của bạn và gia đình bằng cách theo dõi lịch tiêm chủng định kỳ. Hôm nay là một ngày tuyệt vời để chủ động phòng bệnh.
+                            </p>
+<div class="flex flex-wrap gap-4">
+<a href="/appointments" class="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-xl font-bold flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined">add_circle</span>
+                                    Đặt lịch tiêm mới
+                                </a>
+<a href="/vaccination-history" class="bg-white dark:bg-[#1a2e21] hover:bg-gray-50 border border-[#f0f4f2] dark:border-[#2d3f33] px-8 py-4 rounded-xl font-bold transition-all">
+                                    Xem hướng dẫn
+                                </a>
+</div>
+</div>
+<div class="w-full md:w-1/3 aspect-square bg-contain bg-center bg-no-repeat" data-alt="Flat illustration of a friendly doctor holding a health shield" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBIZ7axClcVDpu-qFpxGpPPi1K46LqJDTqKPJ_7kebVmQ6QhGqkIwTeF6SscbfvXBkG1b86GkflsBivp87Id1oStLrCiRnfGAQpNBShsiS73SEgk3tI0et64TbnaGMvlHyYDyZNkHJuLCs7OP9DrWay1-jiyvUchXwaqbie6zGLN-FUpnIEYzG1qkQ-o4uuDwTJpW6MVjoLarNLNtS9BCK9w8uRvH12F0yPwpQL4l-2p6sanvsWgjr1qz8BRmkZ06UIpvs50f_bSjw");'></div>
+</div>
+<div class="absolute -top-12 -right-12 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
+</section>
+
+
+<!-- Utility Sections -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Left Column: 2/3 width -->
+<div class="md:col-span-2 space-y-5">
+<!-- Upcoming Appointments Section -->
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<h3 class="text-xl font-bold">Lịch hẹn sắp tới</h3>
+<a class="text-sm font-bold text-primary hover:underline" href="/vaccination-history">Xem tất cả</a>
+</div>
+<div id="upcomingAppointmentContainer" class="bg-white dark:bg-[#1a2e21] rounded-2xl p-5 shadow-sm border border-[#f0f4f2] dark:border-[#2d3f33]">
+<div id="noUpcomingAppointment" class="text-center py-8 text-[#61896f]">
+<p>Bạn chưa có lịch hẹn sắp tới</p>
+<a href="/appointments" class="inline-block mt-4 text-primary hover:underline font-bold">Đặt lịch ngay</a>
+</div>
+<div id="upcomingAppointmentsList" class="hidden space-y-4">
+<!-- Appointments will be dynamically inserted here -->
+</div>
+</div>
+</div>
+
+<!-- Statistics Cards Section -->
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-white dark:bg-[#1a2e21] p-4 rounded-xl border border-[#f0f4f2] dark:border-[#2d3f33] flex items-center gap-3">
+<div class="size-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined">vaccines</span>
+</div>
+<div class="min-w-0">
+<p id="totalInjections" class="text-2xl font-black">0</p>
+<p class="text-xs text-[#61896f] font-medium">Mũi tiêm đã hoàn tất</p>
+</div>
+</div>
+<div class="bg-white dark:bg-[#1a2e21] p-4 rounded-xl border border-[#f0f4f2] dark:border-[#2d3f33] flex items-center gap-3">
+<div class="size-10 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined">family_restroom</span>
+</div>
+<div class="min-w-0">
+<p id="familyMembersCount" class="text-2xl font-black">0</p>
+<p class="text-xs text-[#61896f] font-medium">Người thân đã đăng ký</p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Right Column: 1/3 width -->
+<div class="md:col-span-1 space-y-5">
+<!-- Recent History Section -->
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<h3 class="text-xl font-bold">Lịch sử gần đây</h3>
+<a class="text-sm font-bold text-primary hover:underline" href="/vaccination-history">Xem sổ tiêm</a>
+</div>
+<div class="bg-white dark:bg-[#1a2e21] rounded-2xl overflow-hidden shadow-sm border border-[#f0f4f2] dark:border-[#2d3f33]">
+<div id="recentHistoryList" class="divide-y divide-[#f0f4f2] dark:divide-[#2d3f33]">
+<div class="p-4 text-center text-[#61896f] py-6">
+<p>Chưa có lịch sử tiêm chủng</p>
+</div>
+</div>
+<div class="p-3 bg-gray-50 dark:bg-[#233d2c] text-center">
+<a href="/vaccination-history" class="text-sm font-bold text-[#61896f] hover:text-[#111813] dark:hover:text-white flex items-center justify-center gap-1 mx-auto">
+<span class="material-symbols-outlined text-lg">expand_more</span>
+                                    Xem tất cả
+                                </a>
+</div>
+</div>
+</div>
+
+<!-- Vaccine Knowledge Card -->
+<div class="bg-[#111813] dark:bg-[#08110b] rounded-2xl p-5 text-white relative overflow-hidden group shadow-sm">
+<div class="relative z-10 space-y-2.5">
+<h4 class="font-bold text-base">Kiến thức vaccine</h4>
+<p class="text-xs text-gray-400 leading-relaxed">Tại sao nên tiêm nhắc lại cúm hàng năm cho người trưởng thành?</p>
+<button class="text-primary text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all mt-3">
+Đọc thêm <span class="material-symbols-outlined text-base">arrow_forward</span>
+</button>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-20 transform group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-7xl">book_4</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<footer class="mt-auto py-8 px-8 border-t border-[#f0f4f2] dark:border-[#2d3f33]">
+<div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-[#61896f]">
+<p>© 2023 VacciCare. Bảo vệ sức khỏe cộng đồng.</p>
+<div class="flex gap-6">
+<a class="hover:text-primary transition-colors" href="#">Điều khoản</a>
+<a class="hover:text-primary transition-colors" href="#">Bảo mật</a>
+<a class="hover:text-primary transition-colors" href="#">Liên hệ hỗ trợ</a>
+</div>
+</div>
+</footer>
+</main>
+</div>
+
+<script>
+    // Load số lượng thông báo chưa đọc
+    async function loadUnreadNotificationCount() {
+        try {
+            const response = await fetch('/api/notifications/unread-count', { credentials: 'include' });
+            if (response.ok) {
+                const data = await response.json();
+                // Update sidebar badge
+                const sidebarBadge = document.getElementById('notificationBadge');
+                if (sidebarBadge) {
+                    if (data.count > 0) {
+                        sidebarBadge.textContent = data.count > 99 ? '99+' : data.count;
+                        sidebarBadge.classList.remove('hidden');
+                    } else {
+                        sidebarBadge.classList.add('hidden');
+                    }
+                }
+                // Update dashboard header badge
+                const dashboardBadge = document.getElementById('dashboardNotificationBadge');
+                if (dashboardBadge) {
+                    if (data.count > 0) {
+                        dashboardBadge.textContent = data.count > 99 ? '99+' : data.count;
+                        dashboardBadge.classList.remove('hidden');
+                    } else {
+                        dashboardBadge.classList.add('hidden');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error loading unread count:', error);
+        }
+    }
+    
+    // Handle search
+    function setupSearch() {
+        const searchInput = document.getElementById('dashboardSearchInput');
+        if (searchInput) {
+            // Enter key để search
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const keyword = searchInput.value.trim();
+                    if (keyword) {
+                        window.location.href = `/vaccines?search=${encodeURIComponent(keyword)}`;
+                    } else {
+                        window.location.href = '/vaccines';
+                    }
+                }
+            });
+            
+            // Click vào search icon (parent div) cũng trigger search
+            const searchContainer = searchInput.parentElement;
+            if (searchContainer) {
+                const searchIcon = searchContainer.querySelector('.material-symbols-outlined');
+                if (searchIcon) {
+                    searchIcon.style.cursor = 'pointer';
+                    searchIcon.addEventListener('click', () => {
+                        const keyword = searchInput.value.trim();
+                        if (keyword) {
+                            window.location.href = `/vaccines?search=${encodeURIComponent(keyword)}`;
+                        } else {
+                            window.location.href = '/vaccines';
+                        }
+                    });
+                }
+            }
+        }
+    }
+    
+    // Load thống kê dashboard
+    async function loadDashboardStatistics() {
+        try {
+            const response = await fetch('/api/dashboard/statistics', { credentials: 'include' });
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById('totalInjections').textContent = data.totalInjections || 0;
+                document.getElementById('familyMembersCount').textContent = data.familyMembersCount || 0;
+            }
+        } catch (error) {
+            console.error('Error loading statistics:', error);
+        }
+    }
+    
+    // Load lịch hẹn sắp tới
+    async function loadUpcomingAppointment() {
+        try {
+            const response = await fetch('/api/dashboard/upcoming', { credentials: 'include' });
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Upcoming appointments data:', data); // Debug log
+                const container = document.getElementById('upcomingAppointmentContainer');
+                const noAppointment = document.getElementById('noUpcomingAppointment');
+                const appointmentsList = document.getElementById('upcomingAppointmentsList');
+                
+                if (data.hasAppointment && data.appointments && data.appointments.length > 0) {
+                    console.log('Found ' + data.appointments.length + ' appointments'); // Debug log
+                    noAppointment.classList.add('hidden');
+                    appointmentsList.classList.remove('hidden');
+                    
+                    // Render appointments theo bố cục mới: appointment đầu tiên hiển thị lớn, các appointment khác hiển thị nhỏ hơn
+                    if (data.appointments.length > 0) {
+                        const firstApt = data.appointments[0];
+                        const statusClasses = getStatusClasses(firstApt.status);
+                        const dateTime = `${firstApt.formattedDate || ''} - ${firstApt.formattedTime || ''}`;
+                        const forUserText = firstApt.forUser ? `<p class="text-xs text-[#61896f] mb-2">Cho: ${firstApt.forUser}</p>` : '';
+                        
+                        let html = `
+                            <div class="bg-white dark:bg-[#1a2e21] rounded-2xl p-6 shadow-sm border border-[#f0f4f2] dark:border-[#2d3f33]">
+                                <div class="flex flex-col lg:flex-row gap-6">
+                                    <div class="flex-1 space-y-4">
+                                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${statusClasses.badge}">
+                                            <span class="size-1.5 rounded-full ${statusClasses.dot}"></span>
+                                            <span>${firstApt.statusText || 'Chờ xác nhận'}</span>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-[#61896f] uppercase font-bold tracking-widest mb-2">Mã đặt chỗ</p>
+                                            <h4 class="text-3xl font-black text-[#111813] dark:text-white mb-1">${firstApt.bookingCode || 'N/A'}</h4>
+                                            ${forUserText}
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <p class="text-xs text-[#61896f] uppercase font-bold tracking-widest mb-2">Vaccine</p>
+                                                <p class="text-base font-bold text-[#111813] dark:text-white">${firstApt.vaccineName || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-[#61896f] uppercase font-bold tracking-widest mb-2">Thời gian</p>
+                                                <p class="text-base font-bold text-[#111813] dark:text-white">${dateTime.trim() || 'N/A'}</p>
+                                            </div>
+                                            ${firstApt.roomNumber ? `
+                                            <div>
+                                                <p class="text-xs text-[#61896f] uppercase font-bold tracking-widest mb-2">Phòng</p>
+                                                <p class="text-base font-bold text-[#111813] dark:text-white">${firstApt.roomNumber}</p>
+                                            </div>
+                                            ` : ''}
+                                        </div>
+                                        <div class="pt-2 flex gap-3">
+                                            <a href="/vaccination-history" class="inline-flex items-center gap-2 bg-[#f0f4f2] dark:bg-[#2d3f33] hover:bg-[#e0e7e3] text-[#111813] dark:text-white py-2.5 px-5 rounded-xl text-sm font-bold transition-colors">
+                                                <span class="material-symbols-outlined text-lg">info</span>
+                                                Xem chi tiết
+                                            </a>
+                                            ${firstApt.qrCodeUrl ? `
+                                            <button onclick="openQRCodeModal('${firstApt.qrCodeUrl}', '${firstApt.bookingCode}')" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white py-2.5 px-5 rounded-xl text-sm font-bold transition-colors">
+                                                <span class="material-symbols-outlined text-lg">qr_code_2</span>
+                                                Xem QR
+                                            </button>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                    ${firstApt.qrCodeUrl ? `
+                                    <div class="w-full lg:w-48 flex-shrink-0 bg-gradient-to-br from-[#0d9488] to-[#14b8a6] rounded-xl flex items-center justify-center p-4 shadow-lg">
+                                        <div class="text-center w-full">
+                                            <div class="bg-white rounded-lg p-3 mb-3 inline-block shadow-md">
+                                                <img src="${firstApt.qrCodeUrl}" alt="QR Code" class="w-32 h-32 object-contain" onerror="this.style.display='none'">
+                                            </div>
+                                            <p class="text-[10px] text-white font-bold uppercase tracking-wider">Quét tại quầy tiếp đón</p>
+                                        </div>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Nếu có nhiều hơn 1 appointment, hiển thị các appointment còn lại dưới dạng compact
+                        if (data.appointments.length > 1) {
+                            html += '<div class="space-y-3 mt-4">';
+                            data.appointments.slice(1).forEach((apt) => {
+                                const aptStatusClasses = getStatusClasses(apt.status);
+                                const aptDateTime = `${apt.formattedDate || ''} - ${apt.formattedTime || ''}`;
+                                const aptForUserText = apt.forUser ? `<span class="text-xs text-[#61896f]">Cho: ${apt.forUser}</span>` : '';
+                                
+                                html += `
+                                    <div class="bg-white dark:bg-[#1a2e21] rounded-xl p-4 shadow-sm border border-[#f0f4f2] dark:border-[#2d3f33]">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-3 mb-2">
+                                                    <div class="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs font-bold uppercase ${aptStatusClasses.badge}">
+                                                        <span class="size-1.5 rounded-full ${aptStatusClasses.dot}"></span>
+                                                        <span>${apt.statusText || 'Chờ xác nhận'}</span>
+                                                    </div>
+                                                    ${aptForUserText}
+                                                </div>
+                                                <p class="text-lg font-black text-[#111813] dark:text-white mb-1">${apt.bookingCode || 'N/A'}</p>
+                                                <div class="flex gap-4 text-sm">
+                                                    <span class="text-[#61896f]">${apt.vaccineName || 'N/A'}</span>
+                                                    <span class="text-[#61896f]">${aptDateTime.trim() || 'N/A'}</span>
+                                                    ${apt.roomNumber ? `<span class="text-[#61896f]">Phòng: ${apt.roomNumber}</span>` : ''}
+                                                </div>
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <a href="/vaccination-history" class="p-2 rounded-lg bg-[#f0f4f2] dark:bg-[#2d3f33] hover:bg-[#e0e7e3] transition-colors">
+                                                    <span class="material-symbols-outlined text-lg">info</span>
+                                                </a>
+                                                ${apt.qrCodeUrl ? `
+                                                <button onclick="openQRCodeModal('${apt.qrCodeUrl}', '${apt.bookingCode}')" class="p-2 rounded-lg bg-primary hover:bg-primary-dark text-white transition-colors">
+                                                    <span class="material-symbols-outlined text-lg">qr_code_2</span>
+                                                </button>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                            html += '</div>';
+                        }
+                        
+                        appointmentsList.innerHTML = html;
+                    }
+                } else {
+                    noAppointment.classList.remove('hidden');
+                    appointmentsList.classList.add('hidden');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading upcoming appointment:', error);
+        }
+    }
+    
+    // Helper function để lấy CSS classes theo status
+    function getStatusClasses(status) {
+        const classes = {
+            badge: '',
+            dot: ''
+        };
+        
+        if (status === 'PENDING') {
+            classes.badge = 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400';
+            classes.dot = 'bg-yellow-600 animate-pulse';
+        } else if (status === 'CONFIRMED') {
+            classes.badge = 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400';
+            classes.dot = 'bg-blue-600 animate-pulse';
+        } else if (status === 'CHECKED_IN' || status === 'SCREENING' || status === 'APPROVED') {
+            classes.badge = 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400';
+            classes.dot = 'bg-orange-600 animate-pulse';
+        } else if (status === 'INJECTING' || status === 'MONITORING') {
+            classes.badge = 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400';
+            classes.dot = 'bg-purple-600 animate-pulse';
+        } else {
+            classes.badge = 'bg-gray-100 dark:bg-gray-900/30 text-gray-600 dark:text-gray-400';
+            classes.dot = 'bg-gray-600';
+        }
+        
+        return classes;
+    }
+    
+    // Load lịch sử gần đây
+    async function loadRecentHistory() {
+        try {
+            const response = await fetch('/api/dashboard/recent-history', { credentials: 'include' });
+            if (response.ok) {
+                const data = await response.json();
+                const list = document.getElementById('recentHistoryList');
+                
+                if (data.length === 0) {
+                    list.innerHTML = '<div class="p-4 text-center text-[#61896f] py-8"><p>Chưa có lịch sử tiêm chủng</p></div>';
+                } else {
+                    list.innerHTML = data.map((record, index) => {
+                        const isLast = index === data.length - 1;
+                        const doseText = record.doseNumber ? `Mũi ${record.doseNumber}` : '';
+                        return `
+                            <div class="p-4 hover:bg-gray-50 dark:hover:bg-[#233d2c] transition-colors cursor-pointer group" onclick="window.location.href='/vaccination-history'">
+                                <div class="flex gap-4">
+                                    <div class="flex flex-col items-center">
+                                        <div class="size-2 bg-primary rounded-full mb-1"></div>
+                                        <div class="w-0.5 ${isLast ? 'h-full bg-transparent' : 'flex-1 bg-gray-100 dark:bg-gray-800'}"></div>
+                                    </div>
+                                    <div class="flex-1 ${isLast ? '' : 'pb-4'}">
+                                        <p class="text-xs text-[#61896f] font-bold">${record.formattedDate || 'N/A'}</p>
+                                        <h5 class="font-bold group-hover:text-primary transition-colors">${record.vaccineName || 'N/A'}</h5>
+                                        <p class="text-xs text-[#61896f]">${doseText}${doseText && record.centerName ? ' • ' : ''}${record.centerName || ''}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading recent history:', error);
+        }
+    }
+    
+    // Load lời nhắc sức khỏe
+    async function loadHealthReminder() {
+        try {
+            const response = await fetch('/api/dashboard/health-reminder', { credentials: 'include' });
+            if (response.ok) {
+                const data = await response.json();
+                const reminder = document.getElementById('healthReminder');
+                const reminderText = document.getElementById('healthReminderText');
+                
+                if (data.hasReminder) {
+                    reminder.classList.remove('hidden');
+                    reminderText.textContent = `Bạn có 1 mũi tiêm nhắc lại (${data.vaccineName}) vào ${data.formattedDate}. Đừng quên đặt lịch nhé!`;
+                } else {
+                    reminder.classList.add('hidden');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading health reminder:', error);
+        }
+    }
+    
+    // Load khi trang load
+    document.addEventListener('DOMContentLoaded', () => {
+        // Sidebar functionality is loaded from sidebar.js
+        loadUnreadNotificationCount();
+        loadDashboardStatistics();
+        loadUpcomingAppointment();
+        loadRecentHistory();
+        loadHealthReminder();
+        setupSearch();
+        
+        // Refresh mỗi 30 giây
+        setInterval(() => {
+            loadUnreadNotificationCount();
+            loadDashboardStatistics();
+            loadUpcomingAppointment();
+        }, 30000);
+    });
+    
+    // Function để mở modal xem QR code
+    function openQRCodeModal(qrCodeUrl, bookingCode) {
+        // Nếu có tham số thì dùng tham số, không thì dùng window.currentQRCodeUrl
+        const url = qrCodeUrl || window.currentQRCodeUrl;
+        const code = bookingCode || window.currentBookingCode;
+        
+        if (!url) {
+            alert('Không có QR code để hiển thị');
+            return;
+        }
+        
+        // Kiểm tra xem modal đã tồn tại chưa
+        let modal = document.getElementById('qrCodeModal');
+        if (!modal) {
+            // Tạo modal mới
+            modal = document.createElement('div');
+            modal.id = 'qrCodeModal';
+            modal.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4';
+            document.body.appendChild(modal);
+        }
+        
+        modal.innerHTML = `
+            <div class="bg-white dark:bg-[#1a2e21] rounded-2xl p-6 max-w-md w-full relative">
+                <button onclick="closeQRCodeModal()" class="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2d3f33] transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+                <div class="text-center space-y-4">
+                    <h3 class="text-xl font-bold">Mã QR Check-in</h3>
+                    <div class="bg-white dark:bg-[#1a2e21] p-4 rounded-lg inline-block border-2 border-[#f0f4f2] dark:border-[#2d3f33]">
+                        <img id="modalQRCode" src="${url}" alt="QR Code" class="w-64 h-64 object-contain mx-auto">
+                    </div>
+                    <p class="text-sm text-[#61896f] font-mono">${code || ''}</p>
+                    <p class="text-xs text-[#61896f]">Quét mã này tại quầy tiếp đón để check-in</p>
+                    <div class="flex gap-3 justify-center pt-2">
+                        <button onclick="downloadQRCode()" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white py-2.5 px-6 rounded-xl text-sm font-bold transition-colors">
+                            <span class="material-symbols-outlined">download</span>
+                            Tải xuống
+                        </button>
+                        <button onclick="closeQRCodeModal()" class="inline-flex items-center gap-2 bg-[#f0f4f2] dark:bg-[#2d3f33] hover:bg-[#e0e7e3] text-[#111813] dark:text-white py-2.5 px-6 rounded-xl text-sm font-bold transition-colors">
+                            Đóng
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        // Đóng modal khi click outside
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeQRCodeModal();
+            }
+        });
+    }
+    
+    // Function để đóng modal
+    function closeQRCodeModal() {
+        const modal = document.getElementById('qrCodeModal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+    
+    // Function để tải QR code
+    function downloadQRCode() {
+        if (!window.currentQRCodeUrl || !window.currentBookingCode) {
+            alert('Không có QR code để tải xuống');
+            return;
+        }
+        
+        // Tải QR code từ URL
+        fetch(window.currentQRCodeUrl, { credentials: 'include' })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `QR-${window.currentBookingCode}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                console.error('Error downloading QR code:', error);
+                alert('Không thể tải QR code. Vui lòng thử lại.');
+            });
+    }
+</script>
+</body></html>
