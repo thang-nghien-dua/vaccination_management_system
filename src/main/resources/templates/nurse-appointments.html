@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html class="light" lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Quản lý Lịch hẹn - Y tá</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="/js/sidebar.js"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0f766e",
+                        "primary-light": "#14b8a6",
+                        "primary-dark": "#134e4a",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav {
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.1) 0%, rgba(15, 118, 110, 0.05) 100%);
+            border-left: 4px solid #0f766e;
+            color: #0f766e;
+        }
+        .sidebar-nav-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar-nav-item:hover {
+            transform: translateX(4px);
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.1) 0%, rgba(15, 118, 110, 0.05) 100%);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen text-[#111813] dark:text-white font-display">
+<div class="flex min-h-screen">
+    <!-- Sidebar Overlay (mobile) -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-72 bg-white dark:bg-[#1a2e21] border-r border-[#f0f4f2] dark:border-[#2d3f33] fixed h-screen z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col overflow-hidden">
+        <div class="p-6 flex items-center gap-3 flex-shrink-0">
+            <button id="sidebarToggleBtn" class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors flex-shrink-0" title="Menu">
+                <span class="material-symbols-outlined text-xl">menu</span>
+            </button>
+            <h1 id="sidebarLogoText" class="text-xl font-bold tracking-tight flex-1 lg:block">VacciCare</h1>
+            <button id="sidebarCloseBtn" class="lg:hidden p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors flex-shrink-0" title="Đóng sidebar">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div id="sidebarUserProfile" class="px-4 mb-6 flex-shrink-0" th:if="${isAuthenticated}">
+            <div class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark rounded-xl">
+                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 bg-primary/20 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0" th:if="${currentUser?.fullName != null}">
+                    <span th:text="${#strings.substring(currentUser.fullName, 0, 1)}"></span>
+                </div>
+                <div class="flex flex-col overflow-hidden min-w-0 lg:block">
+                    <p id="sidebarUserName" class="text-sm font-bold truncate" th:text="${currentUser?.fullName ?: currentUser?.email}">Tên người dùng</p>
+                    <p id="sidebarUserRole" class="text-xs text-[#61896f] truncate">Y tá</p>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 px-3 py-3 space-y-2 overflow-y-auto min-h-0">
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/dashboard">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">dashboard</span>
+                <span class="text-sm">Dashboard</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl active-nav text-primary font-bold" href="/nurse/appointments">
+                <span class="material-symbols-outlined text-xl">vaccines</span>
+                <span class="text-sm font-semibold">Lịch hẹn</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/vaccines">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">inventory</span>
+                <span class="text-sm">Quản lý vaccine</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/reactions">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">warning</span>
+                <span class="text-sm">Phản ứng phụ</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/vaccination-history">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">history</span>
+                <span class="text-sm">Lịch sử tiêm</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/trace">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">search</span>
+                <span class="text-sm">Truy vết</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/profile">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">person</span>
+                <span class="text-sm">Thông tin cá nhân</span>
+            </a>
+        </nav>
+        <div class="mt-auto p-4 border-t border-[#f0f4f2] dark:border-[#2d3f33] flex-shrink-0">
+            <form th:action="@{/api/auth/logout}" method="post" class="w-full">
+                <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span class="text-sm font-medium">Đăng xuất</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-72">
+        <header class="sticky top-0 z-50 bg-gradient-to-r from-primary/10 via-primary/5 to-white/90 dark:from-primary/20 dark:via-primary/10 dark:to-[#102216]/90 backdrop-blur-xl border-b border-primary/20 dark:border-primary/30 px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors">
+                        <span class="material-symbols-outlined text-xl">menu</span>
+                    </button>
+                    <div>
+                        <h1 class="text-2xl font-bold text-[#111813] dark:text-white">Quản lý Lịch hẹn</h1>
+                        <p id="dateDisplay" class="text-sm text-[#61896f] mt-1">Danh sách lịch hẹn đã phê duyệt</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="refreshBtn" class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" title="Làm mới">
+                        <span class="material-symbols-outlined">refresh</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
+            <!-- Filters -->
+            <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-primary/20 dark:border-primary/30 p-6 hover:shadow-xl transition-all duration-300">
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-sm font-semibold mb-2">Lọc theo ngày</label>
+                        <input type="date" id="dateFilter" class="w-full px-4 py-2 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                    </div>
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-sm font-semibold mb-2">Lọc theo trạng thái</label>
+                        <select id="statusFilter" class="w-full px-4 py-2 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                            <option value="">Tất cả</option>
+                            <option value="APPROVED">Đã phê duyệt</option>
+                            <option value="INJECTING">Đang tiêm</option>
+                            <option value="COMPLETED">Hoàn thành</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button id="clearFiltersBtn" class="px-4 py-2 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-all">
+                            <span class="material-symbols-outlined">clear_all</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appointments List -->
+            <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-primary/20 dark:border-primary/30 p-6 hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold flex items-center gap-2">
+                        <span class="size-8 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center shadow-md">
+                            <span class="material-symbols-outlined text-white text-sm">vaccines</span>
+                        </span>
+                        Danh sách lịch hẹn
+                    </h3>
+                    <div id="appointmentCount" class="text-sm text-[#61896f] font-semibold">0 lịch hẹn</div>
+                </div>
+                <div id="appointmentsList" class="space-y-4">
+                    <div class="text-center py-12 text-[#61896f]">
+                        <span class="material-symbols-outlined text-6xl mb-4 block animate-pulse">event_busy</span>
+                        <p>Đang tải danh sách lịch hẹn...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Vaccination Modal -->
+<div id="vaccinationModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0" id="vaccinationModalWrapper">
+        <div class="sticky top-0 bg-white dark:bg-[#1a2e21] border-b border-[#f0f4f2] dark:border-[#2d3f33] px-6 py-4 flex items-center justify-between">
+            <h3 class="text-xl font-bold">Nhập thông tin tiêm vaccine</h3>
+            <button id="closeVaccinationModal" class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div id="vaccinationModalContent" class="p-6 space-y-4">
+            <!-- Content will be loaded dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- View Record Modal -->
+<div id="viewRecordModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0" id="viewRecordModalWrapper">
+        <div class="sticky top-0 bg-white dark:bg-[#1a2e21] border-b border-[#f0f4f2] dark:border-[#2d3f33] px-6 py-4 flex items-center justify-between">
+            <h3 class="text-xl font-bold">Chi tiết hồ sơ tiêm</h3>
+            <button id="closeViewRecordModal" class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div id="viewRecordModalContent" class="p-6 space-y-4">
+            <!-- Content will be loaded dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- Message Toast -->
+<div id="messageToast" class="hidden fixed top-4 right-4 z-50 bg-white dark:bg-[#1a2e21] rounded-xl shadow-2xl border-2 border-primary/20 dark:border-primary/30 p-4 min-w-[300px]">
+    <div class="flex items-center gap-3">
+        <span id="messageIcon" class="material-symbols-outlined text-2xl"></span>
+        <p id="messageText" class="flex-1 font-medium"></p>
+        <button id="closeMessageBtn" class="p-1 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors">
+            <span class="material-symbols-outlined text-sm">close</span>
+        </button>
+    </div>
+</div>
+
+<script>
+    let approvedAppointments = [];
+    let currentAppointment = null;
+    let appointmentDetailsCache = {};
+    let currentDateFilter = '';
+    let currentStatusFilter = '';
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        updateDateDisplay();
+        loadApprovedAppointments();
+        
+        // Refresh button
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            loadApprovedAppointments();
+        });
+        
+        // Filters
+        document.getElementById('dateFilter').addEventListener('change', (e) => {
+            currentDateFilter = e.target.value;
+            loadApprovedAppointments();
+        });
+        
+        document.getElementById('statusFilter').addEventListener('change', (e) => {
+            currentStatusFilter = e.target.value;
+            loadApprovedAppointments();
+        });
+        
+        document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+            document.getElementById('dateFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            currentDateFilter = '';
+            currentStatusFilter = '';
+            loadApprovedAppointments();
+        });
+        
+        // Modal close buttons
+        document.getElementById('closeVaccinationModal').addEventListener('click', closeVaccinationModal);
+        document.getElementById('closeViewRecordModal').addEventListener('click', closeViewRecordModal);
+        
+        // Close modals on overlay click
+        document.getElementById('vaccinationModal').addEventListener('click', (e) => {
+            if (e.target.id === 'vaccinationModal') {
+                closeVaccinationModal();
+            }
+        });
+        document.getElementById('viewRecordModal').addEventListener('click', (e) => {
+            if (e.target.id === 'viewRecordModal') {
+                closeViewRecordModal();
+            }
+        });
+        
+        // Message toast close
+        document.getElementById('closeMessageBtn').addEventListener('click', () => {
+            document.getElementById('messageToast').classList.add('hidden');
+        });
+        
+        // Auto refresh every 30 seconds
+        setInterval(() => {
+            loadApprovedAppointments();
+        }, 30000);
+    });
+
+    function updateDateDisplay() {
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('vi-VN', options);
+    }
+
+    function closeVaccinationModal() {
+        const modal = document.getElementById('vaccinationModal');
+        const wrapper = document.getElementById('vaccinationModalWrapper');
+        if (wrapper) {
+            wrapper.classList.remove('scale-100', 'opacity-100');
+            wrapper.classList.add('scale-95', 'opacity-0');
+        }
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+
+    function closeViewRecordModal() {
+        const modal = document.getElementById('viewRecordModal');
+        const wrapper = document.getElementById('viewRecordModalWrapper');
+        if (wrapper) {
+            wrapper.classList.remove('scale-100', 'opacity-100');
+            wrapper.classList.add('scale-95', 'opacity-0');
+        }
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+
+    function showMessage(message, type = 'info') {
+        const toast = document.getElementById('messageToast');
+        const icon = document.getElementById('messageIcon');
+        const text = document.getElementById('messageText');
+        
+        toast.classList.remove('hidden');
+        text.textContent = message;
+        
+        switch(type) {
+            case 'success':
+                icon.textContent = 'check_circle';
+                icon.className = 'material-symbols-outlined text-2xl text-green-500';
+                break;
+            case 'error':
+                icon.textContent = 'error';
+                icon.className = 'material-symbols-outlined text-2xl text-red-500';
+                break;
+            default:
+                icon.textContent = 'info';
+                icon.className = 'material-symbols-outlined text-2xl text-blue-500';
+        }
+        
+        setTimeout(() => {
+            toast.classList.add('hidden');
+        }, 5000);
+    }
+
+    async function loadApprovedAppointments() {
+        try {
+            let url = '/api/appointments/approved';
+            const params = [];
+            
+            if (currentDateFilter) {
+                params.push(`date=${currentDateFilter}`);
+            }
+            if (currentStatusFilter) {
+                params.push(`status=${currentStatusFilter}`);
+            }
+            
+            if (params.length > 0) {
+                url += '?' + params.join('&');
+            }
+            
+            const response = await fetch(url, {
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to load appointments');
+            }
+            
+            const data = await response.json();
+            approvedAppointments = data.appointments || [];
+            
+            renderAppointments();
+        } catch (error) {
+            console.error('Error loading appointments:', error);
+            document.getElementById('appointmentsList').innerHTML = `
+                <div class="text-center py-8 text-red-500">
+                    <span class="material-symbols-outlined text-4xl mb-2">error</span>
+                    <p>Có lỗi xảy ra khi tải danh sách lịch hẹn</p>
+                    <p class="text-sm mt-2">${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    async function renderAppointments() {
+        const container = document.getElementById('appointmentsList');
+        
+        if (approvedAppointments.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8 text-[#61896f]">
+                    <span class="material-symbols-outlined text-4xl mb-2">inbox</span>
+                    <p>Không có lịch hẹn nào</p>
+                </div>
+            `;
+            document.getElementById('appointmentCount').textContent = '0 lịch hẹn';
+            return;
+        }
+        
+        // Load appointment details in parallel
+        const detailPromises = approvedAppointments.map(async (apt) => {
+            if (!appointmentDetailsCache[apt.id]) {
+                try {
+                    const response = await fetch(`/api/appointments/${apt.id}/detail`, {
+                        credentials: 'include'
+                    });
+                    if (response.ok) {
+                        appointmentDetailsCache[apt.id] = await response.json();
+                    }
+                } catch (error) {
+                    console.error(`Error loading detail for appointment ${apt.id}:`, error);
+                }
+            }
+            return appointmentDetailsCache[apt.id] || null;
+        });
+        
+        const details = await Promise.all(detailPromises);
+        
+        container.innerHTML = approvedAppointments.map((apt, index) => {
+            const detail = details[index];
+            const hasVaccinationRecord = detail && detail.vaccinationRecord && detail.vaccinationRecord.id;
+            
+            const patient = getPatientInfo(apt);
+            const vaccine = apt.vaccine ? apt.vaccine.name : 'N/A';
+            const center = apt.center ? apt.center.name : 'N/A';
+            const time = apt.appointmentTime ? formatTime(apt.appointmentTime) : 'N/A';
+            const date = apt.appointmentDate ? formatDate(apt.appointmentDate) : 'N/A';
+            
+            return `
+                <div class="bg-[#f0f4f2] dark:bg-[#2d3f33] rounded-xl p-6 border-2 border-transparent hover:border-primary/30 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                ${hasVaccinationRecord ? 
+                                    '<span class="px-3 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold">ĐÃ TIÊM</span>' :
+                                    '<span class="px-3 py-1 bg-green-500/10 text-green-600 dark:text-green-400 rounded-lg text-xs font-bold">ĐÃ PHÊ DUYỆT</span>'
+                                }
+                                ${apt.queueNumber ? `<span class="px-3 py-1 bg-primary/10 text-primary rounded-lg text-xs font-bold">Số thứ tự: ${apt.queueNumber}</span>` : ''}
+                            </div>
+                            <h4 class="text-lg font-bold mb-1">${patient.fullName}</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-[#61896f]">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-base">vaccines</span>
+                                    <span>${vaccine}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-base">location_on</span>
+                                    <span>${center}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-base">calendar_today</span>
+                                    <span>${date}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-base">schedule</span>
+                                    <span>${time}</span>
+                                </div>
+                                ${apt.doseNumber ? `<div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-base">numbers</span>
+                                    <span>Mũi ${apt.doseNumber}</span>
+                                </div>` : ''}
+                            </div>
+                            <div class="mt-3 text-xs text-[#61896f]">
+                                <span class="font-semibold">Mã booking:</span> ${apt.bookingCode}
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            ${!hasVaccinationRecord ? `
+                            <button onclick="openVaccinationModal(${apt.id})" class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
+                                <span class="material-symbols-outlined text-base">vaccines</span>
+                                <span>Tiêm vaccine</span>
+                            </button>
+                            ` : ''}
+                            ${hasVaccinationRecord ? `
+                            <button onclick="viewVaccinationRecord(${apt.id})" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
+                                <span class="material-symbols-outlined text-base">description</span>
+                                <span>Xem hồ sơ</span>
+                            </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        document.getElementById('appointmentCount').textContent = `${approvedAppointments.length} lịch hẹn`;
+    }
+
+    function getPatientInfo(apt) {
+        if (apt.bookedForUser) {
+            return {
+                fullName: apt.bookedForUser.fullName || 'N/A',
+                phoneNumber: apt.bookedForUser.phoneNumber || 'N/A',
+                email: apt.bookedForUser.email || 'N/A'
+            };
+        } else if (apt.familyMember) {
+            return {
+                fullName: apt.familyMember.fullName || 'N/A',
+                phoneNumber: apt.familyMember.phoneNumber || 'N/A',
+                email: 'N/A'
+            };
+        } else {
+            return {
+                fullName: apt.guestFullName || 'N/A',
+                phoneNumber: apt.consultationPhone || 'N/A',
+                email: apt.guestEmail || 'N/A'
+            };
+        }
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString + 'T00:00:00');
+        return date.toLocaleDateString('vi-VN');
+    }
+
+    function formatTime(timeString) {
+        if (!timeString) return 'N/A';
+        return timeString.substring(0, 5);
+    }
+
+    async function openVaccinationModal(appointmentId) {
+        const appointment = approvedAppointments.find(apt => apt.id === appointmentId);
+        if (!appointment) {
+            showMessage('Không tìm thấy lịch hẹn', 'error');
+            return;
+        }
+        
+        currentAppointment = appointment;
+        
+        // Load available vaccine lots
+        let vaccineLots = [];
+        if (appointment.vaccine && appointment.center) {
+            try {
+                const response = await fetch(`/api/vaccine-lots/available?vaccineId=${appointment.vaccine.id}&centerId=${appointment.center.id}`, {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const responseText = await response.text();
+                    try {
+                        vaccineLots = JSON.parse(responseText);
+                        if (!Array.isArray(vaccineLots)) {
+                            console.warn('Expected array but got:', typeof vaccineLots);
+                            vaccineLots = [];
+                        }
+                    } catch (parseError) {
+                        console.error('Error parsing vaccine lots JSON:', parseError);
+                        console.error('Response text:', responseText);
+                        vaccineLots = [];
+                    }
+                } else {
+                    const errorText = await response.text();
+                    console.error('Error loading vaccine lots. Status:', response.status, 'Response:', errorText);
+                }
+            } catch (error) {
+                console.error('Error loading vaccine lots:', error);
+            }
+        }
+        
+        const patient = getPatientInfo(appointment);
+        
+        document.getElementById('vaccinationModalContent').innerHTML = `
+            <div class="space-y-4">
+                <div class="bg-[#f0f4f2] dark:bg-[#2d3f33] rounded-xl p-4">
+                    <h4 class="font-bold mb-2">Thông tin bệnh nhân</h4>
+                    <p><strong>Họ tên:</strong> ${patient.fullName}</p>
+                    <p><strong>Vaccine:</strong> ${appointment.vaccine ? appointment.vaccine.name : 'N/A'}</p>
+                    <p><strong>Mũi tiêm:</strong> ${appointment.doseNumber || 1}</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Lô vaccine *</label>
+                    <select id="vaccineLotId" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white" required>
+                        <option value="">Chọn lô vaccine</option>
+                        ${vaccineLots.map(lot => `
+                            <option value="${lot.id}" data-lot-number="${lot.lotNumber}">
+                                ${lot.lotNumber} - Còn lại: ${lot.remainingQuantity} - HSD: ${formatDate(lot.expiryDate)}
+                            </option>
+                        `).join('')}
+                    </select>
+                    ${vaccineLots.length === 0 ? '<p class="text-red-500 text-xs mt-1">Không có lô vaccine nào khả dụng</p>' : ''}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Vị trí tiêm *</label>
+                    <select id="injectionSite" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white" required>
+                        <option value="">Chọn vị trí tiêm</option>
+                        <option value="LEFT_ARM">Tay trái</option>
+                        <option value="RIGHT_ARM">Tay phải</option>
+                        <option value="LEFT_THIGH">Đùi trái</option>
+                        <option value="RIGHT_THIGH">Đùi phải</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Liều lượng (ml)</label>
+                    <input type="number" id="doseAmount" step="0.1" min="0" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white" placeholder="Ví dụ: 0.5">
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button onclick="confirmVaccination()" id="confirmVaccinationBtn" class="flex-1 bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg">
+                        <span class="material-symbols-outlined">check</span>
+                        <span>Xác nhận tiêm</span>
+                    </button>
+                    <button onclick="closeVaccinationModal()" class="px-6 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-all">
+                        Hủy
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        const modal = document.getElementById('vaccinationModal');
+        const wrapper = document.getElementById('vaccinationModalWrapper');
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            if (wrapper) {
+                wrapper.classList.remove('scale-95', 'opacity-0');
+                wrapper.classList.add('scale-100', 'opacity-100');
+            }
+        }, 10);
+    }
+
+    async function confirmVaccination() {
+        if (!currentAppointment) {
+            showMessage('Không tìm thấy lịch hẹn', 'error');
+            return;
+        }
+        
+        const vaccineLotId = document.getElementById('vaccineLotId').value;
+        const injectionSite = document.getElementById('injectionSite').value;
+        const doseAmount = document.getElementById('doseAmount').value;
+        
+        if (!vaccineLotId || !injectionSite) {
+            showMessage('Vui lòng điền đầy đủ thông tin bắt buộc', 'error');
+            return;
+        }
+        
+        const btn = document.getElementById('confirmVaccinationBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span><span>Đang xử lý...</span>';
+        
+        try {
+            const requestBody = {
+                appointmentId: currentAppointment.id,
+                vaccineLotId: parseInt(vaccineLotId),
+                injectionSite: injectionSite,
+                doseAmount: doseAmount ? parseFloat(doseAmount) : null,
+                injectionDate: new Date().toISOString().split('T')[0],
+                injectionTime: new Date().toTimeString().split(' ')[0].substring(0, 5)
+            };
+            
+            const response = await fetch('/api/vaccination-records', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(requestBody)
+            });
+            
+            const responseText = await response.text();
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('Error parsing response JSON:', parseError);
+                console.error('Response text:', responseText);
+                showMessage('Có lỗi xảy ra khi xử lý phản hồi từ server', 'error');
+                return;
+            }
+            
+            if (response.ok) {
+                showMessage('Ghi nhận tiêm vaccine thành công! Chứng nhận đã được gửi qua email.', 'success');
+                closeVaccinationModal();
+                delete appointmentDetailsCache[currentAppointment.id];
+                setTimeout(() => {
+                    loadApprovedAppointments();
+                }, 500);
+            } else {
+                showMessage(result.error || 'Có lỗi xảy ra khi ghi nhận tiêm', 'error');
+            }
+        } catch (error) {
+            console.error('Error creating vaccination record:', error);
+            showMessage('Có lỗi xảy ra khi ghi nhận tiêm', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-symbols-outlined">check</span><span>Xác nhận tiêm</span>';
+        }
+    }
+
+    async function viewVaccinationRecord(appointmentId) {
+        try {
+            const appointmentResponse = await fetch(`/api/appointments/${appointmentId}/detail`, {
+                credentials: 'include'
+            });
+            
+            if (!appointmentResponse.ok) {
+                throw new Error('Failed to load appointment detail');
+            }
+            
+            const appointmentDetail = await appointmentResponse.json();
+            
+            if (!appointmentDetail.vaccinationRecord || !appointmentDetail.vaccinationRecord.id) {
+                showMessage('Chưa có hồ sơ tiêm cho lịch hẹn này', 'error');
+                return;
+            }
+            
+            const recordId = appointmentDetail.vaccinationRecord.id;
+            
+            const recordResponse = await fetch(`/api/vaccination-records/${recordId}`, {
+                credentials: 'include'
+            });
+            
+            if (!recordResponse.ok) {
+                throw new Error('Failed to load vaccination record');
+            }
+            
+            const record = await recordResponse.json();
+            
+            document.getElementById('viewRecordModalContent').innerHTML = `
+                <div class="space-y-4">
+                    <div class="bg-[#f0f4f2] dark:bg-[#2d3f33] rounded-xl p-4">
+                        <h4 class="font-bold mb-3 text-lg">Thông tin tiêm chủng</h4>
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                                <span class="text-[#61896f]">Số chứng nhận:</span>
+                                <p class="font-bold">${record.certificateNumber || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <span class="text-[#61896f]">Ngày tiêm:</span>
+                                <p class="font-bold">${formatDate(record.injectionDate)} ${formatTime(record.injectionTime)}</p>
+                            </div>
+                            <div>
+                                <span class="text-[#61896f]">Vị trí tiêm:</span>
+                                <p class="font-bold">${record.injectionSite || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <span class="text-[#61896f]">Mũi tiêm:</span>
+                                <p class="font-bold">${record.doseNumber || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <span class="text-[#61896f]">Liều lượng:</span>
+                                <p class="font-bold">${record.doseAmount ? record.doseAmount + ' ml' : 'N/A'}</p>
+                            </div>
+                            ${record.nextDoseDate ? `
+                            <div>
+                                <span class="text-[#61896f]">Mũi tiếp theo:</span>
+                                <p class="font-bold">${formatDate(record.nextDoseDate)}</p>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    ${record.vaccine ? `
+                    <div class="bg-[#f0f4f2] dark:bg-[#2d3f33] rounded-xl p-4">
+                        <h4 class="font-bold mb-2">Vaccine</h4>
+                        <p><strong>Tên:</strong> ${record.vaccine.name || 'N/A'}</p>
+                        ${record.vaccine.manufacturer ? `<p><strong>Nhà sản xuất:</strong> ${record.vaccine.manufacturer}</p>` : ''}
+                    </div>
+                    ` : ''}
+                    
+                    ${record.vaccineLot ? `
+                    <div class="bg-[#f0f4f2] dark:bg-[#2d3f33] rounded-xl p-4">
+                        <h4 class="font-bold mb-2">Lô vaccine</h4>
+                        <p><strong>Số lô:</strong> ${record.vaccineLot.lotNumber || 'N/A'}</p>
+                        ${record.vaccineLot.expiryDate ? `<p><strong>HSD:</strong> ${formatDate(record.vaccineLot.expiryDate)}</p>` : ''}
+                    </div>
+                    ` : ''}
+                    
+                    <div class="flex gap-3 pt-4">
+                        <button onclick="window.open('/api/vaccination-records/${recordId}/certificate', '_blank')" class="flex-1 bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg">
+                            <span class="material-symbols-outlined">download</span>
+                            <span>Tải chứng nhận</span>
+                        </button>
+                        <button onclick="closeViewRecordModal()" class="px-6 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-all">
+                            Đóng
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            const modal = document.getElementById('viewRecordModal');
+            const wrapper = document.getElementById('viewRecordModalWrapper');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                if (wrapper) {
+                    wrapper.classList.remove('scale-95', 'opacity-0');
+                    wrapper.classList.add('scale-100', 'opacity-100');
+                }
+            }, 10);
+        } catch (error) {
+            console.error('Error viewing vaccination record:', error);
+            showMessage('Có lỗi xảy ra khi tải hồ sơ tiêm', 'error');
+        }
+    }
+</script>
+</body>
+</html>

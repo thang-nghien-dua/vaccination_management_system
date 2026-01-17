@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html class="light" lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Quản lý Phản ứng phụ - Y tá</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="/js/sidebar.js"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0f766e",
+                        "primary-light": "#14b8a6",
+                        "primary-dark": "#134e4a",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav {
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.1) 0%, rgba(15, 118, 110, 0.05) 100%);
+            border-left: 4px solid #0f766e;
+            color: #0f766e;
+        }
+        .sidebar-nav-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar-nav-item:hover {
+            transform: translateX(4px);
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.1) 0%, rgba(15, 118, 110, 0.05) 100%);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen text-[#111813] dark:text-white font-display">
+<div class="flex min-h-screen">
+    <!-- Sidebar Overlay (mobile) -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-72 bg-white dark:bg-[#1a2e21] border-r border-[#f0f4f2] dark:border-[#2d3f33] fixed h-screen z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col overflow-hidden">
+        <div class="p-6 flex items-center gap-3 flex-shrink-0">
+            <button id="sidebarToggleBtn" class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors flex-shrink-0" title="Menu">
+                <span class="material-symbols-outlined text-xl">menu</span>
+            </button>
+            <h1 id="sidebarLogoText" class="text-xl font-bold tracking-tight flex-1 lg:block">VacciCare</h1>
+            <button id="sidebarCloseBtn" class="lg:hidden p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors flex-shrink-0" title="Đóng sidebar">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div id="sidebarUserProfile" class="px-4 mb-6 flex-shrink-0" th:if="${isAuthenticated}">
+            <div class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark rounded-xl">
+                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 bg-primary/20 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0" th:if="${currentUser?.fullName != null}">
+                    <span th:text="${#strings.substring(currentUser.fullName, 0, 1)}"></span>
+                </div>
+                <div class="flex flex-col overflow-hidden min-w-0 lg:block">
+                    <p id="sidebarUserName" class="text-sm font-bold truncate" th:text="${currentUser?.fullName ?: currentUser?.email}">Tên người dùng</p>
+                    <p id="sidebarUserRole" class="text-xs text-[#61896f] truncate">Y tá</p>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 px-3 py-3 space-y-2 overflow-y-auto min-h-0">
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/dashboard">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">dashboard</span>
+                <span class="text-sm">Dashboard</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/appointments">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">vaccines</span>
+                <span class="text-sm">Lịch hẹn</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/vaccines">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">inventory</span>
+                <span class="text-sm">Quản lý vaccine</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl active-nav text-primary font-bold" href="/nurse/reactions">
+                <span class="material-symbols-outlined text-xl">warning</span>
+                <span class="text-sm font-semibold">Phản ứng phụ</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/vaccination-history">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">history</span>
+                <span class="text-sm">Lịch sử tiêm</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/trace">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">search</span>
+                <span class="text-sm">Truy vết</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/profile">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">person</span>
+                <span class="text-sm">Thông tin cá nhân</span>
+            </a>
+        </nav>
+        <div class="mt-auto p-4 border-t border-[#f0f4f2] dark:border-[#2d3f33] flex-shrink-0">
+            <form th:action="@{/api/auth/logout}" method="post" class="w-full">
+                <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span class="text-sm font-medium">Đăng xuất</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-72">
+        <header class="sticky top-0 z-50 bg-gradient-to-r from-primary/10 via-primary/5 to-white/90 dark:from-primary/20 dark:via-primary/10 dark:to-[#102216]/90 backdrop-blur-xl border-b border-primary/20 dark:border-primary/30 px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors">
+                        <span class="material-symbols-outlined text-xl">menu</span>
+                    </button>
+                    <div>
+                        <h1 class="text-2xl font-bold text-[#111813] dark:text-white">Quản lý Phản ứng phụ</h1>
+                        <p class="text-sm text-[#61896f] mt-1">Theo dõi và xử lý phản ứng phụ sau tiêm</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="refreshBtn" class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" title="Làm mới">
+                        <span class="material-symbols-outlined">refresh</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-red-500/20 dark:border-red-500/30 p-6 hover:shadow-xl transition-all duration-300 hover:scale-105 group">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Chưa xử lý</p>
+                            <p id="statUnresolved" class="text-2xl font-bold group-hover:text-red-500 transition-colors">0</p>
+                        </div>
+                        <div class="size-12 bg-red-500/10 rounded-xl flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
+                            <span class="material-symbols-outlined text-red-500 text-2xl">warning</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-green-500/20 dark:border-green-500/30 p-6 hover:shadow-xl transition-all duration-300 hover:scale-105 group">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Đã xử lý</p>
+                            <p id="statResolved" class="text-2xl font-bold group-hover:text-green-500 transition-colors">0</p>
+                        </div>
+                        <div class="size-12 bg-green-500/10 rounded-xl flex items-center justify-center group-hover:bg-green-500/20 transition-colors">
+                            <span class="material-symbols-outlined text-green-500 text-2xl">check_circle</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-blue-500/20 dark:border-blue-500/30 p-6 hover:shadow-xl transition-all duration-300 hover:scale-105 group">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Tổng số</p>
+                            <p id="statTotal" class="text-2xl font-bold group-hover:text-blue-500 transition-colors">0</p>
+                        </div>
+                        <div class="size-12 bg-blue-500/10 rounded-xl flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                            <span class="material-symbols-outlined text-blue-500 text-2xl">bar_chart</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-primary/20 dark:border-primary/30 p-6 hover:shadow-xl transition-all duration-300">
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex gap-2">
+                        <button onclick="loadAdverseReactions(false)" id="filterUnresolved" class="px-4 py-2 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-all text-sm font-bold">
+                            Chưa xử lý
+                        </button>
+                        <button onclick="loadAdverseReactions(true)" id="filterResolved" class="px-4 py-2 rounded-xl bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20 transition-all text-sm font-bold">
+                            Đã xử lý
+                        </button>
+                        <button onclick="loadAdverseReactions(null)" id="filterAll" class="px-4 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all text-sm font-bold">
+                            Tất cả
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Adverse Reactions List -->
+            <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-primary/20 dark:border-primary/30 p-6 hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold flex items-center gap-2">
+                        <span class="size-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-md">
+                            <span class="material-symbols-outlined text-white text-sm">warning</span>
+                        </span>
+                        Danh sách phản ứng phụ
+                    </h3>
+                </div>
+                <div id="adverseReactionsContainer" class="space-y-4">
+                    <div class="text-center py-12 text-[#61896f]">
+                        <span class="material-symbols-outlined text-6xl mb-4 block animate-pulse">hourglass_empty</span>
+                        <p>Đang tải danh sách phản ứng phụ...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    let adverseReactions = [];
+    let currentFilter = null; // null = all, true = resolved, false = unresolved
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        loadAdverseReactions(null);
+        
+        // Refresh button
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            loadAdverseReactions(currentFilter);
+        });
+    });
+
+    async function loadAdverseReactions(resolved) {
+        currentFilter = resolved;
+        
+        // Update filter buttons
+        document.querySelectorAll('[id^="filter"]').forEach(btn => {
+            btn.classList.remove('bg-primary', 'text-white');
+            btn.classList.add('bg-transparent');
+        });
+        
+        if (resolved === false) {
+            document.getElementById('filterUnresolved').classList.add('bg-red-500', 'text-white');
+            document.getElementById('filterUnresolved').classList.remove('bg-red-500/10', 'text-red-600');
+        } else if (resolved === true) {
+            document.getElementById('filterResolved').classList.add('bg-green-500', 'text-white');
+            document.getElementById('filterResolved').classList.remove('bg-green-500/10', 'text-green-600');
+        } else {
+            document.getElementById('filterAll').classList.add('bg-primary', 'text-white');
+            document.getElementById('filterAll').classList.remove('bg-primary/10', 'text-primary');
+        }
+        
+        const container = document.getElementById('adverseReactionsContainer');
+        try {
+            const url = resolved === null ? '/api/nurse/adverse-reactions' : `/api/nurse/adverse-reactions?resolved=${resolved}`;
+            const response = await fetch(url, {
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error('Failed to load adverse reactions');
+            adverseReactions = await response.json();
+            
+            updateStatistics();
+            renderAdverseReactions();
+        } catch (error) {
+            console.error('Error loading adverse reactions:', error);
+            container.innerHTML = `
+                <div class="text-center py-8 text-red-500">
+                    <span class="material-symbols-outlined text-4xl mb-2">error</span>
+                    <p>Có lỗi xảy ra khi tải danh sách phản ứng phụ</p>
+                    <p class="text-sm mt-2">${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    function updateStatistics() {
+        const unresolved = adverseReactions.filter(r => !r.resolved).length;
+        const resolved = adverseReactions.filter(r => r.resolved).length;
+        const total = adverseReactions.length;
+        
+        document.getElementById('statUnresolved').textContent = unresolved;
+        document.getElementById('statResolved').textContent = resolved;
+        document.getElementById('statTotal').textContent = total;
+    }
+
+    function renderAdverseReactions() {
+        const container = document.getElementById('adverseReactionsContainer');
+        
+        if (adverseReactions.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8 text-[#61896f]">
+                    <span class="material-symbols-outlined text-4xl mb-2">check_circle</span>
+                    <p>Không có phản ứng phụ nào</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = adverseReactions.map(reaction => `
+            <div class="bg-[#f0f4f2] dark:bg-[#2d3f33] rounded-xl p-6 border-2 ${reaction.resolved ? 'border-green-500/30' : 'border-red-500/30'} hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                <div class="flex items-start justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                            ${reaction.resolved ? 
+                                '<span class="px-3 py-1 bg-green-500/10 text-green-600 dark:text-green-400 rounded-lg text-xs font-bold">ĐÃ XỬ LÝ</span>' :
+                                '<span class="px-3 py-1 bg-red-500/10 text-red-600 dark:text-red-400 rounded-lg text-xs font-bold">CHƯA XỬ LÝ</span>'
+                            }
+                            <span class="px-3 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold">${reaction.reactionType}</span>
+                        </div>
+                        <h4 class="font-bold mb-2 text-lg">${reaction.vaccinationRecord ? reaction.vaccinationRecord.patientName : 'N/A'}</h4>
+                        <div class="text-sm text-[#61896f] mb-2 space-y-1">
+                            <p><strong>Vaccine:</strong> ${reaction.vaccinationRecord ? reaction.vaccinationRecord.vaccineName : 'N/A'}</p>
+                            <p><strong>Triệu chứng:</strong> ${reaction.symptoms}</p>
+                            ${reaction.treatment ? `<p><strong>Điều trị:</strong> ${reaction.treatment}</p>` : ''}
+                            ${reaction.notes ? `<p><strong>Ghi chú:</strong> ${reaction.notes}</p>` : ''}
+                        </div>
+                        <div class="text-xs text-[#61896f]">
+                            <span class="material-symbols-outlined text-sm align-middle">schedule</span>
+                            ${formatDateTime(reaction.occurredAt)}
+                            ${reaction.handledBy ? ` • Xử lý bởi: ${reaction.handledBy.fullName}` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function formatDateTime(dateTimeString) {
+        if (!dateTimeString) return 'N/A';
+        const date = new Date(dateTimeString);
+        return date.toLocaleString('vi-VN');
+    }
+</script>
+</body>
+</html>
