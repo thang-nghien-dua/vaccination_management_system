@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html class="light" lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Truy vết Thông tin - Hệ thống Tiêm chủng</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="/js/sidebar.js"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0f766e",
+                        "primary-light": "#14b8a6",
+                        "primary-dark": "#134e4a",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav {
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.1) 0%, rgba(15, 118, 110, 0.05) 100%);
+            border-left: 4px solid #0f766e;
+            color: #0f766e;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass-effect {
+            background: rgba(26, 46, 33, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        }
+        .sidebar-nav-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar-nav-item:hover {
+            transform: translateX(4px);
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.1) 0%, rgba(15, 118, 110, 0.05) 100%);
+        }
+        .info-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, currentColor, transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .info-card:hover::before {
+            opacity: 0.3;
+        }
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+        .info-item {
+            transition: all 0.2s ease;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid transparent;
+        }
+        .info-item:hover {
+            padding-left: 0.5rem;
+            border-bottom-color: rgba(15, 118, 110, 0.1);
+        }
+        .info-label {
+            font-weight: 600;
+            color: #61896f;
+            transition: color 0.2s ease;
+        }
+        .info-value {
+            font-weight: 700;
+            color: #111813;
+            transition: color 0.2s ease;
+        }
+        .dark .info-value {
+            color: #ffffff;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid rgba(15, 118, 110, 0.1);
+        }
+        .section-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen text-[#111813] dark:text-white font-display">
+<div class="flex min-h-screen">
+    <!-- Sidebar Overlay (mobile) -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-72 bg-white dark:bg-[#1a2e21] border-r border-[#f0f4f2] dark:border-[#2d3f33] fixed h-screen z-50 transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out flex flex-col overflow-hidden shadow-xl lg:shadow-none">
+        <div class="p-6 flex items-center gap-3 flex-shrink-0">
+            <button id="sidebarToggleBtn" class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors flex-shrink-0" title="Menu">
+                <span class="material-symbols-outlined text-xl">menu</span>
+            </button>
+            <h1 id="sidebarLogoText" class="text-xl font-bold tracking-tight flex-1 lg:block">VacciCare</h1>
+            <button id="sidebarCloseBtn" class="lg:hidden p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors flex-shrink-0" title="Đóng sidebar">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div id="sidebarUserProfile" class="px-4 mb-6 flex-shrink-0" th:if="${isAuthenticated}">
+            <div class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark rounded-xl">
+                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 bg-primary/20 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0" th:if="${currentUser?.fullName != null}">
+                    <span th:text="${#strings.substring(currentUser.fullName, 0, 1)}"></span>
+                </div>
+                <div class="flex flex-col overflow-hidden min-w-0 lg:block">
+                    <p id="sidebarUserName" class="text-sm font-bold truncate" th:text="${currentUser?.fullName ?: currentUser?.email}">Tên người dùng</p>
+                    <p id="sidebarUserRole" class="text-xs text-[#61896f] truncate">Y tá</p>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 px-3 py-3 space-y-2 overflow-y-auto min-h-0">
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/dashboard">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">dashboard</span>
+                <span class="text-sm">Dashboard</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/appointments">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">vaccines</span>
+                <span class="text-sm">Lịch hẹn</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/vaccines">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">inventory</span>
+                <span class="text-sm">Quản lý vaccine</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/reactions">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">warning</span>
+                <span class="text-sm">Phản ứng phụ</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/vaccination-history">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">history</span>
+                <span class="text-sm">Lịch sử tiêm</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl active-nav text-primary font-bold" href="/trace">
+                <span class="material-symbols-outlined text-xl">search</span>
+                <span class="text-sm font-semibold">Truy vết</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/profile">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">person</span>
+                <span class="text-sm">Thông tin cá nhân</span>
+            </a>
+        </nav>
+        <div class="mt-auto p-4 border-t border-[#f0f4f2] dark:border-[#2d3f33] flex-shrink-0">
+            <form th:action="@{/api/auth/logout}" method="post" class="w-full">
+                <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span class="text-sm font-medium">Đăng xuất</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-72">
+        <header class="sticky top-0 z-50 glass-effect border-b border-white/20 dark:border-white/10 px-6 lg:px-8 py-6 backdrop-blur-xl shadow-lg shadow-black/5">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <button id="mobileMenuBtn" class="lg:hidden p-2.5 rounded-xl hover:bg-white/20 dark:hover:bg-white/10 transition-all hover:scale-110 active:scale-95">
+                        <span class="material-symbols-outlined text-xl">menu</span>
+                    </button>
+                    <div>
+                        <h1 class="text-3xl font-extrabold bg-gradient-to-r from-primary via-primary-light to-primary bg-clip-text text-transparent">Truy vết Thông tin</h1>
+                        <p class="text-sm text-[#61896f] dark:text-gray-400 mt-1.5 font-medium">Tìm kiếm thông tin bệnh nhân, y tá, vaccine theo mã hẹn hoặc mã chứng nhận</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
+            <!-- Search Form -->
+            <div class="glass-effect rounded-3xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300 fade-in">
+                <h3 class="text-xl font-extrabold mb-6 flex items-center gap-3">
+                    <span class="size-10 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30">
+                        <span class="material-symbols-outlined text-white text-lg">search</span>
+                    </span>
+                    <span class="bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">Tìm kiếm</span>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2 text-[#61896f] dark:text-gray-400">Mã hẹn (Booking Code)</label>
+                        <input type="text" id="bookingCode" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white shadow-sm hover:shadow-md" placeholder="VD: BK-20241216-001">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2 text-[#61896f] dark:text-gray-400">Mã chứng nhận</label>
+                        <input type="text" id="certificateNumber" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white shadow-sm hover:shadow-md" placeholder="VD: CERT-20241216-001">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2 text-[#61896f] dark:text-gray-400">Số điện thoại</label>
+                        <input type="tel" id="phone" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white shadow-sm hover:shadow-md" placeholder="VD: 0901234567">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2 text-[#61896f] dark:text-gray-400">Email</label>
+                        <input type="email" id="email" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white shadow-sm hover:shadow-md" placeholder="VD: user@example.com">
+                    </div>
+                </div>
+                <div class="mt-6 flex gap-3">
+                    <button id="searchBtn" class="flex-1 bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white px-6 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95">
+                        <span class="material-symbols-outlined">search</span>
+                        <span>Tìm kiếm</span>
+                    </button>
+                    <button id="clearBtn" class="px-6 py-3.5 rounded-xl border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all hover:scale-105 active:scale-95 font-semibold">
+                        Xóa
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div id="resultsContainer" class="space-y-6">
+                <!-- Results will be displayed here -->
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('searchBtn').addEventListener('click', performTrace);
+        document.getElementById('clearBtn').addEventListener('click', clearSearch);
+        
+        // Enter key to search
+        ['bookingCode', 'certificateNumber', 'phone', 'email'].forEach(id => {
+            document.getElementById(id).addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    performTrace();
+                }
+            });
+        });
+    });
+
+    async function performTrace() {
+        const bookingCode = document.getElementById('bookingCode').value.trim();
+        const certificateNumber = document.getElementById('certificateNumber').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const email = document.getElementById('email').value.trim();
+        
+        if (!bookingCode && !certificateNumber && !phone && !email) {
+            showMessage('Vui lòng nhập ít nhất một thông tin để tìm kiếm', 'error');
+            return;
+        }
+        
+        const container = document.getElementById('resultsContainer');
+        container.innerHTML = `
+            <div class="text-center py-8 text-[#61896f]">
+                <span class="material-symbols-outlined text-4xl mb-2 animate-spin">hourglass_empty</span>
+                <p>Đang tìm kiếm...</p>
+            </div>
+        `;
+        
+        try {
+            let url = '/api/trace?';
+            const params = [];
+            if (bookingCode) params.push(`bookingCode=${encodeURIComponent(bookingCode)}`);
+            if (certificateNumber) params.push(`certificateNumber=${encodeURIComponent(certificateNumber)}`);
+            if (phone) params.push(`phone=${encodeURIComponent(phone)}`);
+            if (email) params.push(`email=${encodeURIComponent(email)}`);
+            
+            url += params.join('&');
+            
+            const response = await fetch(url, { credentials: 'include' });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Có lỗi xảy ra khi tìm kiếm');
+            }
+            
+            const data = await response.json();
+            renderResults(data.results || []);
+        } catch (error) {
+            console.error('Error tracing:', error);
+            container.innerHTML = `
+                <div class="text-center py-8 text-red-500">
+                    <span class="material-symbols-outlined text-4xl mb-2">error</span>
+                    <p>Có lỗi xảy ra khi tìm kiếm</p>
+                    <p class="text-sm mt-2">${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    function renderResults(results) {
+        const container = document.getElementById('resultsContainer');
+        
+        if (results.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-12 text-[#61896f]">
+                    <span class="material-symbols-outlined text-6xl mb-4 block">search_off</span>
+                    <p class="text-lg font-semibold mb-2">Không tìm thấy kết quả</p>
+                    <p class="text-sm">Vui lòng thử lại với thông tin khác</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = results.map((result, index) => {
+            if (result.type === 'VACCINATION_RECORD') {
+                return renderVaccinationRecord(result, index);
+            } else {
+                return renderAppointment(result, index);
+            }
+        }).join('');
+    }
+
+    function renderVaccinationRecord(result, index) {
+        const patient = result.patient || {};
+        const nurse = result.nurse || {};
+        const doctor = result.doctor || {};
+        const vaccine = result.vaccine || {};
+        const lot = result.vaccineLot || {};
+        const appointment = result.appointment || {};
+        const center = appointment.center || {};
+        const reactions = result.adverseReactions || [];
+        
+        return `
+            <div class="card-hover glass-effect rounded-3xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300 fade-in">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="size-12 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/30">
+                        <span class="material-symbols-outlined text-white text-xl">vaccines</span>
+                    </span>
+                    <div>
+                        <h3 class="text-xl font-extrabold">Đã tiêm vaccine</h3>
+                        <p class="text-sm text-[#61896f] dark:text-gray-400">Mã chứng nhận: ${result.certificateNumber || 'N/A'}</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Thông tin Bệnh nhân -->
+                    <div class="info-card bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-2xl p-6 border border-blue-200/50 dark:border-blue-800/30">
+                        <div class="section-header">
+                            <div class="section-icon bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30">
+                                <span class="material-symbols-outlined">person</span>
+                            </div>
+                            <h4 class="font-bold text-lg text-blue-600 dark:text-blue-400">Thông tin Bệnh nhân</h4>
+                        </div>
+                        <div class="space-y-3 text-sm">
+                            <div class="info-item"><span class="info-label">Họ tên:</span> <span class="info-value ml-2">${patient.fullName || 'N/A'}</span></div>
+                            <div class="info-item"><span class="info-label">SĐT:</span> <span class="info-value ml-2">${patient.phoneNumber || 'N/A'}</span></div>
+                            <div class="info-item"><span class="info-label">Email:</span> <span class="info-value ml-2">${patient.email || 'N/A'}</span></div>
+                            <div class="info-item"><span class="info-label">Ngày sinh:</span> <span class="info-value ml-2">${formatDate(patient.dayOfBirth)}</span></div>
+                            <div class="info-item"><span class="info-label">Giới tính:</span> <span class="info-value ml-2">${formatGender(patient.gender)}</span></div>
+                            ${patient.address ? `<div class="info-item"><span class="info-label">Địa chỉ:</span> <span class="info-value ml-2">${patient.address}</span></div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <!-- Thông tin Y tá -->
+                    <div class="info-card bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-purple-950/20 dark:to-pink-950/20 rounded-2xl p-6 border border-purple-200/50 dark:border-purple-800/30">
+                        <div class="section-header">
+                            <div class="section-icon bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-lg shadow-purple-500/30">
+                                <span class="material-symbols-outlined">medical_services</span>
+                            </div>
+                            <h4 class="font-bold text-lg text-purple-600 dark:text-purple-400">Y tá Thực hiện</h4>
+                        </div>
+                        <div class="space-y-3 text-sm">
+                            <div class="info-item"><span class="info-label">Họ tên:</span> <span class="info-value ml-2">${nurse.fullName || 'N/A'}</span></div>
+                            <div class="info-item"><span class="info-label">Email:</span> <span class="info-value ml-2">${nurse.email || 'N/A'}</span></div>
+                            <div class="info-item"><span class="info-label">SĐT:</span> <span class="info-value ml-2">${nurse.phoneNumber || 'N/A'}</span></div>
+                        </div>
+                    </div>
+                    
+                    ${doctor && doctor.fullName ? `
+                    <!-- Thông tin Bác sĩ -->
+                    <div class="info-card bg-gradient-to-br from-indigo-50/50 to-blue-50/50 dark:from-indigo-950/20 dark:to-blue-950/20 rounded-2xl p-6 border border-indigo-200/50 dark:border-indigo-800/30">
+                        <div class="section-header">
+                            <div class="section-icon bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/30">
+                                <span class="material-symbols-outlined">medical_services</span>
+                            </div>
+                            <h4 class="font-bold text-lg text-indigo-600 dark:text-indigo-400">Bác sĩ ${doctor.role || ''}</h4>
+                        </div>
+                        <div class="space-y-3 text-sm">
+                            <div class="info-item"><span class="info-label">Họ tên:</span> <span class="info-value ml-2">${doctor.fullName}</span></div>
+                            ${doctor.email ? `<div class="info-item"><span class="info-label">Email:</span> <span class="info-value ml-2">${doctor.email}</span></div>` : ''}
+                            ${doctor.phoneNumber ? `<div class="info-item"><span class="info-label">SĐT:</span> <span class="info-value ml-2">${doctor.phoneNumber}</span></div>` : ''}
+                            ${doctor.screenedAt ? `<div class="info-item"><span class="info-label">Thời gian khám:</span> <span class="info-value ml-2">${formatDateTime(doctor.screenedAt)}</span></div>` : ''}
+                            ${doctor.approvedAt ? `<div class="info-item"><span class="info-label">Thời gian phê duyệt:</span> <span class="info-value ml-2">${formatDateTime(doctor.approvedAt)}</span></div>` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- Thông tin Vaccine -->
+                    <div class="info-card bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-2xl p-6 border border-green-200/50 dark:border-green-800/30">
+                        <div class="section-header">
+                            <div class="section-icon bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/30">
+                                <span class="material-symbols-outlined">vaccines</span>
+                            </div>
+                            <h4 class="font-bold text-lg text-green-600 dark:text-green-400">Thông tin Vaccine</h4>
+                        </div>
+                        <div class="space-y-3 text-sm">
+                            <div class="info-item"><span class="info-label">Tên vaccine:</span> <span class="info-value ml-2">${vaccine.name || 'N/A'}</span></div>
+                            <div class="info-item"><span class="info-label">Nhà sản xuất:</span> <span class="info-value ml-2">${vaccine.manufacturer || 'N/A'}</span></div>
+                            <div class="info-item"><span class="info-label">Mã vaccine:</span> <span class="info-value ml-2">${vaccine.code || 'N/A'}</span></div>
+                            <div class="info-item"><span class="info-label">Mũi tiêm:</span> <span class="info-value ml-2 text-primary">Mũi ${result.doseNumber || 1}</span></div>
+                            <div class="info-item"><span class="info-label">Liều lượng:</span> <span class="info-value ml-2">${result.doseAmount ? result.doseAmount + ' ml' : 'N/A'}</span></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Thông tin Lô vaccine -->
+                    <div class="info-card bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-orange-950/20 dark:to-amber-950/20 rounded-2xl p-6 border border-orange-200/50 dark:border-orange-800/30">
+                        <div class="section-header">
+                            <div class="section-icon bg-gradient-to-br from-orange-500 to-amber-600 text-white shadow-lg shadow-orange-500/30">
+                                <span class="material-symbols-outlined">inventory</span>
+                            </div>
+                            <h4 class="font-bold text-lg text-orange-600 dark:text-orange-400">Thông tin Lô Vaccine</h4>
+                        </div>
+                        <div class="space-y-3 text-sm">
+                            <div class="info-item"><span class="info-label">Số lô:</span> <span class="info-value ml-2">${lot.lotNumber || 'N/A'}</span></div>
+                            <div class="info-item"><span class="info-label">Ngày sản xuất:</span> <span class="info-value ml-2">${formatDate(lot.manufacturingDate)}</span></div>
+                            <div class="info-item"><span class="info-label">Hạn sử dụng:</span> <span class="info-value ml-2">${formatDate(lot.expiryDate)}</span></div>
+                            ${result.batchNumber ? `<div class="info-item"><span class="info-label">Số batch:</span> <span class="info-value ml-2">${result.batchNumber}</span></div>` : ''}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Thông tin Tiêm chủng -->
+                <div class="info-card mt-6 bg-gradient-to-br from-cyan-50/50 to-teal-50/50 dark:from-cyan-950/20 dark:to-teal-950/20 rounded-2xl p-6 border border-cyan-200/50 dark:border-cyan-800/30">
+                    <div class="section-header">
+                        <div class="section-icon bg-gradient-to-br from-cyan-500 to-teal-600 text-white shadow-lg shadow-cyan-500/30">
+                            <span class="material-symbols-outlined">calendar_today</span>
+                        </div>
+                        <h4 class="font-bold text-lg text-cyan-600 dark:text-cyan-400">Thông tin Tiêm chủng</h4>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div class="info-item"><span class="info-label">Ngày tiêm:</span> <span class="info-value ml-2">${formatDate(result.injectionDate)}</span></div>
+                        <div class="info-item"><span class="info-label">Giờ tiêm:</span> <span class="info-value ml-2">${formatTime(result.injectionTime)}</span></div>
+                        <div class="info-item"><span class="info-label">Vị trí tiêm:</span> <span class="info-value ml-2">${getInjectionSiteName(result.injectionSite)}</span></div>
+                        <div class="info-item"><span class="info-label">Mã hẹn:</span> <span class="info-value ml-2">${appointment.bookingCode || 'N/A'}</span></div>
+                        <div class="info-item"><span class="info-label">Trung tâm:</span> <span class="info-value ml-2">${center.name || 'N/A'}</span></div>
+                        ${result.nextDoseDate ? `<div class="info-item"><span class="info-label">Mũi tiếp theo:</span> <span class="info-value ml-2 text-primary font-bold">${formatDate(result.nextDoseDate)}</span></div>` : ''}
+                    </div>
+                </div>
+                
+                ${reactions.length > 0 ? `
+                <!-- Phản ứng phụ -->
+                <div class="info-card mt-6 bg-gradient-to-br from-red-50/50 to-rose-50/50 dark:from-red-950/20 dark:to-rose-950/20 rounded-2xl p-6 border border-red-200/50 dark:border-red-800/30">
+                    <div class="section-header">
+                        <div class="section-icon bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/30">
+                            <span class="material-symbols-outlined">warning</span>
+                        </div>
+                        <h4 class="font-bold text-lg text-red-600 dark:text-red-400">Phản ứng phụ (${reactions.length})</h4>
+                    </div>
+                    <div class="space-y-4">
+                        ${reactions.map(reaction => `
+                            <div class="bg-white/60 dark:bg-black/30 rounded-xl p-5 border-2 border-red-200/40 dark:border-red-800/30 hover:border-red-300/60 dark:hover:border-red-700/50 transition-all duration-300 hover:shadow-lg">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="px-3 py-1.5 rounded-lg text-xs font-bold ${reaction.resolved ? 'bg-green-500/20 text-green-700 dark:text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-700 dark:text-red-400 border border-red-500/30'}">
+                                            ${reaction.resolved ? '✓ Đã xử lý' : '⚠ Chưa xử lý'}
+                                        </span>
+                                        <span class="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-500/30">
+                                            ${getReactionTypeName(reaction.reactionType) || 'N/A'}
+                                        </span>
+                                    </div>
+                                    <span class="text-xs text-[#61896f] dark:text-gray-400 font-medium">${formatDateTime(reaction.occurredAt)}</span>
+                                </div>
+                                <p class="text-sm font-semibold mb-2 text-[#111813] dark:text-white">${reaction.symptoms || 'Không có mô tả'}</p>
+                                ${reaction.treatment ? `<p class="text-xs text-[#61896f] dark:text-gray-400 mb-1"><span class="font-semibold">Điều trị:</span> ${reaction.treatment}</p>` : ''}
+                                ${reaction.handledBy ? `<p class="text-xs text-[#61896f] dark:text-gray-400 mt-2"><span class="font-semibold">Xử lý bởi:</span> <span class="font-bold">${reaction.handledBy.fullName}</span></p>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    function renderAppointment(result, index) {
+        const patient = result.patient || {};
+        const doctor = result.doctor || {};
+        const vaccine = result.vaccine || {};
+        const center = result.center || {};
+        
+        return `
+            <div class="card-hover glass-effect rounded-3xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300 fade-in">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="size-12 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg shadow-yellow-500/30">
+                        <span class="material-symbols-outlined text-white text-xl">event</span>
+                    </span>
+                    <div>
+                        <h3 class="text-xl font-extrabold">Lịch hẹn (Chưa tiêm)</h3>
+                        <p class="text-sm text-[#61896f] dark:text-gray-400">Mã hẹn: ${result.bookingCode || 'N/A'}</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Thông tin Bệnh nhân -->
+                    <div class="info-card bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-2xl p-6 border border-blue-200/50 dark:border-blue-800/30">
+                        <div class="section-header">
+                            <div class="section-icon bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30">
+                                <span class="material-symbols-outlined">person</span>
+                            </div>
+                            <h4 class="font-bold text-lg text-blue-600 dark:text-blue-400">Thông tin Bệnh nhân</h4>
+                        </div>
+                        <div class="space-y-3 text-sm">
+                            <div class="info-item"><span class="info-label">Họ tên:</span> <span class="info-value ml-2">${patient.fullName || 'N/A'}</span></div>
+                            <div class="info-item"><span class="info-label">SĐT:</span> <span class="info-value ml-2">${patient.phoneNumber || 'N/A'}</span></div>
+                            <div class="info-item"><span class="info-label">Email:</span> <span class="info-value ml-2">${patient.email || 'N/A'}</span></div>
+                            ${patient.dayOfBirth ? `<div class="info-item"><span class="info-label">Ngày sinh:</span> <span class="info-value ml-2">${formatDate(patient.dayOfBirth)}</span></div>` : ''}
+                            ${patient.gender ? `<div class="info-item"><span class="info-label">Giới tính:</span> <span class="info-value ml-2">${formatGender(patient.gender)}</span></div>` : ''}
+                            ${result.isGuest ? '<div class="mt-3 px-3 py-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-xs text-yellow-700 dark:text-yellow-400 font-semibold">(Khách hàng chưa đăng ký)</div>' : ''}
+                        </div>
+                    </div>
+                    
+                    <!-- Thông tin Lịch hẹn -->
+                    <div class="info-card bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-purple-950/20 dark:to-pink-950/20 rounded-2xl p-6 border border-purple-200/50 dark:border-purple-800/30">
+                        <div class="section-header">
+                            <div class="section-icon bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-lg shadow-purple-500/30">
+                                <span class="material-symbols-outlined">event</span>
+                            </div>
+                            <h4 class="font-bold text-lg text-purple-600 dark:text-purple-400">Thông tin Lịch hẹn</h4>
+                        </div>
+                        <div class="space-y-3 text-sm">
+                            <div class="info-item"><span class="info-label">Ngày hẹn:</span> <span class="info-value ml-2">${formatDate(result.appointmentDate)}</span></div>
+                            <div class="info-item"><span class="info-label">Giờ hẹn:</span> <span class="info-value ml-2">${formatTime(result.appointmentTime)}</span></div>
+                            <div class="info-item"><span class="info-label">Trạng thái:</span> <span class="ml-2 px-3 py-1 rounded-lg text-xs font-bold ${getStatusColor(result.status)}">${getStatusText(result.status)}</span></div>
+                            ${result.queueNumber ? `<div class="info-item"><span class="info-label">Số thứ tự:</span> <span class="info-value ml-2">${result.queueNumber}</span></div>` : ''}
+                            ${vaccine.name ? `<div class="info-item"><span class="info-label">Vaccine:</span> <span class="info-value ml-2">${vaccine.name}</span></div>` : ''}
+                            ${center.name ? `<div class="info-item"><span class="info-label">Trung tâm:</span> <span class="info-value ml-2">${center.name}</span></div>` : ''}
+                        </div>
+                    </div>
+                    
+                    ${doctor && doctor.fullName ? `
+                    <!-- Thông tin Bác sĩ -->
+                    <div class="info-card bg-gradient-to-br from-indigo-50/50 to-blue-50/50 dark:from-indigo-950/20 dark:to-blue-950/20 rounded-2xl p-6 border border-indigo-200/50 dark:border-indigo-800/30">
+                        <div class="section-header">
+                            <div class="section-icon bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/30">
+                                <span class="material-symbols-outlined">medical_services</span>
+                            </div>
+                            <h4 class="font-bold text-lg text-indigo-600 dark:text-indigo-400">Bác sĩ ${doctor.role || ''}</h4>
+                        </div>
+                        <div class="space-y-3 text-sm">
+                            <div class="info-item"><span class="info-label">Họ tên:</span> <span class="info-value ml-2">${doctor.fullName}</span></div>
+                            ${doctor.email ? `<div class="info-item"><span class="info-label">Email:</span> <span class="info-value ml-2">${doctor.email}</span></div>` : ''}
+                            ${doctor.phoneNumber ? `<div class="info-item"><span class="info-label">SĐT:</span> <span class="info-value ml-2">${doctor.phoneNumber}</span></div>` : ''}
+                            ${doctor.screenedAt ? `<div class="info-item"><span class="info-label">Thời gian khám:</span> <span class="info-value ml-2">${formatDateTime(doctor.screenedAt)}</span></div>` : ''}
+                            ${doctor.approvedAt ? `<div class="info-item"><span class="info-label">Thời gian phê duyệt:</span> <span class="info-value ml-2">${formatDateTime(doctor.approvedAt)}</span></div>` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString + 'T00:00:00');
+        return date.toLocaleDateString('vi-VN');
+    }
+
+    function formatTime(timeString) {
+        if (!timeString) return 'N/A';
+        return timeString.substring(0, 5);
+    }
+
+    function formatDateTime(dateTimeString) {
+        if (!dateTimeString) return 'N/A';
+        const date = new Date(dateTimeString);
+        return date.toLocaleString('vi-VN');
+    }
+
+    function formatGender(gender) {
+        if (!gender) return 'N/A';
+        const genderMap = { 'MALE': 'Nam', 'FEMALE': 'Nữ', 'OTHER': 'Khác' };
+        return genderMap[gender] || gender;
+    }
+
+    function getInjectionSiteName(site) {
+        if (!site) return 'N/A';
+        const sites = {
+            'LEFT_ARM': 'Tay trái',
+            'RIGHT_ARM': 'Tay phải',
+            'LEFT_THIGH': 'Đùi trái',
+            'RIGHT_THIGH': 'Đùi phải'
+        };
+        return sites[site] || site;
+    }
+
+    function getStatusText(status) {
+        if (!status) return 'N/A';
+        const statusMap = {
+            'PENDING': 'Chờ xác nhận',
+            'CONFIRMED': 'Đã xác nhận',
+            'CHECKED_IN': 'Đã check-in',
+            'COMPLETED': 'Hoàn thành',
+            'CANCELLED': 'Đã hủy'
+        };
+        return statusMap[status] || status;
+    }
+
+    function getStatusColor(status) {
+        if (!status) return 'bg-gray-500/10 text-gray-600';
+        const colorMap = {
+            'PENDING': 'bg-yellow-500/10 text-yellow-600',
+            'CONFIRMED': 'bg-blue-500/10 text-blue-600',
+            'CHECKED_IN': 'bg-green-500/10 text-green-600',
+            'COMPLETED': 'bg-green-500/10 text-green-600',
+            'CANCELLED': 'bg-red-500/10 text-red-600'
+        };
+        return colorMap[status] || 'bg-gray-500/10 text-gray-600';
+    }
+
+    function clearSearch() {
+        document.getElementById('bookingCode').value = '';
+        document.getElementById('certificateNumber').value = '';
+        document.getElementById('phone').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('resultsContainer').innerHTML = '';
+    }
+
+    function getReactionTypeName(reactionType) {
+        if (!reactionType) return 'N/A';
+        const typeMap = {
+            'MILD': 'Nhẹ',
+            'MODERATE': 'Trung bình',
+            'SEVERE': 'Nghiêm trọng'
+        };
+        return typeMap[reactionType] || reactionType;
+    }
+
+    function showMessage(message, type) {
+        // Simple alert, có thể thay bằng toast notification
+        alert(message);
+    }
+</script>
+</body>
+</html>
