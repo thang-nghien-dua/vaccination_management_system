@@ -7,12 +7,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ut.edu.vaccinationmanagementsystem.dto.BookAppointmentDTO;
 import ut.edu.vaccinationmanagementsystem.dto.ConsultationRequestDTO;
+import ut.edu.vaccinationmanagementsystem.dto.WalkInAppointmentDTO;
 import ut.edu.vaccinationmanagementsystem.entity.*;
 import ut.edu.vaccinationmanagementsystem.entity.enums.AppointmentStatus;
 import ut.edu.vaccinationmanagementsystem.entity.enums.PaymentMethod;
 import ut.edu.vaccinationmanagementsystem.repository.*;
-import ut.edu.vaccinationmanagementsystem.service.CustomUserDetails;
-import ut.edu.vaccinationmanagementsystem.service.CustomOAuth2User;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -67,6 +66,12 @@ public class AppointmentService {
     
     @Autowired
     private NotificationService notificationService;
+    
+    @Autowired
+    private AppointmentHistoryRepository appointmentHistoryRepository;
+    
+    @Autowired
+    private ClinicRoomRepository clinicRoomRepository;
     
     /**
      * Tạo consultation request (yêu cầu tư vấn)
@@ -262,13 +267,14 @@ public class AppointmentService {
             // Lưu familyMember để check duplicate
             familyMemberIdToCheck = familyMember.getId();
             bookedForUser = null; // Đặt cho người thân nên bookedForUser = null
-            
+
             // Validate phone verification cho người thân
             validatePhoneVerificationForFamilyMember(familyMember, currentUser, dto.getPhoneNumber());
         } else {
             // Đặt cho bản thân
             userIdToCheck = currentUser.getId();
-            
+            bookedForUser = currentUser; // Đặt bookedForUser = currentUser khi đặt cho bản thân
+
             // Validate phone verification cho bản thân
             validatePhoneVerificationForUser(currentUser, dto.getPhoneNumber());
         }
@@ -989,6 +995,406 @@ public class AppointmentService {
         String timeStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HHmmss"));
         long count = appointmentRepository.count();
         return String.format("BK-%s-%s-%03d", dateStr, timeStr, (count % 1000) + 1);
+    }
+    
+    /**
+     * Lấy danh sách lịch hẹn hôm nay
+     * @param status Trạng thái để lọc (optional, null = lấy tất cả)
+     * @return Danh sách appointments
+     */
+    public List<Appointment> getTodayAppointments(AppointmentStatus status) {
+        LocalDate today = LocalDate.now();
+        return getAppointmentsByDate(today, status);
+    }
+    
+    /**
+     * Lấy danh sách lịch hẹn theo ngày cụ thể
+     * @param date Ngày cần lấy
+     * @param status Trạng thái để lọc (optional, null = lấy tất cả)
+     * @return Danh sách appointments
+     */
+    public List<Appointment> getAppointmentsByDate(LocalDate date, AppointmentStatus status) {
+        if (status != null) {
+            return appointmentRepository.findByAppointmentDateAndStatus(date, status);
+        } else {
+            return appointmentRepository.findByAppointmentDate(date);
+        }
+    }
+    
+    /**
+     * Lấy danh sách lịch hẹn đã phê duyệt (APPROVED) - cho Nurse
+     * @return Danh sách appointments với status APPROVED
+     */
+    public List<Appointment> getApprovedAppointments() {
+        return appointmentRepository.findByStatus(AppointmentStatus.APPROVED);
+    }
+    
+    /**
+     * Check-in khách hàng
+     * - Cập nhật status: CHECKED_IN
+     * - Gán số thứ tự
+     * - Tạo AppointmentHistory
+     * @param appointmentId ID của appointment
+     * @param checkedByUser User thực hiện check-in (receptionist)
+     * @return Appointment đã được check-in
+     */
+    public Appointment checkInAppointment(Long appointmentId, User checkedByUser) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+        
+        // Kiểm tra trạng thái hiện tại - cho phép check-in từ PENDING hoặc CONFIRMED
+        // Receptionist có thể check-in trực tiếp mà không cần đợi xác nhận
+        if (appointment.getStatus() != AppointmentStatus.PENDING && 
+            appointment.getStatus() != AppointmentStatus.CONFIRMED) {
+            throw new RuntimeException(
+                String.format("Chỉ có thể check-in khi trạng thái là 'Chờ xác nhận' hoặc 'Đã xác nhận'. Trạng thái hiện tại: %s", 
+                    getStatusLabel(appointment.getStatus()))
+            );
+        }
+        
+        // Kiểm tra ngày hẹn phải là hôm nay
+        if (appointment.getAppointmentDate() == null || !appointment.getAppointmentDate().equals(LocalDate.now())) {
+            throw new RuntimeException("Chỉ có thể check-in cho lịch hẹn hôm nay");
+        }
+        
+        // Lấy số thứ tự tiếp theo cho ngày hôm nay
+        Integer nextQueueNumber = getNextQueueNumber(LocalDate.now());
+        
+        // Lưu trạng thái cũ
+        AppointmentStatus oldStatus = appointment.getStatus();
+        
+        // Cập nhật trạng thái và số thứ tự
+        appointment.setStatus(AppointmentStatus.CHECKED_IN);
+        appointment.setQueueNumber(nextQueueNumber);
+        appointment.setUpdatedAt(LocalDateTime.now());
+        
+        // Lưu appointment
+        appointment = appointmentRepository.save(appointment);
+        
+        // Tạo AppointmentHistory
+        createAppointmentHistory(appointment, oldStatus, AppointmentStatus.CHECKED_IN, checkedByUser, "Check-in tại quầy lễ tân");
+        
+        return appointment;
+    }
+    
+    /**
+     * Xác nhận lịch hẹn (cho Receptionist)
+     * @param appointmentId ID của appointment
+     * @param confirmedByUser User thực hiện xác nhận (receptionist)
+     * @return Appointment đã được xác nhận
+     */
+    public Appointment confirmAppointmentByReceptionist(Long appointmentId, User confirmedByUser) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+        
+        // Chỉ có thể xác nhận khi trạng thái là PENDING
+        if (appointment.getStatus() != AppointmentStatus.PENDING) {
+            throw new RuntimeException(
+                String.format("Chỉ có thể xác nhận lịch hẹn khi trạng thái là 'Chờ xác nhận'. Trạng thái hiện tại: %s",
+                    getStatusLabel(appointment.getStatus()))
+            );
+        }
+        
+        // Lưu trạng thái cũ
+        AppointmentStatus oldStatus = appointment.getStatus();
+        
+        // Cập nhật trạng thái
+        appointment.setStatus(AppointmentStatus.CONFIRMED);
+        appointment.setUpdatedAt(LocalDateTime.now());
+        
+        // Lưu appointment
+        appointment = appointmentRepository.save(appointment);
+        
+        // Tạo AppointmentHistory
+        createAppointmentHistory(appointment, oldStatus, AppointmentStatus.CONFIRMED, confirmedByUser, "Xác nhận lịch hẹn bởi lễ tân");
+        
+        return appointment;
+    }
+    
+    /**
+     * Hủy lịch hẹn bởi Receptionist (không cần kiểm tra quyền như cancelAppointment)
+     * @param appointmentId ID của appointment
+     * @param cancelledByUser User thực hiện hủy (receptionist)
+     * @param reason Lý do hủy (optional)
+     * @return Appointment đã được hủy
+     */
+    public Appointment cancelAppointmentByReceptionist(Long appointmentId, User cancelledByUser, String reason) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+        
+        // Cho phép hủy nếu trạng thái là PENDING hoặc CONFIRMED
+        if (appointment.getStatus() != AppointmentStatus.PENDING && 
+            appointment.getStatus() != AppointmentStatus.CONFIRMED) {
+            throw new RuntimeException(
+                String.format("Chỉ có thể hủy lịch hẹn khi trạng thái là 'Chờ xác nhận' hoặc 'Đã xác nhận'. Trạng thái hiện tại: %s",
+                    getStatusLabel(appointment.getStatus()))
+            );
+        }
+        
+        // Lưu trạng thái cũ
+        AppointmentStatus oldStatus = appointment.getStatus();
+        
+        // Cập nhật trạng thái
+        appointment.setStatus(AppointmentStatus.CANCELLED);
+        appointment.setUpdatedAt(LocalDateTime.now());
+        
+        // Thêm lý do vào notes nếu có
+        if (reason != null && !reason.trim().isEmpty()) {
+            String currentNotes = appointment.getNotes() != null ? appointment.getNotes() : "";
+            appointment.setNotes(currentNotes + (currentNotes.isEmpty() ? "" : "\n") + 
+                "[Hủy bởi lễ tân: " + reason + "]");
+        }
+        
+        // Tạo thông báo hủy lịch
+        try {
+            notificationService.createAppointmentCancelledNotification(appointment);
+        } catch (Exception e) {
+            // Log error nhưng không throw để không làm gián đoạn quá trình hủy lịch
+            System.err.println("Failed to create cancellation notification: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        // Cập nhật slot booking count (giảm số lượng booking)
+        AppointmentSlot slot = appointment.getSlot();
+        if (slot != null) {
+            int currentBookings = slot.getCurrentBookings();
+            if (currentBookings > 0) {
+                slot.setCurrentBookings(currentBookings - 1);
+            }
+            // Nếu slot đã đầy trước đó, mở lại slot
+            if (!slot.getIsAvailable() && slot.getCurrentBookings() < slot.getMaxCapacity()) {
+                slot.setIsAvailable(true);
+            }
+            appointmentSlotRepository.save(slot);
+        }
+        
+        // Lưu appointment
+        appointment = appointmentRepository.save(appointment);
+        
+        // Tạo AppointmentHistory
+        String historyNote = "Hủy lịch hẹn bởi lễ tân" + (reason != null && !reason.trim().isEmpty() ? ": " + reason : "");
+        createAppointmentHistory(appointment, oldStatus, AppointmentStatus.CANCELLED, cancelledByUser, historyNote);
+        
+        return appointment;
+    }
+    
+    /**
+     * Tìm kiếm appointment theo số điện thoại hoặc booking code
+     * @param phone Số điện thoại (optional)
+     * @param bookingCode Mã booking (optional)
+     * @return Danh sách appointments tìm được
+     */
+    public List<Appointment> searchAppointments(String phone, String bookingCode) {
+        if (bookingCode != null && !bookingCode.trim().isEmpty()) {
+            // Tìm theo booking code
+            Optional<Appointment> appointmentOpt = appointmentRepository.findByBookingCode(bookingCode.trim());
+            return appointmentOpt.map(List::of).orElse(List.of());
+        } else if (phone != null && !phone.trim().isEmpty()) {
+            // Tìm theo số điện thoại
+            // Tìm trong User
+            List<User> users = userRepository.findAll().stream()
+                .filter(u -> u.getPhoneNumber() != null && u.getPhoneNumber().contains(phone.trim()))
+                .collect(Collectors.toList());
+            
+            List<Appointment> results = new java.util.ArrayList<>();
+            
+            // Tìm appointments của các user này
+            for (User user : users) {
+                results.addAll(appointmentRepository.findByBookedByUserId(user.getId()));
+                results.addAll(appointmentRepository.findByBookedForUserId(user.getId()));
+            }
+            
+            // Tìm trong consultationPhone và guest phone
+            results.addAll(appointmentRepository.findAll().stream()
+                .filter(a -> (a.getConsultationPhone() != null && a.getConsultationPhone().contains(phone.trim())) ||
+                            (a.getBookedByUser() == null && a.getGuestFullName() != null)) // Guest appointments
+                .collect(Collectors.toList()));
+            
+            return results.stream().distinct().collect(Collectors.toList());
+        } else {
+            throw new RuntimeException("Phải cung cấp số điện thoại hoặc mã booking để tìm kiếm");
+        }
+    }
+    
+    /**
+     * Tạo walk-in appointment (không đặt trước)
+     * @param dto DTO chứa thông tin walk-in
+     * @param createdByUser User tạo (receptionist)
+     * @return Appointment đã tạo
+     */
+    public Appointment createWalkInAppointment(WalkInAppointmentDTO dto, User createdByUser) {
+        // Validate required fields
+        if (dto.getVaccineId() == null) {
+            throw new RuntimeException("Vaccine ID is required");
+        }
+        if (dto.getCenterId() == null) {
+            throw new RuntimeException("Center ID is required");
+        }
+        if (dto.getAppointmentDate() == null) {
+            throw new RuntimeException("Appointment date is required");
+        }
+        if (dto.getAppointmentTime() == null) {
+            throw new RuntimeException("Appointment time is required");
+        }
+        if (dto.getFullName() == null || dto.getFullName().trim().isEmpty()) {
+            throw new RuntimeException("Full name is required");
+        }
+        if (dto.getPhoneNumber() == null || dto.getPhoneNumber().trim().isEmpty()) {
+            throw new RuntimeException("Phone number is required");
+        }
+        
+        // Validate vaccine exists
+        Vaccine vaccine = vaccineRepository.findById(dto.getVaccineId())
+                .orElseThrow(() -> new RuntimeException("Vaccine not found"));
+        
+        // Validate center exists
+        VaccinationCenter center = vaccinationCenterRepository.findById(dto.getCenterId())
+                .orElseThrow(() -> new RuntimeException("Center not found"));
+        
+        // Validate room if provided
+        ClinicRoom room = null;
+        if (dto.getRoomId() != null) {
+            room = clinicRoomRepository.findById(dto.getRoomId())
+                    .orElseThrow(() -> new RuntimeException("Room not found"));
+        }
+        
+        // Validate dose number
+        Integer doseNumber = dto.getDoseNumber() != null ? dto.getDoseNumber() : 1;
+        if (doseNumber <= 0) {
+            throw new RuntimeException("Dose number must be greater than 0");
+        }
+        if (vaccine.getDosesRequired() != null && doseNumber > vaccine.getDosesRequired()) {
+            throw new RuntimeException(
+                String.format("Vaccine '%s' chỉ cần %d mũi. Không thể đặt mũi thứ %d.", 
+                    vaccine.getName(), vaccine.getDosesRequired(), doseNumber)
+            );
+        }
+        
+        // Create appointment
+        Appointment appointment = new Appointment();
+        appointment.setBookingCode(generateBookingCode());
+        appointment.setBookedByUser(createdByUser); // Receptionist tạo
+        appointment.setBookedForUser(null); // Walk-in không có user đặt
+        appointment.setFamilyMember(null); // Walk-in không có family member
+        appointment.setVaccine(vaccine);
+        appointment.setCenter(center);
+        
+        // Set slot if provided
+        if (dto.getSlotId() != null) {
+            AppointmentSlot slot = appointmentSlotRepository.findById(dto.getSlotId())
+                    .orElseThrow(() -> new RuntimeException("Slot not found"));
+            
+            // Validate slot is available
+            if (!slot.getIsAvailable() || slot.getCurrentBookings() >= slot.getMaxCapacity()) {
+                throw new RuntimeException("Slot đã hết chỗ hoặc không khả dụng");
+            }
+            
+            // Validate slot matches center and date
+            if (!slot.getCenter().getId().equals(center.getId())) {
+                throw new RuntimeException("Slot không thuộc trung tâm đã chọn");
+            }
+            if (!slot.getDate().equals(dto.getAppointmentDate())) {
+                throw new RuntimeException("Slot không khớp với ngày đã chọn");
+            }
+            
+            appointment.setSlot(slot);
+            // Update slot booking count
+            slot.setCurrentBookings(slot.getCurrentBookings() + 1);
+            if (slot.getCurrentBookings() >= slot.getMaxCapacity()) {
+                slot.setIsAvailable(false);
+            }
+            appointmentSlotRepository.save(slot);
+        } else {
+            appointment.setSlot(null); // Walk-in không có slot
+        }
+        
+        appointment.setRoom(room);
+        appointment.setAppointmentDate(dto.getAppointmentDate());
+        appointment.setAppointmentTime(dto.getAppointmentTime());
+        appointment.setRequiresConsultation(false);
+        appointment.setStatus(AppointmentStatus.CONFIRMED); // Tự động xác nhận
+        appointment.setDoseNumber(doseNumber);
+        appointment.setNotes(dto.getNotes());
+        
+        // Set guest information
+        appointment.setGuestFullName(dto.getFullName());
+        appointment.setGuestEmail(dto.getEmail());
+        appointment.setGuestDayOfBirth(dto.getDayOfBirth());
+        if (dto.getGender() != null && !dto.getGender().trim().isEmpty()) {
+            try {
+                appointment.setGuestGender(ut.edu.vaccinationmanagementsystem.entity.enums.Gender.valueOf(dto.getGender().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                // Invalid gender, skip
+            }
+        }
+        appointment.setConsultationPhone(dto.getPhoneNumber());
+        
+        appointment.setCreatedAt(LocalDateTime.now());
+        appointment.setUpdatedAt(LocalDateTime.now());
+        
+        // Save appointment first to get ID
+        appointment = appointmentRepository.save(appointment);
+        
+        // Create Payment
+        PaymentMethod paymentMethod = dto.getPaymentMethod() != null 
+            ? PaymentMethod.valueOf(dto.getPaymentMethod().toUpperCase())
+            : PaymentMethod.CASH; // Default to CASH
+        
+        Payment payment = paymentService.createPayment(appointment, paymentMethod);
+        appointment.setPayment(payment);
+        
+        appointment = appointmentRepository.save(appointment);
+        
+        // Tạo AppointmentHistory
+        createAppointmentHistory(appointment, null, AppointmentStatus.CONFIRMED, createdByUser, "Tạo walk-in appointment");
+        
+        return appointment;
+    }
+    
+    /**
+     * Lấy số thứ tự tiếp theo cho ngày hôm nay
+     * @param date Ngày cần lấy số thứ tự
+     * @return Số thứ tự tiếp theo
+     */
+    private Integer getNextQueueNumber(LocalDate date) {
+        List<Appointment> todayAppointments = appointmentRepository.findByAppointmentDate(date);
+        
+        // Lọc các appointment có queueNumber
+        List<Appointment> appointmentsWithQueue = todayAppointments.stream()
+            .filter(a -> a.getQueueNumber() != null)
+            .collect(Collectors.toList());
+        
+        if (appointmentsWithQueue.isEmpty()) {
+            return 1;
+        }
+        
+        Integer maxQueueNumber = appointmentsWithQueue.stream()
+            .map(Appointment::getQueueNumber)
+            .max(Integer::compareTo)
+            .orElse(0);
+        
+        return maxQueueNumber + 1;
+    }
+    
+    /**
+     * Tạo AppointmentHistory để ghi lại thay đổi trạng thái
+     * @param appointment Appointment
+     * @param oldStatus Trạng thái cũ (null nếu là lần đầu tạo)
+     * @param newStatus Trạng thái mới
+     * @param changedBy User thực hiện thay đổi
+     * @param reason Lý do thay đổi
+     */
+    private void createAppointmentHistory(Appointment appointment, AppointmentStatus oldStatus, 
+                                         AppointmentStatus newStatus, User changedBy, String reason) {
+        AppointmentHistory history = new AppointmentHistory();
+        history.setAppointment(appointment);
+        history.setOldStatus(oldStatus);
+        history.setNewStatus(newStatus);
+        history.setChangedBy(changedBy);
+        history.setChangedAt(LocalDateTime.now());
+        history.setReason(reason);
+        
+        appointmentHistoryRepository.save(history);
     }
 }
 

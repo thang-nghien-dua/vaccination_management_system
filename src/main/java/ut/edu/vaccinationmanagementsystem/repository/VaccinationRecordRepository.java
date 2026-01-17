@@ -8,6 +8,7 @@ import ut.edu.vaccinationmanagementsystem.entity.VaccinationRecord;
 import ut.edu.vaccinationmanagementsystem.entity.Vaccine;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface VaccinationRecordRepository extends JpaRepository<VaccinationRecord, Long> {
@@ -60,6 +61,29 @@ public interface VaccinationRecordRepository extends JpaRepository<VaccinationRe
            "WHERE vr.user.id = :userId " +
            "ORDER BY vr.injectionDate DESC, vr.injectionTime DESC")
     List<VaccinationRecord> findByUserIdOrderByInjectionDateDesc(@Param("userId") Long userId);
+    
+    /**
+     * Đếm số lượng vaccination records được tiêm trong ngày cụ thể
+     */
+    @Query("SELECT COUNT(vr) FROM VaccinationRecord vr WHERE vr.injectionDate = :date")
+    long countByInjectionDate(@Param("date") java.time.LocalDate date);
+    
+    /**
+     * Đếm số lượng vaccination records được tiêm bởi một nurse trong ngày cụ thể
+     */
+    @Query("SELECT COUNT(vr) FROM VaccinationRecord vr WHERE vr.nurse.id = :nurseId AND vr.injectionDate = :date")
+    long countByNurseIdAndInjectionDate(@Param("nurseId") Long nurseId, @Param("date") java.time.LocalDate date);
+    
+    /**
+     * Lấy danh sách vaccination records được tiêm trong ngày cụ thể
+     */
+    @Query("SELECT vr FROM VaccinationRecord vr WHERE vr.injectionDate = :date ORDER BY vr.injectionTime DESC")
+    List<VaccinationRecord> findByInjectionDate(@Param("date") java.time.LocalDate date);
+    
+    /**
+     * Tìm vaccination record theo số chứng nhận
+     */
+    Optional<VaccinationRecord> findByCertificateNumber(String certificateNumber);
 }
 
 

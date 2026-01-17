@@ -114,7 +114,6 @@ public class VaccineController {
                 return response;
             }).collect(Collectors.toList());
             
-            System.out.println("Found " + vaccines.size() + " vaccines");
             return ResponseEntity.ok(vaccineResponses);
         } catch (Exception e) {
             e.printStackTrace();

@@ -106,6 +106,19 @@ public class PaymentService {
     }
     
     /**
+     * Đánh dấu thanh toán tiền mặt đã được thanh toán tại quầy (cho Receptionist)
+     * @param payment Payment cần cập nhật
+     */
+    public void markCashPaymentAsPaid(Payment payment) {
+        if (payment.getPaymentMethod() != PaymentMethod.CASH) {
+            throw new RuntimeException("Chỉ có thể đánh dấu thanh toán tiền mặt");
+        }
+        payment.setPaymentStatus(PaymentStatus.PAID);
+        payment.setPaidAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+    }
+    
+    /**
      * Generate invoice number
      * Format: INV-YYYYMMDD-HHMMSS-XXXX
      */

@@ -365,13 +365,11 @@
             const response = await fetch('/api/dashboard/upcoming', { credentials: 'include' });
             if (response.ok) {
                 const data = await response.json();
-                console.log('Upcoming appointments data:', data); // Debug log
                 const container = document.getElementById('upcomingAppointmentContainer');
                 const noAppointment = document.getElementById('noUpcomingAppointment');
                 const appointmentsList = document.getElementById('upcomingAppointmentsList');
                 
                 if (data.hasAppointment && data.appointments && data.appointments.length > 0) {
-                    console.log('Found ' + data.appointments.length + ' appointments'); // Debug log
                     noAppointment.classList.add('hidden');
                     appointmentsList.classList.remove('hidden');
                     

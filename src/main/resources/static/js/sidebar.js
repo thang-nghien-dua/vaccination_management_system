@@ -66,29 +66,39 @@ function setupSidebar() {
     
     // Collapse sidebar (desktop)
     function collapseSidebar() {
+        sidebar.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
         sidebar.classList.add('lg:w-20');
         sidebar.classList.remove('lg:w-72');
         localStorage.setItem('sidebarCollapsed', 'true');
         
-        // Hide text elements
+        // Hide text elements with fade animation
         const textElements = sidebar.querySelectorAll('[id^="navText"], [id^="sidebar"]');
-        textElements.forEach(el => {
-            if (el.id && el.id.startsWith('navText')) {
-                el.classList.add('lg:hidden');
-            }
-            if (el.id === 'sidebarLogoText' || el.id === 'sidebarUserName' || el.id === 'sidebarUserRole') {
-                el.classList.add('lg:hidden');
-            }
+        textElements.forEach((el, index) => {
+            setTimeout(() => {
+                if (el.id && el.id.startsWith('navText')) {
+                    el.style.transition = 'opacity 0.2s ease-out';
+                    el.style.opacity = '0';
+                    setTimeout(() => el.classList.add('lg:hidden'), 200);
+                }
+                if (el.id === 'sidebarLogoText' || el.id === 'sidebarUserName' || el.id === 'sidebarUserRole') {
+                    el.style.transition = 'opacity 0.2s ease-out';
+                    el.style.opacity = '0';
+                    setTimeout(() => el.classList.add('lg:hidden'), 200);
+                }
+            }, index * 20);
         });
         
         // Hide user profile section when collapsed
         const userProfileSection = document.getElementById('sidebarUserProfile');
         if (userProfileSection) {
-            userProfileSection.classList.add('lg:hidden');
+            userProfileSection.style.transition = 'opacity 0.2s ease-out';
+            userProfileSection.style.opacity = '0';
+            setTimeout(() => userProfileSection.classList.add('lg:hidden'), 200);
         }
         
-        // Adjust main content margin
+        // Adjust main content margin smoothly
         if (mainContent) {
+            mainContent.style.transition = 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
             mainContent.classList.remove('lg:ml-72');
             mainContent.classList.add('lg:ml-20');
         }
@@ -96,18 +106,27 @@ function setupSidebar() {
     
     // Expand sidebar (desktop)
     function expandSidebar() {
+        sidebar.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
         sidebar.classList.remove('lg:w-20');
         sidebar.classList.add('lg:w-72');
         localStorage.setItem('sidebarCollapsed', 'false');
         
-        // Show text elements
+        // Show text elements with fade animation
         const textElements = sidebar.querySelectorAll('[id^="navText"], [id^="sidebar"]');
-        textElements.forEach(el => {
+        textElements.forEach((el, index) => {
             if (el.id && el.id.startsWith('navText')) {
                 el.classList.remove('lg:hidden');
+                setTimeout(() => {
+                    el.style.transition = 'opacity 0.2s ease-in';
+                    el.style.opacity = '1';
+                }, index * 20);
             }
             if (el.id === 'sidebarLogoText' || el.id === 'sidebarUserName' || el.id === 'sidebarUserRole') {
                 el.classList.remove('lg:hidden');
+                setTimeout(() => {
+                    el.style.transition = 'opacity 0.2s ease-in';
+                    el.style.opacity = '1';
+                }, index * 20);
             }
         });
         
@@ -115,12 +134,15 @@ function setupSidebar() {
         const userProfileSection = document.getElementById('sidebarUserProfile');
         if (userProfileSection) {
             userProfileSection.classList.remove('lg:hidden');
+            setTimeout(() => {
+                userProfileSection.style.transition = 'opacity 0.2s ease-in';
+                userProfileSection.style.opacity = '1';
+            }, 100);
         }
         
-        // Hamburger button stays the same (no icon change needed)
-        
-        // Adjust main content margin
+        // Adjust main content margin smoothly
         if (mainContent) {
+            mainContent.style.transition = 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
             mainContent.classList.remove('lg:ml-20');
             mainContent.classList.add('lg:ml-72');
         }

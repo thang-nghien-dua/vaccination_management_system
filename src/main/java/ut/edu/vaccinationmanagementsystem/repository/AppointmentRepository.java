@@ -117,6 +117,37 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("familyMemberId") Long familyMemberId,
             @Param("vaccineId") Long vaccineId,
             @Param("statuses") List<AppointmentStatus> statuses);
+    
+    /**
+     * Tìm tất cả appointments trong ngày cụ thể
+     * @param date Ngày cần tìm
+     * @return Danh sách appointments
+     */
+    List<Appointment> findByAppointmentDate(java.time.LocalDate date);
+    
+    /**
+     * Tìm tất cả appointments trong ngày cụ thể với trạng thái cụ thể
+     * @param date Ngày cần tìm
+     * @param status Trạng thái
+     * @return Danh sách appointments
+     */
+    List<Appointment> findByAppointmentDateAndStatus(java.time.LocalDate date, AppointmentStatus status);
+    
+    /**
+     * Tìm tất cả appointments với trạng thái APPROVED (đã phê duyệt để tiêm)
+     * @return Danh sách appointments
+     */
+    List<Appointment> findByStatus(AppointmentStatus status);
+    
+    /**
+     * Đếm số lượng appointments với status cụ thể
+     */
+    long countByStatus(AppointmentStatus status);
+    
+    /**
+     * Tìm appointments với status và ngày cụ thể
+     */
+    List<Appointment> findByStatusAndAppointmentDate(AppointmentStatus status, java.time.LocalDate date);
 }
 
 

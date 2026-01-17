@@ -8,6 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import ut.edu.vaccinationmanagementsystem.entity.User;
+import ut.edu.vaccinationmanagementsystem.entity.enums.Role;
 
 
 import java.io.IOException;
@@ -40,8 +41,27 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     }
     
     private String determineRedirectUrl(User user) {
-        // Redirect về trang home (dashboard) sau khi đăng nhập thành công
-        return "/home";
+        // Redirect dựa trên role
+        if (user.getRole() == null) {
+            return "/home";
+        }
+        
+        switch (user.getRole()) {
+            case RECEPTIONIST:
+                // Receptionist -> receptionist dashboard
+                return "/receptionist/dashboard";
+            case NURSE:
+                // Nurse -> nurse dashboard
+                return "/nurse/dashboard";
+            case DOCTOR:
+            case ADMIN:
+                // Other staff roles -> home dashboard
+                return "/home";
+            case CUSTOMER:
+            default:
+                // Customer -> home
+                return "/home";
+        }
     }
 }
 

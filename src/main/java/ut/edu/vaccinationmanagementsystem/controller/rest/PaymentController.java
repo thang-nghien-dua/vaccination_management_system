@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.view.RedirectView;
 import ut.edu.vaccinationmanagementsystem.entity.Appointment;
 import ut.edu.vaccinationmanagementsystem.entity.Payment;
 import ut.edu.vaccinationmanagementsystem.entity.User;
@@ -21,7 +20,6 @@ import ut.edu.vaccinationmanagementsystem.service.CustomUserDetails;
 import ut.edu.vaccinationmanagementsystem.service.PaymentService;
 import ut.edu.vaccinationmanagementsystem.service.VnPayService;
 
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -271,6 +269,43 @@ public class PaymentController {
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * POST /api/payment/{appointmentId}/mark-paid-cash
+     * Đánh dấu thanh toán tiền mặt đã được thanh toán tại quầy (cho Receptionist)
+     */
+    @PostMapping("/{appointmentId}/mark-paid-cash")
+    public ResponseEntity<?> markCashPaymentAsPaid(@PathVariable Long appointmentId) {
+        try {
+            Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+            
+            Payment payment = paymentService.findByAppointment(appointment);
+            if (payment == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Payment not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+            }
+            
+            paymentService.markCashPaymentAsPaid(payment);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Đánh dấu thanh toán thành công");
+            response.put("paymentStatus", payment.getPaymentStatus().toString());
+            response.put("invoiceNumber", payment.getInvoiceNumber());
+            response.put("paidAt", payment.getPaidAt());
+            
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }

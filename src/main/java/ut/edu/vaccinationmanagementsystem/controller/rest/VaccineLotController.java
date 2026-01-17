@@ -88,6 +88,61 @@ public class VaccineLotController {
     }
     
     /**
+     * GET /api/vaccine-lots/available?vaccineId={}&centerId={}
+     * Lấy danh sách lô vaccine có sẵn theo vaccineId và centerId (cho Nurse)
+     */
+    @GetMapping("/available")
+    public ResponseEntity<?> getAvailableVaccineLots(
+            @RequestParam(required = false) Long vaccineId,
+            @RequestParam(required = false) Long centerId) {
+        try {
+            if (vaccineId == null || centerId == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "vaccineId and centerId are required");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            
+            List<VaccineLot> vaccineLots = vaccineLotService.getAvailableVaccineLots(vaccineId, centerId);
+            
+            // Convert to Map để tránh circular reference khi serialize JSON
+            List<Map<String, Object>> lotDTOs = vaccineLots.stream().map(lot -> {
+                Map<String, Object> dto = new HashMap<>();
+                dto.put("id", lot.getId());
+                dto.put("lotNumber", lot.getLotNumber());
+                dto.put("quantity", lot.getQuantity());
+                dto.put("remainingQuantity", lot.getRemainingQuantity());
+                dto.put("manufacturingDate", lot.getManufacturingDate());
+                dto.put("expiryDate", lot.getExpiryDate());
+                dto.put("supplier", lot.getSupplier());
+                dto.put("importDate", lot.getImportDate());
+                dto.put("status", lot.getStatus() != null ? lot.getStatus().name() : null);
+                dto.put("createdAt", lot.getCreatedAt());
+                
+                // Vaccine info (chỉ ID và name để tránh circular reference)
+                if (lot.getVaccine() != null) {
+                    Map<String, Object> vaccine = new HashMap<>();
+                    vaccine.put("id", lot.getVaccine().getId());
+                    vaccine.put("name", lot.getVaccine().getName());
+                    vaccine.put("code", lot.getVaccine().getCode());
+                    dto.put("vaccine", vaccine);
+                }
+                
+                return dto;
+            }).collect(java.util.stream.Collectors.toList());
+            
+            return ResponseEntity.ok(lotDTOs);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
      * GET /api/vaccine-lots/search?keyword={keyword}
      * Tìm kiếm lô vaccine theo từ khóa (số lô, nhà cung cấp)
      */

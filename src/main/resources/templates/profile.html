@@ -116,13 +116,21 @@
     <!-- Main Content -->
     <main class="flex-1 lg:ml-72 flex flex-col min-h-screen">
         <header class="sticky top-0 z-50 bg-gradient-to-r from-primary/10 via-primary/5 to-white/90 dark:from-primary/20 dark:via-primary/10 dark:to-[#102216]/90 backdrop-blur-xl border-b border-primary/20 dark:border-primary/30 px-8 py-6 transition-all">
-            <div class="flex items-center gap-4">
-                <div class="size-12 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-                    <span class="material-symbols-outlined text-white text-2xl">person</span>
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="size-12 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                        <span class="material-symbols-outlined text-white text-2xl">person</span>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-[#111813] dark:text-white">Hồ sơ cá nhân</h2>
+                        <p class="text-sm text-[#61896f] mt-1">Quản lý thông tin tài khoản của bạn</p>
+                    </div>
                 </div>
-                <div>
-                    <h2 class="text-2xl font-bold text-[#111813] dark:text-white">Hồ sơ cá nhân</h2>
-                    <p class="text-sm text-[#61896f] mt-1">Quản lý thông tin tài khoản của bạn</p>
+                <div th:if="${returnUrl != null and !returnUrl.isEmpty()}">
+                    <a th:href="${returnUrl}" class="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-primary/20 hover:scale-105 active:scale-95">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                        <span>Quay lại</span>
+                    </a>
                 </div>
             </div>
         </header>

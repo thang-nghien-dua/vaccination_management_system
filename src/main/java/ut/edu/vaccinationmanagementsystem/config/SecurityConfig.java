@@ -42,13 +42,14 @@ public class SecurityConfig {
                 .requestMatchers("/payment-result").permitAll() // Payment result page
                 // Protected endpoints - cần đăng nhập
                 .requestMatchers("/home").authenticated()
+                .requestMatchers("/receptionist/dashboard").hasAnyRole("RECEPTIONIST", "ADMIN")
+                .requestMatchers("/nurse/dashboard").hasAnyRole("NURSE", "ADMIN")
                 .requestMatchers("/forgot-password", "/reset-password").permitAll()
                 .requestMatchers("/verify-email-success").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/oauth2/**").permitAll()
                 .requestMatchers("/api/vaccines/**").permitAll() // Tạm thời cho phép xem vaccine
-                .requestMatchers("/api/appointment-slots/available/**").permitAll()
-                .requestMatchers("/api/appointments/consultation-request").permitAll() // Cho phép guest gửi yêu cầu tư vấn // Tạm thời cho phép xem slot trống
+                .requestMatchers("/api/appointments/consultation-request").permitAll() // Cho phép guest gửi yêu cầu tư vấn
                 // Protected endpoints - cần đăng nhập
                 .requestMatchers("/home", "/profile", "/family-members", "/vaccines", "/vaccines/**", "/vaccination-history", "/appointments", "/notifications").authenticated()
                 .requestMatchers("/api/users/**").authenticated()
@@ -61,6 +62,28 @@ public class SecurityConfig {
                 .requestMatchers("/api/payment/**").authenticated() // Payment endpoints
                 .requestMatchers("/api/vaccine-lots/**").hasAnyRole("ADMIN", "NURSE")
                 .requestMatchers("/api/appointment-slots/**").authenticated()
+                // Receptionist endpoints - quản lý lịch hẹn
+                        .requestMatchers("/api/appointments/today").hasAnyRole("RECEPTIONIST", "ADMIN")
+                        .requestMatchers("/api/appointments/{id}/check-in").hasAnyRole("RECEPTIONIST", "ADMIN")
+                        .requestMatchers("/api/appointments/{id}/confirm").hasAnyRole("RECEPTIONIST", "ADMIN")
+                        .requestMatchers("/api/appointments/{id}/cancel-by-receptionist").hasAnyRole("RECEPTIONIST", "ADMIN")
+                        .requestMatchers("/api/appointments/search").hasAnyRole("RECEPTIONIST", "ADMIN")
+                        .requestMatchers("/api/appointments/walk-in").hasAnyRole("RECEPTIONIST", "ADMIN")
+                        .requestMatchers("/api/appointments/{id}/detail").hasAnyRole("RECEPTIONIST", "ADMIN", "NURSE", "DOCTOR")
+                        .requestMatchers("/api/appointments/approved").hasAnyRole("NURSE", "ADMIN")
+                        .requestMatchers("/api/payment/{appointmentId}/mark-paid-cash").hasAnyRole("RECEPTIONIST", "ADMIN")
+                        .requestMatchers("/api/appointment-slots/available/**").hasAnyRole("RECEPTIONIST", "ADMIN")
+                        // Nurse endpoints
+                        .requestMatchers("/api/vaccine-lots/available").hasAnyRole("NURSE", "ADMIN")
+                        .requestMatchers("/api/vaccination-records").hasAnyRole("NURSE", "ADMIN")
+                        .requestMatchers("/api/vaccination-records/**").hasAnyRole("NURSE", "ADMIN", "DOCTOR")
+                        .requestMatchers("/api/adverse-reactions").hasAnyRole("NURSE", "ADMIN", "DOCTOR")
+                        .requestMatchers("/api/adverse-reactions/**").hasAnyRole("NURSE", "ADMIN", "DOCTOR")
+                        // Nurse dashboard endpoints
+                        .requestMatchers("/api/nurse/**").hasAnyRole("NURSE", "ADMIN")
+                        // Trace endpoints - truy vết thông tin (chỉ dành cho Nurse)
+                        .requestMatchers("/api/trace/**").hasAnyRole("NURSE", "ADMIN")
+                        .requestMatchers("/trace").hasAnyRole("NURSE", "ADMIN")
                 // Tất cả các request khác cần đăng nhập
                 .anyRequest().authenticated()
             )

@@ -111,6 +111,12 @@
                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                    placeholder="Nhập lại mật khẩu">
                         </div>
+                        <div>
+                            <label for="phoneNumber" class="block text-sm font-semibold text-text-main mb-2">Số điện thoại <span class="text-red-500">*</span></label>
+                            <input type="tel" id="phoneNumber" name="phoneNumber" required
+                                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                   placeholder="0123456789">
+                        </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label for="dayOfBirth" class="block text-sm font-semibold text-text-main mb-2">Ngày sinh</label>
@@ -234,6 +240,7 @@
                 email: document.getElementById('email').value,
                 password: password,
                 fullName: document.getElementById('fullName').value,
+                phoneNumber: document.getElementById('phoneNumber').value,
                 dayOfBirth: document.getElementById('dayOfBirth').value || null,
                 gender: document.getElementById('gender').value || null,
                 address: document.getElementById('address').value || null,

@@ -6,13 +6,19 @@ import org.springframework.transaction.annotation.Transactional;
 import ut.edu.vaccinationmanagementsystem.dto.VaccineLotDTO;
 import ut.edu.vaccinationmanagementsystem.entity.Vaccine;
 import ut.edu.vaccinationmanagementsystem.entity.VaccineLot;
+import ut.edu.vaccinationmanagementsystem.entity.VaccinationCenter;
+import ut.edu.vaccinationmanagementsystem.entity.CenterVaccine;
 import ut.edu.vaccinationmanagementsystem.entity.enums.VaccineLotStatus;
 import ut.edu.vaccinationmanagementsystem.repository.VaccineLotRepository;
 import ut.edu.vaccinationmanagementsystem.repository.VaccineRepository;
+import ut.edu.vaccinationmanagementsystem.repository.CenterVaccineRepository;
+import ut.edu.vaccinationmanagementsystem.repository.VaccinationCenterRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -275,6 +281,76 @@ public class VaccineLotService {
     // Kiểm tra lô vaccine có tồn tại không
     public boolean existsById(Long id) {
         return vaccineLotRepository.existsById(id);
+    }
+    
+    @Autowired
+    private CenterVaccineRepository centerVaccineRepository;
+    
+    @Autowired
+    private VaccinationCenterRepository vaccinationCenterRepository;
+    
+    /**
+     * Lấy danh sách lô vaccine có sẵn theo vaccineId và centerId
+     * - Kiểm tra center có vaccine đó không (nếu có CenterVaccine record thì kiểm tra stock, nếu không thì vẫn cho phép nếu có lots)
+     * - Lọc các lots có status AVAILABLE và remainingQuantity > 0
+     * - Kiểm tra lot chưa hết hạn
+     */
+    public List<VaccineLot> getAvailableVaccineLots(Long vaccineId, Long centerId) {
+        // Kiểm tra center có vaccine này không
+        VaccinationCenter center = vaccinationCenterRepository.findById(centerId)
+                .orElseThrow(() -> new RuntimeException("Center not found"));
+        
+        Vaccine vaccine = vaccineRepository.findById(vaccineId)
+                .orElseThrow(() -> new RuntimeException("Vaccine not found"));
+        
+        // Kiểm tra center có vaccine này trong CenterVaccine không (optional check)
+        Optional<CenterVaccine> centerVaccineOpt = centerVaccineRepository.findByCenterAndVaccine(center, vaccine);
+        if (centerVaccineOpt.isPresent()) {
+            CenterVaccine centerVaccine = centerVaccineOpt.get();
+            // Nếu có record và stockQuantity được set và <= 0 thì không có vaccine
+            if (centerVaccine.getStockQuantity() != null && centerVaccine.getStockQuantity() <= 0) {
+                return List.of(); // Center đã hết hàng theo CenterVaccine
+            }
+        }
+        
+        // Lấy tất cả lots của vaccine này
+        List<VaccineLot> allLots = vaccineLotRepository.findByVaccineId(vaccineId);
+        
+        if (allLots.isEmpty()) {
+            return List.of(); // Không có lots nào
+        }
+        
+        // Lọc các lots có sẵn (AVAILABLE, remainingQuantity > 0, chưa hết hạn)
+        LocalDate today = LocalDate.now();
+        
+        List<VaccineLot> availableLots = new ArrayList<>();
+        for (VaccineLot lot : allLots) {
+            boolean passed = true;
+            
+            // Kiểm tra status
+            if (lot.getStatus() != VaccineLotStatus.AVAILABLE) {
+                passed = false;
+            }
+            
+            // Kiểm tra remainingQuantity
+            if (passed && (lot.getRemainingQuantity() == null || lot.getRemainingQuantity() <= 0)) {
+                passed = false;
+            }
+            
+            // Kiểm tra expiryDate
+            if (passed && lot.getExpiryDate() == null) {
+                passed = false;
+            } else if (passed && lot.getExpiryDate() != null && lot.getExpiryDate().isBefore(today)) {
+                // Lot đã hết hạn - bỏ qua
+                passed = false;
+            }
+            
+            if (passed) {
+                availableLots.add(lot);
+            }
+        }
+        
+        return availableLots;
     }
 }
 
