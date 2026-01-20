@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Gửi Thông báo theo Vai trò - Vaccine Admin</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+        .tab-active {
+            @apply text-primary border-b-2 border-primary;
+        }
+        .tab-inactive {
+            @apply text-[#61896f] border-b-2 border-transparent hover:text-[#111813] dark:hover:text-white transition-all;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white antialiased">
+<div class="flex h-screen overflow-hidden">
+<div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+<main class="flex-1 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
+<!-- Header with Tabs -->
+<header class="bg-white dark:bg-zinc-900 border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
+<div class="flex items-center gap-3 mb-4">
+<button onclick="window.location.href='/admin/notifications'" class="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-[#61896f] dark:text-zinc-400" title="Quay lại">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div class="flex items-center gap-2">
+<a class="text-[#61896f] dark:text-zinc-400 text-sm font-medium hover:underline" th:href="@{/admin/home}">Hệ thống</a>
+<span class="text-[#61896f] dark:text-zinc-400 text-sm font-medium">/</span>
+<a class="text-[#61896f] dark:text-zinc-400 text-sm font-medium hover:underline" th:href="@{/admin/notifications}">Thông báo</a>
+</div>
+</div>
+<!-- Tabs Navigation -->
+<div class="flex gap-8 border-b border-zinc-200 dark:border-zinc-800">
+<button onclick="window.location.href='/admin/notifications/send-individual'" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-lg leading-none">person</span>
+Cá nhân cụ thể
+</button>
+<button onclick="window.location.href='/admin/notifications/send-all'" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-lg leading-none">groups</span>
+Tất cả người dùng
+</button>
+<button onclick="window.location.href='/admin/notifications/send-role'" class="tab-active py-4 text-sm font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-lg leading-none">shield_person</span>
+Theo vai trò
+</button>
+<button onclick="window.location.href='/admin/notifications/send-center'" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-lg leading-none">home_work</span>
+Theo Trung tâm
+</button>
+<button onclick="window.location.href='/admin/notifications/templates'" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-lg leading-none">description</span>
+Quản lý Template
+</button>
+</div>
+</header>
+<!-- Content -->
+<div class="flex-1 p-8">
+<div class="max-w-[1000px] mx-auto">
+<!-- Page Heading -->
+<div class="mb-8">
+<h2 class="text-[#111813] dark:text-white text-4xl font-black tracking-tight">Gửi Thông báo theo Vai trò</h2>
+<p class="text-[#61896f] text-base mt-2">Gửi thông báo quan trọng đến từng nhóm đối tượng cụ thể trong hệ thống.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Left: Form Card -->
+<div class="lg:col-span-2 flex flex-col gap-6">
+<div class="bg-white dark:bg-zinc-900 rounded-xl border border-[#dbe6df] dark:border-zinc-800 p-6 shadow-sm">
+<div class="flex flex-col gap-6">
+<!-- Multi-select Roles -->
+<div class="flex flex-col gap-3">
+<label class="text-[#111813] dark:text-zinc-200 text-sm font-bold">1. Chọn vai trò nhận tin</label>
+<div id="selectedRolesContainer" class="flex flex-wrap gap-2 p-3 border border-[#dbe6df] dark:border-zinc-700 rounded-lg bg-background-light/30 dark:bg-zinc-800/30">
+<span class="text-xs text-[#61896f]">Chưa chọn vai trò nào</span>
+</div>
+<!-- Role Selection Modal -->
+<div id="roleModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+<div class="bg-white dark:bg-zinc-900 rounded-xl p-6 max-w-md w-full mx-4">
+<h3 class="text-lg font-bold mb-4">Chọn vai trò</h3>
+<div id="roleList" class="space-y-2">
+</div>
+<div class="flex gap-3 mt-6">
+<button onclick="closeRoleModal()" class="flex-1 px-4 py-2 bg-gray-200 dark:bg-zinc-700 rounded-lg font-semibold">Hủy</button>
+<button onclick="confirmRoleSelection()" class="flex-1 px-4 py-2 bg-primary text-[#111813] rounded-lg font-bold">Xác nhận</button>
+</div>
+</div>
+</div>
+<button onclick="openRoleModal()" class="flex h-8 items-center gap-x-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 px-3 border border-dashed border-zinc-400 dark:border-zinc-600 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors w-fit mt-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<p class="text-xs font-medium text-[#61896f]">Thêm vai trò</p>
+</button>
+</div>
+<!-- Title Input -->
+<div class="flex flex-col gap-3">
+<label class="text-[#111813] dark:text-zinc-200 text-sm font-bold">2. Tiêu đề thông báo <span class="text-red-500">*</span></label>
+<input id="notificationTitle" class="w-full h-11 px-4 rounded-lg border-[#dbe6df] dark:border-zinc-700 dark:bg-zinc-800 text-sm focus:ring-primary focus:border-primary" placeholder="Nhập tiêu đề..." type="text" required/>
+</div>
+<!-- Content Area -->
+<div class="flex flex-col gap-3">
+<label class="text-[#111813] dark:text-zinc-200 text-sm font-bold">3. Nội dung chi tiết <span class="text-red-500">*</span></label>
+<textarea id="notificationContent" class="w-full p-4 rounded-lg border-[#dbe6df] dark:border-zinc-700 dark:bg-zinc-800 text-sm focus:ring-primary focus:border-primary" placeholder="Nhập nội dung thông báo tại đây..." rows="6" required></textarea>
+</div>
+<div class="flex items-center gap-4">
+<label class="flex items-center gap-2 cursor-pointer">
+<input id="sendSms" class="w-4 h-4 text-primary border-[#dbe6df] dark:border-zinc-700 rounded focus:ring-primary" type="checkbox"/>
+<span class="text-sm text-[#61896f]">Gửi qua SMS</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input id="sendApp" class="w-4 h-4 text-primary border-[#dbe6df] dark:border-zinc-700 rounded focus:ring-primary" type="checkbox" checked=""/>
+<span class="text-sm text-[#61896f]">Gửi qua ứng dụng</span>
+</label>
+</div>
+</div>
+</div>
+<!-- Submit Button Section -->
+<div class="flex justify-end items-center gap-6 p-2">
+<button id="sendButton" onclick="sendNotification()" class="bg-primary hover:brightness-105 text-[#111813] px-8 py-3 rounded-lg font-bold text-base shadow-lg shadow-primary/20 flex items-center gap-2 transition-all">
+<span class="material-symbols-outlined">send</span>
+<span id="sendButtonText">Gửi cho 0 người dùng</span>
+</button>
+</div>
+</div>
+<!-- Right: Stats and Preview -->
+<div class="lg:col-span-1 flex flex-col gap-6">
+<!-- Stats Card -->
+<div class="bg-white dark:bg-zinc-900 rounded-xl border border-[#dbe6df] dark:border-zinc-800 p-6">
+<h3 class="text-[#111813] dark:text-white text-sm font-bold mb-4">Ước tính người nhận</h3>
+<div class="flex flex-col gap-4">
+<div class="flex flex-col gap-1 p-4 bg-background-light dark:bg-zinc-800 rounded-lg border border-[#dbe6df] dark:border-zinc-700">
+<p class="text-[#61896f] text-xs font-medium uppercase tracking-wider">Tổng số người nhận</p>
+<div class="flex items-baseline gap-2">
+<p id="totalRecipients" class="text-2xl font-black text-[#111813] dark:text-white">0</p>
+</div>
+</div>
+<div id="roleStats" class="space-y-3 px-1">
+<p class="text-xs text-[#61896f] text-center">Chưa chọn vai trò</p>
+</div>
+</div>
+</div>
+<!-- Quick Tips -->
+<div class="bg-primary/10 rounded-xl p-6 border border-primary/20">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-primary">lightbulb</span>
+<h4 class="text-sm font-bold text-[#111813] dark:text-white">Mẹo nhỏ</h4>
+</div>
+<p class="text-xs text-[#111813]/70 dark:text-white/70 leading-relaxed">
+                                Sử dụng các biến như <b>{name}</b>, <b>{date}</b> để cá nhân hóa nội dung thông báo cho từng người nhận.
+                            </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+let selectedRoles = [];
+let roleCounts = {};
+let tempSelectedRoles = [];
+
+const roleNames = {
+    'CUSTOMER': 'Khách hàng',
+    'DOCTOR': 'Bác sĩ',
+    'NURSE': 'Y tá',
+    'RECEPTIONIST': 'Lễ tân',
+    'ADMIN': 'Quản trị viên'
+};
+
+const roleIcons = {
+    'CUSTOMER': 'person',
+    'DOCTOR': 'medical_services',
+    'NURSE': 'local_hospital',
+    'RECEPTIONIST': 'support_agent',
+    'ADMIN': 'admin_panel_settings'
+};
+
+// Load role counts
+function loadRoleCounts() {
+    fetch('/api/notifications/admin/users/count-by-role')
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error loading role counts:', data.error);
+                return;
+            }
+            roleCounts = data;
+            updateStats();
+        })
+        .catch(err => {
+            console.error('Error loading role counts:', err);
+        });
+}
+
+function openRoleModal() {
+    document.getElementById('roleModal').classList.remove('hidden');
+    tempSelectedRoles = [...selectedRoles];
+    renderRoleModal();
+}
+
+function closeRoleModal() {
+    document.getElementById('roleModal').classList.add('hidden');
+    tempSelectedRoles = [];
+}
+
+function confirmRoleSelection() {
+    selectedRoles = [...tempSelectedRoles];
+    renderSelectedRoles();
+    updateStats();
+    closeRoleModal();
+}
+
+function toggleRoleInModal(role) {
+    if (tempSelectedRoles.includes(role)) {
+        tempSelectedRoles = tempSelectedRoles.filter(r => r !== role);
+    } else {
+        tempSelectedRoles.push(role);
+    }
+    renderRoleModal();
+}
+
+function renderRoleModal() {
+    const roleList = document.getElementById('roleList');
+    roleList.innerHTML = Object.keys(roleNames).map(role => {
+        const isSelected = tempSelectedRoles.includes(role);
+        return `
+            <label class="flex items-center gap-3 p-3 rounded-lg border ${isSelected ? 'border-primary bg-primary/10' : 'border-[#dbe6df] dark:border-zinc-700'} cursor-pointer hover:bg-[#f0f4f2] dark:hover:bg-zinc-800">
+                <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleRoleInModal('${role}')" class="w-4 h-4 text-primary border-[#dbe6df] dark:border-zinc-700 rounded focus:ring-primary"/>
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">${roleIcons[role] || 'person'}</span>
+                <span class="flex-1 text-sm font-medium text-[#111813] dark:text-white">${roleNames[role]}</span>
+                <span class="text-xs text-[#61896f]">${roleCounts[role] || 0} người</span>
+            </label>
+        `;
+    }).join('');
+}
+
+function renderSelectedRoles() {
+    const container = document.getElementById('selectedRolesContainer');
+    if (selectedRoles.length === 0) {
+        container.innerHTML = '<span class="text-xs text-[#61896f]">Chưa chọn vai trò nào</span>';
+        return;
+    }
+    
+    container.innerHTML = selectedRoles.map(role => `
+        <div class="flex h-8 items-center gap-x-2 rounded-lg bg-primary/20 pl-2 pr-1 border border-primary/30">
+            <span class="material-symbols-outlined text-[18px] text-[#111813] dark:text-primary">${roleIcons[role] || 'person'}</span>
+            <p class="text-[#111813] dark:text-white text-xs font-medium">${roleNames[role]}</p>
+            <button onclick="removeRole('${role}')" class="hover:bg-primary/20 rounded-full p-0.5">
+                <span class="material-symbols-outlined text-[16px]">close</span>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removeRole(role) {
+    selectedRoles = selectedRoles.filter(r => r !== role);
+    renderSelectedRoles();
+    updateStats();
+}
+
+function updateStats() {
+    let total = 0;
+    const statsHtml = [];
+    
+    selectedRoles.forEach(role => {
+        const count = roleCounts[role] || 0;
+        total += count;
+        const percentage = selectedRoles.length > 0 ? (count / Object.values(roleCounts).reduce((a, b) => a + b, 0)) * 100 : 0;
+        statsHtml.push(`
+            <div class="flex justify-between items-center text-sm">
+                <span class="text-[#61896f]">${roleNames[role]}</span>
+                <span class="font-bold">${count.toLocaleString('vi-VN')}</span>
+            </div>
+            <div class="w-full bg-zinc-100 dark:bg-zinc-800 h-1.5 rounded-full">
+                <div class="bg-primary h-full rounded-full" style="width: ${Math.max(percentage, 1)}%;"></div>
+            </div>
+        `);
+    });
+    
+    document.getElementById('totalRecipients').textContent = total.toLocaleString('vi-VN');
+    document.getElementById('sendButtonText').textContent = `Gửi cho ${total.toLocaleString('vi-VN')} người dùng`;
+    
+    const roleStatsDiv = document.getElementById('roleStats');
+    if (statsHtml.length === 0) {
+        roleStatsDiv.innerHTML = '<p class="text-xs text-[#61896f] text-center">Chưa chọn vai trò</p>';
+    } else {
+        roleStatsDiv.innerHTML = statsHtml.join('');
+    }
+}
+
+function sendNotification() {
+    const title = document.getElementById('notificationTitle').value.trim();
+    const content = document.getElementById('notificationContent').value.trim();
+    const sendSms = document.getElementById('sendSms').checked;
+    const sendApp = document.getElementById('sendApp').checked;
+    
+    if (!title || !content) {
+        alert('Vui lòng nhập tiêu đề và nội dung thông báo!');
+        return;
+    }
+    
+    if (selectedRoles.length === 0) {
+        alert('Vui lòng chọn ít nhất một vai trò!');
+        return;
+    }
+    
+    if (!sendSms && !sendApp) {
+        alert('Vui lòng chọn ít nhất một kênh gửi (SMS hoặc Ứng dụng)!');
+        return;
+    }
+    
+    const sendButton = document.getElementById('sendButton');
+    sendButton.disabled = true;
+    sendButton.innerHTML = '<span class="material-symbols-outlined animate-spin">refresh</span> Đang gửi...';
+    
+    fetch('/api/notifications/admin/send-by-role', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            roles: selectedRoles,
+            title: title,
+            content: content,
+            sendSms: sendSms,
+            sendApp: sendApp
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            alert('Lỗi: ' + data.error);
+        } else {
+            alert('Đã gửi thông báo thành công cho ' + (data.successCount || 0) + ' người dùng!');
+            // Reset form
+            selectedRoles = [];
+            renderSelectedRoles();
+            updateStats();
+            document.getElementById('notificationTitle').value = '';
+            document.getElementById('notificationContent').value = '';
+            document.getElementById('sendSms').checked = false;
+            document.getElementById('sendApp').checked = true;
+        }
+    })
+    .catch(err => {
+        console.error('Error sending notification:', err);
+        alert('Lỗi khi gửi thông báo: ' + (err.message || 'Vui lòng thử lại sau'));
+    })
+    .finally(() => {
+        const sendButton = document.getElementById('sendButton');
+        const sendButtonText = document.getElementById('sendButtonText');
+        if (sendButton) {
+            sendButton.disabled = false;
+            if (sendButtonText) {
+                sendButton.innerHTML = '<span class="material-symbols-outlined">send</span><span id="sendButtonText">Gửi cho 0 người dùng</span>';
+            } else {
+                sendButton.innerHTML = '<span class="material-symbols-outlined">send</span><span>Gửi thông báo</span>';
+            }
+        }
+        updateStats();
+    });
+}
+
+// Close modal when clicking outside
+document.getElementById('roleModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeRoleModal();
+    }
+});
+
+// Load on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadRoleCounts();
+    renderSelectedRoles();
+    updateStats();
+});
+</script>
+</body></html>

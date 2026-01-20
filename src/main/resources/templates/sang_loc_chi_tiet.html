@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Thực hiện Khám Sàng lọc - Doctor Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="flex min-h-screen">
+<!-- Sidebar Fragment -->
+<div th:replace="~{fragments/doctor-sidebar :: sidebar}"></div>
+<!-- Main Content -->
+<div class="flex-1 ml-64">
+<!-- Top Navigation Bar -->
+<header class="flex items-center justify-between border-b border-solid border-[#dbe6df] bg-white dark:bg-background-dark px-10 py-3 sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4 text-slate-900 dark:text-white">
+<div class="size-6 text-primary">
+<span class="material-symbols-outlined text-3xl">vaccines</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-tight">VaccinPro Dashboard</h2>
+</div>
+<nav class="flex items-center gap-9">
+<a class="text-sm font-medium leading-normal hover:text-primary transition-colors" th:href="@{/doctor/home}">Dashboard</a>
+<a class="text-sm font-medium leading-normal hover:text-primary transition-colors border-b-2 border-primary pb-1" th:href="@{/doctor/appointments}">Lịch khám</a>
+<a class="text-sm font-medium leading-normal hover:text-primary transition-colors" th:href="@{/doctor/history}">Lịch sử</a>
+<a class="text-sm font-medium leading-normal hover:text-primary transition-colors" th:href="@{/doctor/profile}">Cá nhân</a>
+</nav>
+</div>
+<div class="flex flex-1 justify-end gap-6 items-center">
+<label class="flex flex-col min-w-40 h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+<div class="text-[#61896f] flex border-none bg-slate-100 dark:bg-slate-800 items-center justify-center pl-4 rounded-l-lg" data-icon="MagnifyingGlass">
+<span class="material-symbols-outlined text-xl">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 border-none bg-slate-100 dark:bg-slate-800 focus:ring-0 h-full placeholder:text-slate-400 px-4 rounded-r-lg text-base font-normal" placeholder="Tìm kiếm bệnh nhân..." value=""/>
+</div>
+</label>
+<div class="flex gap-2">
+<button class="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+<div class="flex items-center gap-3 border-l pl-6 border-slate-200 dark:border-slate-700">
+<div class="text-right">
+<p class="text-sm font-bold leading-none" th:text="${currentUser != null ? currentUser.fullName : 'Bác sĩ'}">Bác sĩ</p>
+<p class="text-xs text-slate-500 mt-1">Bác sĩ chuyên khoa</p>
+</div>
+<div class="bg-primary/20 rounded-full size-10 border-2 border-primary/30 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary font-bold">person</span>
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-[1200px] mx-auto py-8 px-6">
+<!-- Breadcrumbs -->
+<div class="flex flex-wrap gap-2 mb-6">
+<a class="text-[#61896f] text-sm font-medium hover:underline" th:href="@{/doctor/home}">Dashboard</a>
+<span class="text-[#61896f] text-sm font-medium">/</span>
+<a class="text-[#61896f] text-sm font-medium hover:underline" th:href="@{/doctor/appointments}">Lịch tiêm hôm nay</a>
+<span class="text-[#61896f] text-sm font-medium">/</span>
+<span class="text-slate-900 dark:text-white text-sm font-bold">Khám Sàng lọc Chi tiết</span>
+</div>
+<!-- 1. Patient Profile & Vaccine Info Header -->
+<div class="bg-white dark:bg-background-dark rounded-xl border border-[#dbe6df] dark:border-slate-800 shadow-sm p-6 mb-8">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+<div class="flex gap-6 items-center">
+<div class="bg-primary/20 rounded-xl size-24 border-2 border-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-5xl">person</span>
+</div>
+<div>
+<div class="flex items-center gap-3">
+<h1 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white" id="patientName">Đang tải...</h1>
+<span class="bg-primary/20 text-primary text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider" id="bookingCode">Mã Booking: -</span>
+</div>
+<div class="flex flex-wrap gap-x-6 gap-y-1 mt-2 text-slate-600 dark:text-slate-400">
+<p class="flex items-center gap-1 text-sm" id="patientDob"><span class="material-symbols-outlined text-lg">calendar_today</span> Ngày sinh: -</p>
+<p class="flex items-center gap-1 text-sm" id="patientGender"><span class="material-symbols-outlined text-lg">person</span> Giới tính: -</p>
+<p class="flex items-center gap-1 text-sm" id="patientPhone"><span class="material-symbols-outlined text-lg">phone</span> SĐT: -</p>
+</div>
+<div class="mt-3 flex items-center gap-2">
+<div class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-lg border border-blue-100 dark:border-blue-800 inline-flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">syringe</span>
+<span class="text-sm font-bold" id="vaccineInfo">Vaccine: Đang tải...</span>
+</div>
+</div>
+<div class="mt-3">
+<label class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 block">Chọn vaccine để tiêm</label>
+<select id="vaccineSelect" class="w-full md:w-auto min-w-[300px] h-11 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-primary focus:ring-primary px-4 text-base font-medium">
+<option value="">Đang tải...</option>
+</select>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<button onclick="showVaccinationHistory()" class="flex items-center justify-center gap-2 px-5 h-11 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-bold rounded-lg hover:bg-slate-200 transition-colors">
+<span class="material-symbols-outlined text-xl">history</span>
+                        Lịch sử tiêm chủng
+                    </button>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- 2. Appointment Info (Left Side) -->
+<div class="lg:col-span-1 space-y-6">
+<div class="bg-white dark:bg-background-dark rounded-xl border border-[#dbe6df] dark:border-slate-800 shadow-sm flex flex-col h-full">
+<div class="p-5 border-b border-[#dbe6df] dark:border-slate-800 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">event</span>
+<h2 class="text-lg font-bold text-slate-900 dark:text-white">Thông tin lịch hẹn</h2>
+</div>
+<div class="p-5 overflow-y-auto">
+<div class="space-y-4">
+<div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+<p class="text-xs font-bold text-slate-500 uppercase mb-2">Ngày hẹn</p>
+<p class="text-sm font-medium" id="appointmentDate">-</p>
+</div>
+<div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+<p class="text-xs font-bold text-slate-500 uppercase mb-2">Giờ hẹn</p>
+<p class="text-sm font-medium" id="appointmentTime">-</p>
+</div>
+<div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+<p class="text-xs font-bold text-slate-500 uppercase mb-2">Trạng thái</p>
+<p class="text-sm font-medium" id="appointmentStatus">-</p>
+</div>
+<div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+<p class="text-xs font-bold text-slate-500 uppercase mb-2">Mũi tiêm</p>
+<p class="text-sm font-medium" id="doseNumber">-</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 3. Clinical Examination Form (Right Side) -->
+<div class="lg:col-span-2 space-y-6">
+<div class="bg-white dark:bg-background-dark rounded-xl border border-[#dbe6df] dark:border-slate-800 shadow-sm p-6">
+<div class="flex items-center gap-2 mb-6 border-b border-[#dbe6df] dark:border-slate-800 pb-4">
+<span class="material-symbols-outlined text-primary">stethoscope</span>
+<h2 class="text-lg font-bold text-slate-900 dark:text-white">Kết quả Khám sàng lọc của Bác sĩ</h2>
+<span id="readOnlyBadge" class="ml-auto px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-bold hidden">Đã lưu - Không thể chỉnh sửa</span>
+</div>
+<form id="screeningForm" class="space-y-8" method="POST" action="#" onsubmit="return false;">
+<!-- Vitals Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="space-y-2">
+<label class="text-sm font-bold text-slate-700 dark:text-slate-300">Nhiệt độ (°C)</label>
+<div class="relative">
+<input class="w-full h-11 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-primary focus:ring-primary pl-4 pr-12 text-base font-medium" placeholder="36.5" step="0.1" type="number"/>
+<span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">°C</span>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-sm font-bold text-slate-700 dark:text-slate-300">Huyết áp (mmHg)</label>
+<div class="relative">
+<input class="w-full h-11 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-primary focus:ring-primary pl-4 pr-12 text-base font-medium" placeholder="120/80" type="text"/>
+<span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">mmHg</span>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-sm font-bold text-slate-700 dark:text-slate-300">Nhịp tim (bpm)</label>
+<div class="relative">
+<input class="w-full h-11 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-primary focus:ring-primary pl-4 pr-12 text-base font-medium" placeholder="75" type="number"/>
+<span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">bpm</span>
+</div>
+</div>
+</div>
+<!-- Notes Area -->
+<div class="space-y-2">
+<label class="text-sm font-bold text-slate-700 dark:text-slate-300">Ghi chú lâm sàng / Kết luận khám</label>
+<textarea class="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-primary focus:ring-primary p-4 text-base font-normal" placeholder="Ghi nhận các triệu chứng hoặc tình trạng sức khỏe cụ thể..." rows="4"></textarea>
+</div>
+<!-- 4. Result Selection -->
+<div class="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
+<h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 uppercase tracking-wider">Kết quả thẩm định cuối cùng</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<label class="relative flex cursor-pointer rounded-lg border bg-white dark:bg-slate-900 p-4 shadow-sm focus:outline-none border-primary ring-2 ring-primary ring-opacity-10">
+<input checked="" class="mt-0.5 h-4 w-4 shrink-0 cursor-pointer text-primary border-slate-300 focus:ring-primary" name="result" type="radio" value="approved"/>
+<span class="ml-3 flex flex-col">
+<span class="block text-sm font-bold text-slate-900 dark:text-white">ĐỦ ĐIỀU KIỆN TIÊM (APPROVED)</span>
+<span class="block text-xs text-slate-500 mt-1">Bệnh nhân có thể tiến hành tiêm ngay lập tức.</span>
+</span>
+</label>
+<label class="relative flex cursor-pointer rounded-lg border bg-white dark:bg-slate-900 p-4 shadow-sm focus:outline-none border-slate-200 dark:border-slate-700">
+<input class="mt-0.5 h-4 w-4 shrink-0 cursor-pointer text-red-500 border-slate-300 focus:ring-red-500" name="result" type="radio" value="rejected"/>
+<span class="ml-3 flex flex-col">
+<span class="block text-sm font-bold text-slate-900 dark:text-white text-red-500">KHÔNG ĐỦ ĐIỀU KIỆN / TẠM HOÃN (REJECTED)</span>
+<span class="block text-xs text-slate-500 mt-1">Cần có lý do từ chối hoặc tạm hoãn tiêm chủng.</span>
+</span>
+</label>
+</div>
+<!-- Conditional Field: Reason for Rejection -->
+<div class="space-y-2" id="rejectionReasonContainer" style="display: none;">
+<label class="text-sm font-bold text-slate-700 dark:text-slate-300">Lý do từ chối / Ghi chú thêm (Nếu có)</label>
+<input id="rejectionReasonInput" class="w-full h-11 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-red-500 focus:ring-red-500 px-4 text-base" placeholder="Vui lòng nhập lý do nếu bệnh nhân bị từ chối tiêm..." type="text"/>
+</div>
+</div>
+<!-- Vaccination Record Info (nếu đã tiêm) -->
+<div id="vaccinationRecordSection" class="hidden mt-6 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+<h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 uppercase tracking-wider flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">vaccines</span>
+Thông tin tiêm chủng
+</h3>
+<div id="vaccinationRecordContent" class="space-y-2 text-sm">
+<!-- Content will be populated by JavaScript -->
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex items-center justify-end gap-4 pt-6 border-t border-[#dbe6df] dark:border-slate-800">
+<button id="cancelButton" class="px-6 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 transition-colors" type="button">Hủy bỏ</button>
+<button id="submitButton" class="px-8 h-12 rounded-lg bg-primary text-slate-900 font-bold text-sm hover:brightness-105 shadow-lg shadow-primary/20 transition-all flex items-center gap-2" type="submit">
+<span class="material-symbols-outlined font-bold">check_circle</span>
+                                Lưu kết quả khám
+                            </button>
+</div>
+</form>
+</div>
+</div>
+</div>
+</main>
+<footer class="mt-12 py-10 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark">
+<div class="max-w-[1200px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="flex items-center gap-2 text-slate-400">
+<span class="material-symbols-outlined text-lg">medical_services</span>
+<p class="text-sm">Hệ thống Quản lý Tiêm chủng Quốc gia - Phân hệ Bác sĩ</p>
+</div>
+<div class="flex gap-6">
+<a class="text-xs font-medium text-slate-500 hover:text-primary" href="#">Hướng dẫn sử dụng</a>
+<a class="text-xs font-medium text-slate-500 hover:text-primary" href="#">Hỗ trợ kỹ thuật</a>
+<a class="text-xs font-medium text-slate-500 hover:text-primary" href="#">Chính sách bảo mật</a>
+</div>
+</div>
+    </footer>
+    </main>
+    </div>
+    </div>
+    
+    <!-- Modal Lịch sử tiêm chủng -->
+    <div id="vaccinationHistoryModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4" style="display: none;">
+        <div class="bg-white dark:bg-background-dark rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white">Lịch sử tiêm chủng</h3>
+                <button onclick="closeVaccinationHistoryModal()" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6">
+                <div id="vaccinationHistoryContent" class="space-y-4">
+                    <div class="text-center text-slate-500 py-8">
+                        <span class="material-symbols-outlined text-4xl mb-2 opacity-50">hourglass_empty</span>
+                        <p>Đang tải...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        (function() {
+            const appointmentId = /*[[${appointmentId}]]*/ null;
+            const screeningId = /*[[${screeningId}]]*/ null;
+            const isReadOnly = /*[[${isReadOnly}]]*/ false;
+            let allVaccines = [];
+            let currentAppointmentData = null;
+            
+            async function loadAppointmentDetail() {
+                if (!appointmentId && !screeningId) {
+                    alert('Không tìm thấy ID lịch hẹn. Vui lòng quay lại trang danh sách.');
+                    return;
+                }
+                
+                try {
+                    let response;
+                    if (screeningId) {
+                        // Load từ API screening history detail
+                        response = await fetch(`/api/doctor/screening/history/${screeningId}`);
+                    } else {
+                        // Load từ API appointment detail
+                        response = await fetch(`/api/doctor/appointments/${appointmentId}`);
+                    }
+                    
+                    if (!response.ok) throw new Error('Failed to load appointment');
+                    const data = await response.json();
+                    currentAppointmentData = data;
+                    
+                    // Xử lý cấu trúc dữ liệu khác nhau
+                    const appointmentData = screeningId ? data.appointment : data;
+                    const patientInfo = screeningId ? data.patientInfo : data.patientInfo;
+                    const vaccineInfo = screeningId ? (appointmentData?.vaccineInfo) : data.vaccineInfo;
+                    const screeningData = screeningId ? data.screening : data.screening;
+                    
+                    // Update patient info
+                    if (patientInfo) {
+                        const patientName = patientInfo.fullName || 'N/A';
+                        document.getElementById('patientName').textContent = patientName;
+                        
+                        // Update booking code
+                        const bookingCode = screeningId ? appointmentData?.bookingCode : data.bookingCode;
+                        if (bookingCode) {
+                            document.getElementById('bookingCode').textContent = `Mã Booking: ${bookingCode}`;
+                        }
+                        
+                        // Update patient details
+                        if (data.patientInfo.dateOfBirth) {
+                            const dob = new Date(data.patientInfo.dateOfBirth);
+                            const dobFormatted = dob.toLocaleDateString('vi-VN');
+                            const age = Math.floor((new Date() - dob) / (365.25 * 24 * 60 * 60 * 1000));
+                            document.getElementById('patientDob').innerHTML = `<span class="material-symbols-outlined text-lg">calendar_today</span> Ngày sinh: ${dobFormatted} (${age} tuổi)`;
+                        } else {
+                            document.getElementById('patientDob').innerHTML = '<span class="material-symbols-outlined text-lg">calendar_today</span> Ngày sinh: -';
+                        }
+                        
+                        const gender = data.patientInfo.gender === 'MALE' ? 'Nam' : data.patientInfo.gender === 'FEMALE' ? 'Nữ' : 'Khác';
+                        const genderIcon = data.patientInfo.gender === 'MALE' ? 'male' : data.patientInfo.gender === 'FEMALE' ? 'female' : 'person';
+                        document.getElementById('patientGender').innerHTML = `<span class="material-symbols-outlined text-lg">${genderIcon}</span> Giới tính: ${gender}`;
+                        
+                        if (data.patientInfo.phoneNumber) {
+                            document.getElementById('patientPhone').innerHTML = `<span class="material-symbols-outlined text-lg">phone</span> SĐT: ${data.patientInfo.phoneNumber}`;
+                        } else {
+                            document.getElementById('patientPhone').innerHTML = '<span class="material-symbols-outlined text-lg">phone</span> SĐT: -';
+                        }
+                    }
+                    
+                    // Update vaccine info and load vaccine dropdown
+                    if (vaccineInfo) {
+                        const doseNumber = screeningId ? appointmentData?.doseNumber : data.doseNumber;
+                        document.getElementById('vaccineInfo').textContent = `Vaccine: ${vaccineInfo.name} (Mũi ${doseNumber || 1})`;
+                        // Set selected vaccine in dropdown
+                        const vaccineSelect = document.getElementById('vaccineSelect');
+                        if (vaccineSelect && vaccineInfo.id) {
+                            vaccineSelect.value = vaccineInfo.id;
+                        }
+                    }
+                    
+                    // Update appointment info
+                    const appointmentDate = screeningId ? appointmentData?.appointmentDate : data.appointmentDate;
+                    if (appointmentDate) {
+                        const date = new Date(appointmentDate);
+                        document.getElementById('appointmentDate').textContent = date.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    }
+                    
+                    const appointmentTime = screeningId ? appointmentData?.appointmentTime : data.appointmentTime;
+                    if (appointmentTime) {
+                        const time = new Date('2000-01-01T' + appointmentTime);
+                        document.getElementById('appointmentTime').textContent = time.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                    }
+                    
+                    const status = screeningId ? appointmentData?.status : data.status;
+                    if (status) {
+                        const statusText = {
+                            'PENDING': 'Chờ khám',
+                            'CHECKED_IN': 'Đã check-in',
+                            'SCREENING': 'Đang khám sàng lọc',
+                            'APPROVED': 'Đã phê duyệt',
+                            'REJECTED': 'Đã từ chối'
+                        }[status] || status;
+                        document.getElementById('appointmentStatus').textContent = statusText;
+                    }
+                    
+                    const doseNumber = screeningId ? appointmentData?.doseNumber : data.doseNumber;
+                    if (doseNumber) {
+                        document.getElementById('doseNumber').textContent = `Mũi ${doseNumber}`;
+                    }
+                    
+                    // Load existing screening data if available
+                    const screeningDataToLoad = screeningId ? data.screening : data.screening;
+                    if (screeningDataToLoad) {
+                        const form = document.getElementById('screeningForm');
+                        if (form) {
+                            if (screeningDataToLoad.bodyTemperature) {
+                                const tempInput = form.querySelector('input[placeholder*="36.5"]');
+                                if (tempInput) tempInput.value = screeningDataToLoad.bodyTemperature;
+                            }
+                            if (screeningDataToLoad.bloodPressure) {
+                                const bpInput = form.querySelector('input[placeholder*="120/80"]');
+                                if (bpInput) bpInput.value = screeningDataToLoad.bloodPressure;
+                            }
+                            if (screeningDataToLoad.heartRate) {
+                                const hrInput = form.querySelector('input[placeholder*="75"]');
+                                if (hrInput) hrInput.value = screeningDataToLoad.heartRate;
+                            }
+                            if (screeningDataToLoad.notes) {
+                                const notesTextarea = form.querySelector('textarea');
+                                if (notesTextarea) notesTextarea.value = screeningDataToLoad.notes;
+                            }
+                            if (screeningDataToLoad.screeningResult) {
+                                const resultRadio = form.querySelector(`input[value="${screeningDataToLoad.screeningResult.toLowerCase()}"]`);
+                                if (resultRadio) {
+                                    resultRadio.checked = true;
+                                    // Trigger change to show/hide rejection reason field
+                                    resultRadio.dispatchEvent(new Event('change'));
+                                }
+                            }
+                            if (screeningDataToLoad.rejectionReason) {
+                                const reasonInput = document.getElementById('rejectionReasonInput');
+                                if (reasonInput) reasonInput.value = screeningDataToLoad.rejectionReason;
+                            }
+                            
+                            // Nếu đã lưu (có screenedAt) hoặc ở chế độ read-only thì disable form
+                            if (screeningId || isReadOnly || screeningDataToLoad.screenedAt) {
+                                enableReadOnlyMode(form);
+                            }
+                        }
+                    }
+                    
+                    // Hiển thị thông tin vaccination record nếu có
+                    const vaccinationRecord = screeningId ? appointmentData?.vaccinationRecord : null;
+                    if (vaccinationRecord) {
+                        displayVaccinationRecordInfo(vaccinationRecord);
+                    }
+                } catch (error) {
+                    alert('Lỗi khi tải thông tin lịch hẹn. Vui lòng thử lại.');
+                }
+            }
+            
+            // Load vaccines for dropdown
+            async function loadVaccines() {
+                try {
+                    const response = await fetch('/api/vaccines', {
+                        credentials: 'include'
+                    });
+                    if (response.ok) {
+                        allVaccines = await response.json();
+                        const vaccineSelect = document.getElementById('vaccineSelect');
+                        if (vaccineSelect) {
+                            vaccineSelect.innerHTML = '<option value="">Chọn vaccine</option>';
+                            allVaccines.forEach(vaccine => {
+                                if (vaccine.status === 'AVAILABLE') {
+                                    const option = document.createElement('option');
+                                    option.value = vaccine.id;
+                                    option.textContent = vaccine.name;
+                                    vaccineSelect.appendChild(option);
+                                }
+                            });
+                            
+                            // Add change event listener to update display
+                            vaccineSelect.addEventListener('change', function() {
+                                const selectedVaccine = allVaccines.find(v => v.id == this.value);
+                                if (selectedVaccine) {
+                                    const doseNumber = currentAppointmentData?.doseNumber || 1;
+                                    document.getElementById('vaccineInfo').textContent = `Vaccine: ${selectedVaccine.name} (Mũi ${doseNumber})`;
+                                }
+                            });
+                        }
+                    }
+                } catch (error) {
+                    // Silent fail
+                }
+            }
+            
+            // Enable read-only mode
+            function enableReadOnlyMode(form) {
+                if (!form) return;
+                
+                // Disable tất cả input fields
+                form.querySelectorAll('input, textarea, select').forEach(el => {
+                    el.disabled = true;
+                    el.classList.add('opacity-75', 'cursor-not-allowed');
+                });
+                
+                // Disable radio buttons
+                form.querySelectorAll('input[type="radio"]').forEach(radio => {
+                    radio.disabled = true;
+                    radio.classList.add('cursor-not-allowed');
+                });
+                
+                // Ẩn nút submit
+                const submitBtn = document.getElementById('submitButton');
+                if (submitBtn) {
+                    submitBtn.style.display = 'none';
+                }
+                
+                // Hiển thị badge "Đã lưu"
+                const badge = document.getElementById('readOnlyBadge');
+                if (badge) {
+                    badge.classList.remove('hidden');
+                }
+                
+                // Đổi text nút cancel thành "Quay lại"
+                const cancelBtn = document.getElementById('cancelButton');
+                if (cancelBtn) {
+                    cancelBtn.textContent = 'Quay lại';
+                }
+            }
+            
+            // Display vaccination record info
+            function displayVaccinationRecordInfo(record) {
+                const section = document.getElementById('vaccinationRecordSection');
+                const content = document.getElementById('vaccinationRecordContent');
+                
+                if (!section || !content || !record) return;
+                
+                section.classList.remove('hidden');
+                
+                const injectionDate = record.injectionDate ? new Date(record.injectionDate).toLocaleDateString('vi-VN') : 'N/A';
+                const injectionTime = record.injectionTime ? (typeof record.injectionTime === 'string' ? record.injectionTime.substring(0, 5) : new Date('2000-01-01T' + record.injectionTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})) : '';
+                
+                let html = '';
+                html += `<p><span class="font-semibold">Ngày tiêm:</span> ${injectionDate} ${injectionTime ? 'lúc ' + injectionTime : ''}</p>`;
+                if (record.batchNumber) {
+                    html += `<p><span class="font-semibold">Số lô vaccine:</span> ${record.batchNumber}</p>`;
+                }
+                if (record.certificateNumber) {
+                    html += `<p><span class="font-semibold">Số chứng nhận:</span> ${record.certificateNumber}</p>`;
+                }
+                if (record.injectionSite) {
+                    html += `<p><span class="font-semibold">Vị trí tiêm:</span> ${record.injectionSite}</p>`;
+                }
+                if (record.nurseName) {
+                    html += `<p><span class="font-semibold">Y tá thực hiện:</span> ${record.nurseName}</p>`;
+                }
+                if (record.doseAmount) {
+                    html += `<p><span class="font-semibold">Liều lượng:</span> ${record.doseAmount}ml</p>`;
+                }
+                if (record.nextDoseDate) {
+                    const nextDate = new Date(record.nextDoseDate).toLocaleDateString('vi-VN');
+                    html += `<p><span class="font-semibold">Ngày tiêm mũi tiếp theo:</span> ${nextDate}</p>`;
+                }
+                
+                content.innerHTML = html;
+            }
+            
+            // Handle form submission
+            function setupFormSubmission() {
+                const form = document.getElementById('screeningForm');
+                if (!form) {
+                    setTimeout(() => {
+                        setupFormSubmission();
+                    }, 1000);
+                    return;
+                }
+                
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    // Validate form
+                    const bodyTemperature = form.querySelector('input[placeholder*="36.5"]')?.value;
+                    const bloodPressure = form.querySelector('input[placeholder*="120/80"]')?.value;
+                    const heartRate = form.querySelector('input[placeholder*="75"]')?.value;
+                    const notes = form.querySelector('textarea')?.value;
+                    const screeningResult = form.querySelector('input[name="result"]:checked')?.value;
+                    const rejectionReason = document.getElementById('rejectionReasonInput')?.value;
+                    const selectedVaccineId = document.getElementById('vaccineSelect')?.value;
+                    
+                    // Validation
+                    if (!screeningResult) {
+                        alert('Vui lòng chọn kết quả khám sàng lọc!');
+                        return;
+                    }
+                    
+                    if (screeningResult === 'rejected' && !rejectionReason) {
+                        alert('Vui lòng nhập lý do từ chối khi chọn "Không đủ điều kiện"!');
+                        document.getElementById('rejectionReasonInput').focus();
+                        return;
+                    }
+                    
+                    if (!selectedVaccineId) {
+                        alert('Vui lòng chọn vaccine để tiêm!');
+                        return;
+                    }
+                    
+                    // Disable submit button to prevent double submission
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (!submitBtn) {
+                        return;
+                    }
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="material-symbols-outlined font-bold animate-spin">hourglass_empty</span> Đang lưu...';
+                    
+                    const requestData = {
+                        appointmentId: appointmentId,
+                        vaccineId: selectedVaccineId ? parseInt(selectedVaccineId) : null,
+                        bodyTemperature: bodyTemperature && bodyTemperature.trim() !== '' ? parseFloat(bodyTemperature) : null,
+                        bloodPressure: bloodPressure && bloodPressure.trim() !== '' ? bloodPressure.trim() : null,
+                        heartRate: heartRate && heartRate.trim() !== '' ? parseInt(heartRate) : null,
+                        notes: notes && notes.trim() !== '' ? notes.trim() : null,
+                        screeningResult: screeningResult.toUpperCase(),
+                        rejectionReason: rejectionReason && rejectionReason.trim() !== '' ? rejectionReason.trim() : null
+                    };
+                    
+                    try {
+                        const response = await fetch('/api/doctor/screening', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify(requestData)
+                        });
+                        
+                        const responseData = await response.json();
+                        
+                        if (!response.ok) {
+                            const errorMsg = responseData.error || 'Không thể lưu kết quả khám';
+                            alert('Lỗi: ' + errorMsg);
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalText;
+                            return;
+                        }
+                        
+                        alert('Lưu kết quả khám thành công!');
+                        setTimeout(() => {
+                            window.location.href = '/doctor/appointments';
+                        }, 1000);
+                    } catch (error) {
+                        alert('Lỗi khi lưu kết quả khám: ' + error.message);
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
+                });
+            }
+            
+            // Show/hide rejection reason field based on result selection
+            function setupRejectionReasonToggle() {
+                const resultRadios = document.querySelectorAll('input[name="result"]');
+                const rejectionContainer = document.getElementById('rejectionReasonContainer');
+                const rejectionInput = document.getElementById('rejectionReasonInput');
+                
+                resultRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        if (this.value === 'rejected') {
+                            rejectionContainer.style.display = 'block';
+                            rejectionInput.required = true;
+                        } else {
+                            rejectionContainer.style.display = 'none';
+                            rejectionInput.required = false;
+                            rejectionInput.value = '';
+                        }
+                    });
+                });
+            }
+            
+            // Handle cancel button
+            function setupCancelButton() {
+                const cancelBtn = document.getElementById('cancelButton');
+                if (cancelBtn) {
+                    cancelBtn.addEventListener('click', function() {
+                        if (isReadOnly || screeningId) {
+                            // Nếu ở chế độ read-only thì quay lại trang lịch sử
+                            window.location.href = '/doctor/history';
+                        } else {
+                            // Nếu đang chỉnh sửa thì hỏi xác nhận
+                            if (confirm('Bạn có chắc chắn muốn hủy? Dữ liệu chưa lưu sẽ bị mất.')) {
+                                window.location.href = '/doctor/appointments';
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // Check if DOM is already loaded
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    initializePage();
+                });
+            } else {
+                initializePage();
+            }
+            
+            // Show vaccination history modal
+            window.showVaccinationHistory = async function() {
+                const modal = document.getElementById('vaccinationHistoryModal');
+                const content = document.getElementById('vaccinationHistoryContent');
+                
+                if (!currentAppointmentData || !currentAppointmentData.patientInfo) {
+                    alert('Không có thông tin bệnh nhân. Vui lòng đợi trang tải xong.');
+                    return;
+                }
+                
+                modal.style.display = 'flex';
+                content.innerHTML = '<div class="text-center text-slate-500 py-8"><span class="material-symbols-outlined text-4xl mb-2 opacity-50 animate-spin">hourglass_empty</span><p>Đang tải...</p></div>';
+                
+                try {
+                    const patientInfo = currentAppointmentData.patientInfo;
+                    let url = '/api/doctor/patient/history?';
+                    
+                    // Ưu tiên dùng userId, nếu không có thì dùng citizenId
+                    if (patientInfo.userId) {
+                        url += `userId=${encodeURIComponent(patientInfo.userId)}`;
+                    } else if (patientInfo.citizenId) {
+                        url += `citizenId=${encodeURIComponent(patientInfo.citizenId)}`;
+                    } else {
+                        content.innerHTML = '<div class="text-center text-slate-500 py-8"><span class="material-symbols-outlined text-4xl mb-2 opacity-50">info</span><p>Không có thông tin định danh bệnh nhân (User ID hoặc CCCD/CMND)</p></div>';
+                        return;
+                    }
+                    
+                    const response = await fetch(url, {
+                        credentials: 'include'
+                    });
+                    
+                    if (response.ok) {
+                        const historyData = await response.json();
+                        displayVaccinationHistory(historyData);
+                    } else if (response.status === 404) {
+                        content.innerHTML = '<div class="text-center text-slate-500 py-8"><span class="material-symbols-outlined text-4xl mb-2 opacity-50">history_edu</span><p>Chưa có lịch sử tiêm chủng</p></div>';
+                    } else {
+                        const errorData = await response.json();
+                        content.innerHTML = `<div class="text-center text-red-500 py-8"><span class="material-symbols-outlined text-4xl mb-2">error</span><p>${errorData.error || 'Lỗi khi tải lịch sử tiêm chủng'}</p></div>`;
+                    }
+                } catch (error) {
+                    content.innerHTML = '<div class="text-center text-red-500 py-8"><span class="material-symbols-outlined text-4xl mb-2">error</span><p>Lỗi khi tải lịch sử tiêm chủng: ' + error.message + '</p></div>';
+                }
+            };
+            
+            // Close modal
+            window.closeVaccinationHistoryModal = function() {
+                const modal = document.getElementById('vaccinationHistoryModal');
+                modal.style.display = 'none';
+            };
+            
+            // Display vaccination history
+            function displayVaccinationHistory(historyData) {
+                const content = document.getElementById('vaccinationHistoryContent');
+                
+                if (!historyData || !historyData.records || historyData.records.length === 0) {
+                    content.innerHTML = '<div class="text-center text-slate-500 py-8"><span class="material-symbols-outlined text-4xl mb-2 opacity-50">history_edu</span><p>Chưa có lịch sử tiêm chủng</p></div>';
+                    return;
+                }
+                
+                let html = `<div class="mb-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+                    <p class="text-sm text-slate-600 dark:text-slate-400"><span class="font-semibold">Bệnh nhân:</span> ${historyData.patientName || 'N/A'}</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400"><span class="font-semibold">Tổng số mũi tiêm:</span> ${historyData.totalRecords || 0}</p>
+                </div>`;
+                html += '<div class="space-y-4">';
+                historyData.records.forEach(record => {
+                    const date = new Date(record.injectionDate).toLocaleDateString('vi-VN');
+                    const time = record.injectionTime ? (typeof record.injectionTime === 'string' ? record.injectionTime.substring(0, 5) : new Date('2000-01-01T' + record.injectionTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})) : '';
+                    html += `
+                        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h4 class="font-bold text-slate-900 dark:text-white mb-2">${record.vaccineName || 'N/A'}</h4>
+                                    <div class="space-y-1 text-sm text-slate-600 dark:text-slate-400">
+                                        <p><span class="font-semibold">Ngày tiêm:</span> ${date} ${time ? 'lúc ' + time : ''}</p>
+                                        <p><span class="font-semibold">Mũi tiêm:</span> Mũi ${record.doseNumber || 'N/A'}</p>
+                                        ${record.centerName ? `<p><span class="font-semibold">Trung tâm:</span> ${record.centerName}</p>` : ''}
+                                        ${record.batchNumber ? `<p><span class="font-semibold">Số lô:</span> ${record.batchNumber}</p>` : ''}
+                                        ${record.certificateNumber ? `<p><span class="font-semibold">Số chứng nhận:</span> ${record.certificateNumber}</p>` : ''}
+                                        ${record.injectionSite ? `<p><span class="font-semibold">Vị trí tiêm:</span> ${record.injectionSite}</p>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                content.innerHTML = html;
+            }
+            
+            function initializePage() {
+                if (!appointmentId && !screeningId) {
+                    alert('Lỗi: Không tìm thấy ID lịch hẹn. Vui lòng quay lại trang danh sách.');
+                    return;
+                }
+                
+                // Chỉ load vaccines nếu không ở chế độ read-only
+                if (!isReadOnly && !screeningId) {
+                    loadVaccines();
+                }
+                
+                loadAppointmentDetail();
+                
+                // Chỉ setup form submission nếu không ở chế độ read-only
+                if (!isReadOnly && !screeningId) {
+                    setupFormSubmission();
+                }
+                
+                setupRejectionReasonToggle();
+                setupCancelButton();
+            }
+        })();
+        /*]]>*/
+    </script>
+    </body></html>

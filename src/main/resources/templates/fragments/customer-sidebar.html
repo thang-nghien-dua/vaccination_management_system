@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Customer Sidebar Fragment -->
+<aside th:fragment="sidebar" class="w-72 bg-white dark:bg-[#1a2e21] border-r border-[#f0f4f2] dark:border-[#2d3f33] fixed h-full z-50 flex flex-col">
+<div class="p-6 flex items-center gap-3">
+<h1 class="text-xl font-bold tracking-tight flex-1 lg:block">VacciCare</h1>
+</div>
+<div class="px-4 mb-6" th:if="${isAuthenticated}">
+<div class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark rounded-xl" th:if="${currentUser != null}">
+<div class="bg-primary/20 rounded-full size-10 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0">
+<span th:text="${currentUser.fullName != null ? #strings.substring(currentUser.fullName, 0, 1) : 'U'}">U</span>
+</div>
+<div class="flex flex-col overflow-hidden min-w-0 lg:block">
+<p class="text-sm font-bold truncate text-[#111813] dark:text-white" th:text="${currentUser.fullName ?: currentUser.email}">Tên người dùng</p>
+<p class="text-xs text-[#61896f] truncate">Người dùng cá nhân</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-2 space-y-1 overflow-y-auto">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" 
+   th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/home') ? 'active-nav text-primary font-bold' : ''}"
+   th:href="@{/home}">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm">Tổng quan</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" 
+   th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/profile') ? 'active-nav text-primary font-bold' : ''}"
+   th:href="@{/profile}">
+<span class="material-symbols-outlined text-[#111813] dark:text-white">person</span>
+<span class="text-sm font-medium">Thông tin cá nhân</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" 
+   th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/appointments') ? 'active-nav text-primary font-bold' : ''}"
+   th:href="@{/appointments}">
+<span class="material-symbols-outlined text-[#111813] dark:text-white">calendar_month</span>
+<span class="text-sm font-medium">Đặt lịch</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" 
+   th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/vaccination-history') ? 'active-nav text-primary font-bold' : ''}"
+   th:href="@{/vaccination-history}">
+<span class="material-symbols-outlined text-[#111813] dark:text-white">history_edu</span>
+<span class="text-sm font-medium">Hồ sơ tiêm chủng</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" 
+   th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/family-members') ? 'active-nav text-primary font-bold' : ''}"
+   th:href="@{/family-members}">
+<span class="material-symbols-outlined text-[#111813] dark:text-white">group</span>
+<span class="text-sm font-medium">Người thân</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" 
+   th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/vaccines') ? 'active-nav text-primary font-bold' : ''}"
+   th:href="@{/vaccines}">
+<span class="material-symbols-outlined text-[#111813] dark:text-white">vaccines</span>
+<span class="text-sm font-medium">Vaccine</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors relative" 
+   th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/notifications') ? 'active-nav text-primary font-bold' : ''}"
+   th:href="@{/notifications}">
+<span class="material-symbols-outlined text-[#111813] dark:text-white">notifications</span>
+<span class="text-sm font-medium">Thông báo</span>
+<span id="notificationBadge" class="hidden absolute top-1.5 right-1.5 bg-gradient-to-r from-red-500 to-red-600 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 leading-none shadow-lg">0</span>
+</a>
+</nav>
+<div class="mt-auto p-4 border-t border-[#f0f4f2] dark:border-[#2d3f33] space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="#">
+<span class="material-symbols-outlined text-[#111813] dark:text-white">settings</span>
+<span class="text-sm font-medium">Cài đặt</span>
+</a>
+<form th:action="@{/api/auth/logout}" method="post" class="inline">
+<button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-50 transition-colors">
+<span class="material-symbols-outlined">logout</span>
+<span class="text-sm font-medium">Đăng xuất</span>
+</button>
+</form>
+</div>
+</aside>
+
+<style>
+.active-nav {
+background-color: rgba(19, 236, 91, 0.1) !important;
+border-left: 4px solid #13ec5b;
+color: #13ec5b !important;
+}
+.active-nav .material-symbols-outlined {
+color: #13ec5b !important;
+}
+</style>
+</body>
+</html>
+

@@ -150,7 +150,7 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
             } catch (org.springframework.security.authentication.LockedException e) {
                 Map<String, String> error = new HashMap<>();
-                error.put("error", "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.");
+                error.put("error", "Tài khoản của bạn đã bị khóa. Vui lòng gửi email đến thangtv5280@gmail.com để được hỗ trợ.");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
             }
             
@@ -174,7 +174,7 @@ public class AuthController {
             loginResponse.put("userId", user.getId());
             loginResponse.put("email", user.getEmail());
             loginResponse.put("fullName", user.getFullName());
-            loginResponse.put("role", user.getRole().name());
+            loginResponse.put("role", user.getRole() != null ? user.getRole().name() : "CUSTOMER");
             
             return ResponseEntity.ok(loginResponse);
         } catch (org.springframework.security.core.AuthenticationException e) {

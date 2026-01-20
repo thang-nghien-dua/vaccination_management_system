@@ -26,15 +26,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import ut.edu.vaccinationmanagementsystem.entity.Appointment;
+import ut.edu.vaccinationmanagementsystem.entity.Payment;
 import ut.edu.vaccinationmanagementsystem.entity.User;
 import ut.edu.vaccinationmanagementsystem.entity.VaccinationRecord;
 import ut.edu.vaccinationmanagementsystem.entity.enums.AppointmentStatus;
+import ut.edu.vaccinationmanagementsystem.entity.enums.PaymentStatus;
 import ut.edu.vaccinationmanagementsystem.repository.AppointmentRepository;
+import ut.edu.vaccinationmanagementsystem.repository.AppointmentSlotRepository;
 import ut.edu.vaccinationmanagementsystem.repository.FamilyMemberRepository;
+import ut.edu.vaccinationmanagementsystem.repository.PaymentRepository;
 import ut.edu.vaccinationmanagementsystem.repository.UserRepository;
 import ut.edu.vaccinationmanagementsystem.repository.VaccinationRecordRepository;
 import ut.edu.vaccinationmanagementsystem.service.CustomOAuth2User;
 import ut.edu.vaccinationmanagementsystem.service.CustomUserDetails;
+
+import java.math.BigDecimal;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -56,7 +62,149 @@ public class DashboardController {
 
     @Autowired
     private FamilyMemberRepository familyMemberRepository;
+    
+    @Autowired
+    private PaymentRepository paymentRepository;
+    
+    @Autowired
+    private AppointmentSlotRepository appointmentSlotRepository;
 
+    /**
+     * GET /api/dashboard/stats
+     * Thống kê tổng quan (cho ADMIN)
+     * - Số lượng tiêm hôm nay
+     * - Doanh thu
+     * - Tỷ lệ sử dụng slots
+     */
+    @GetMapping("/stats")
+    public ResponseEntity<?> getStats() {
+        try {
+            User currentUser = getCurrentUser();
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
+            }
+            
+            // Kiểm tra quyền: chỉ ADMIN mới xem được stats tổng quan
+            if (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Only ADMIN can view dashboard stats");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+            }
+            
+            LocalDate today = LocalDate.now();
+            
+            // 1. Số lượng tiêm hôm nay
+            List<VaccinationRecord> todayInjections = vaccinationRecordRepository.findAll().stream()
+                    .filter(record -> record.getInjectionDate() != null && record.getInjectionDate().equals(today))
+                    .collect(Collectors.toList());
+            long todayInjectionCount = todayInjections.size();
+            
+            // 2. Doanh thu
+            // Doanh thu hôm nay (từ payments đã thanh toán thành công)
+            BigDecimal todayRevenue = paymentRepository.findAll().stream()
+                    .filter(payment -> payment.getPaidAt() != null && 
+                            payment.getPaidAt().toLocalDate().equals(today) &&
+                            payment.getPaymentStatus() == PaymentStatus.PAID)
+                    .map(Payment::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            // Doanh thu tháng này
+            LocalDate firstDayOfMonth = today.withDayOfMonth(1);
+            BigDecimal monthlyRevenue = paymentRepository.findAll().stream()
+                    .filter(payment -> payment.getPaidAt() != null && 
+                            payment.getPaidAt().toLocalDate().isAfter(firstDayOfMonth.minusDays(1)) &&
+                            payment.getPaidAt().toLocalDate().isBefore(today.plusDays(1)) &&
+                            payment.getPaymentStatus() == PaymentStatus.PAID)
+                    .map(Payment::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            // Doanh thu tổng (tất cả payments đã thanh toán)
+            BigDecimal totalRevenue = paymentRepository.findAll().stream()
+                    .filter(payment -> payment.getPaymentStatus() == PaymentStatus.PAID)
+                    .map(Payment::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            // 3. Tỷ lệ sử dụng slots
+            List<ut.edu.vaccinationmanagementsystem.entity.AppointmentSlot> allSlots = appointmentSlotRepository.findAll();
+            long totalSlots = allSlots.size();
+            long totalCapacity = allSlots.stream()
+                    .mapToInt(slot -> slot.getMaxCapacity() != null ? slot.getMaxCapacity() : 0)
+                    .sum();
+            long totalBookings = allSlots.stream()
+                    .mapToInt(slot -> slot.getCurrentBookings() != null ? slot.getCurrentBookings() : 0)
+                    .sum();
+            
+            double slotUsageRate = 0.0;
+            if (totalCapacity > 0) {
+                slotUsageRate = (double) totalBookings / totalCapacity * 100;
+            }
+            
+            // Tỷ lệ sử dụng slots hôm nay
+            List<ut.edu.vaccinationmanagementsystem.entity.AppointmentSlot> todaySlots = allSlots.stream()
+                    .filter(slot -> slot.getDate() != null && slot.getDate().equals(today))
+                    .collect(Collectors.toList());
+            long todayTotalCapacity = todaySlots.stream()
+                    .mapToInt(slot -> slot.getMaxCapacity() != null ? slot.getMaxCapacity() : 0)
+                    .sum();
+            long todayTotalBookings = todaySlots.stream()
+                    .mapToInt(slot -> slot.getCurrentBookings() != null ? slot.getCurrentBookings() : 0)
+                    .sum();
+            double todaySlotUsageRate = 0.0;
+            if (todayTotalCapacity > 0) {
+                todaySlotUsageRate = (double) todayTotalBookings / todayTotalCapacity * 100;
+            }
+            
+            // Thống kê thêm
+            long totalAppointments = appointmentRepository.findAll().size();
+            long completedAppointments = appointmentRepository.findAll().stream()
+                    .filter(apt -> apt.getStatus() == AppointmentStatus.COMPLETED)
+                    .count();
+            long totalUsers = userRepository.findAll().size();
+            long totalVaccinationRecords = vaccinationRecordRepository.findAll().size();
+            
+            Map<String, Object> stats = new HashMap<>();
+            
+            // Tiêm chủng
+            Map<String, Object> injectionStats = new HashMap<>();
+            injectionStats.put("todayCount", todayInjectionCount);
+            injectionStats.put("totalCount", totalVaccinationRecords);
+            stats.put("injections", injectionStats);
+            
+            // Doanh thu
+            Map<String, Object> revenueStats = new HashMap<>();
+            revenueStats.put("today", todayRevenue);
+            revenueStats.put("monthly", monthlyRevenue);
+            revenueStats.put("total", totalRevenue);
+            stats.put("revenue", revenueStats);
+            
+            // Slots
+            Map<String, Object> slotStats = new HashMap<>();
+            slotStats.put("totalSlots", totalSlots);
+            slotStats.put("totalCapacity", totalCapacity);
+            slotStats.put("totalBookings", totalBookings);
+            slotStats.put("usageRate", Math.round(slotUsageRate * 100.0) / 100.0);
+            slotStats.put("todaySlots", todaySlots.size());
+            slotStats.put("todayCapacity", todayTotalCapacity);
+            slotStats.put("todayBookings", todayTotalBookings);
+            slotStats.put("todayUsageRate", Math.round(todaySlotUsageRate * 100.0) / 100.0);
+            stats.put("slots", slotStats);
+            
+            // Tổng quan
+            Map<String, Object> overview = new HashMap<>();
+            overview.put("totalUsers", totalUsers);
+            overview.put("totalAppointments", totalAppointments);
+            overview.put("completedAppointments", completedAppointments);
+            stats.put("overview", overview);
+            
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
     /**
      * GET /api/dashboard/statistics
      * Lấy thống kê tổng quan cho dashboard

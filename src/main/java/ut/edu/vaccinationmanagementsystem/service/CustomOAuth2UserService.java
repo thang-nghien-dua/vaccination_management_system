@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import ut.edu.vaccinationmanagementsystem.entity.User;
 import ut.edu.vaccinationmanagementsystem.entity.enums.AuthProvider;
 import ut.edu.vaccinationmanagementsystem.entity.enums.Gender;
+import ut.edu.vaccinationmanagementsystem.entity.enums.UserStatus;
 
 import java.util.Map;
 
@@ -92,8 +93,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         try {
             User user = userService.processOAuth2User(email, name, providerId, authProvider, gender);
             
+            // Kiểm tra user status - không cho phép đăng nhập nếu bị khóa
+            if (user.getStatus() == UserStatus.LOCKED) {
+                OAuth2Error oauth2Error = new OAuth2Error("account_locked", 
+                    "Tài khoản của bạn đã bị khóa. Vui lòng gửi email đến thangtv5280@gmail.com để được hỗ trợ.", null);
+                throw new OAuth2AuthenticationException(oauth2Error);
+            }
+            
             // Tạo CustomOAuth2User với thông tin từ database
             return new CustomOAuth2User(oAuth2User, user);
+        } catch (OAuth2AuthenticationException e) {
+            throw e;
         } catch (Exception e) {
             OAuth2Error oauth2Error = new OAuth2Error("oauth2_processing_error", "Failed to process OAuth2 user: " + e.getMessage(), null);
             throw new OAuth2AuthenticationException(oauth2Error, e);

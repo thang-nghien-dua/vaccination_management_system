@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dashboard Quản trị Hệ thống Toàn diện - Hệ thống Quản lý Tiêm chủng</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .stat-card {
+            @apply bg-white dark:bg-white/5 p-6 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm hover:shadow-md transition-all;
+        }
+        .chart-container {
+            @apply bg-white dark:bg-white/5 p-6 rounded-2xl border border-[#f0f4f2] dark:border-white/10;
+        }
+        .quick-list-card {
+            @apply bg-white dark:bg-white/5 rounded-2xl border border-[#f0f4f2] dark:border-white/10 overflow-hidden flex flex-col;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white antialiased">
+<div class="flex h-screen overflow-hidden">
+<div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+<main class="flex-1 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
+<header class="sticky top-0 z-10 flex items-center justify-between bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
+<div class="flex flex-1 items-center gap-4">
+<h2 class="text-xl font-bold">Tổng quan Hệ thống</h2>
+</div>
+<div class="flex items-center gap-4 pl-4">
+<button class="relative p-2 rounded-lg bg-[#f0f4f2] dark:bg-white/5 text-[#111813] dark:text-white">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-background-dark"></span>
+</button>
+<div class="h-6 w-px bg-[#f0f4f2] dark:bg-white/10"></div>
+<p class="text-sm font-medium text-[#61896f] uppercase tracking-widest">Hôm nay: 24/05/2024</p>
+</div>
+</header>
+<section class="px-8 pt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+<div class="stat-card border-l-4 border-blue-500">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-600">
+<span class="material-symbols-outlined">group</span>
+</div>
+<span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">+12%</span>
+</div>
+<p class="text-[#61896f] text-xs font-bold uppercase tracking-wider mb-1">Tổng người dùng</p>
+<h3 class="text-2xl font-black mb-2" id="totalUsers">0</h3>
+<div class="flex flex-wrap gap-2" id="userBreakdown">
+<span class="text-[10px] px-2 py-0.5 bg-gray-100 dark:bg-white/5 rounded-full">Khách: 0</span>
+<span class="text-[10px] px-2 py-0.5 bg-gray-100 dark:bg-white/5 rounded-full">BS: 0</span>
+</div>
+</div>
+<div class="stat-card border-l-4 border-purple-500">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-purple-600">
+<span class="material-symbols-outlined">event_available</span>
+</div>
+<span class="text-[10px] font-bold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded" id="todayAppointmentsBadge">Hôm nay: 0</span>
+</div>
+<p class="text-[#61896f] text-xs font-bold uppercase tracking-wider mb-1">Tổng lịch hẹn</p>
+<h3 class="text-2xl font-black mb-2" id="totalAppointments">0</h3>
+<p class="text-[10px] text-[#61896f]">Tăng 5% so với tháng trước</p>
+</div>
+<div class="stat-card border-l-4 border-primary">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-primary/10 rounded-lg text-primary">
+<span class="material-symbols-outlined">vaccines</span>
+</div>
+<span class="text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">Đã tiêm</span>
+</div>
+<p class="text-[#61896f] text-xs font-bold uppercase tracking-wider mb-1">Vaccine đã tiêm</p>
+<h3 class="text-2xl font-black mb-2" id="totalVaccinations">0</h3>
+<p class="text-[10px] text-[#61896f]">Đạt 92% kế hoạch năm</p>
+</div>
+<div class="stat-card border-l-4 border-amber-500">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-amber-600">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Tăng trưởng</span>
+</div>
+<p class="text-[#61896f] text-xs font-bold uppercase tracking-wider mb-1">Doanh thu (VNĐ)</p>
+<h3 class="text-2xl font-black mb-2" id="monthlyRevenue">0</h3>
+<p class="text-[10px] text-[#61896f]">Tháng hiện tại</p>
+</div>
+<div class="stat-card border-l-4 border-rose-500">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-rose-50 dark:bg-rose-900/20 rounded-lg text-rose-600">
+<span class="material-symbols-outlined">location_on</span>
+</div>
+</div>
+<p class="text-[#61896f] text-xs font-bold uppercase tracking-wider mb-1">Trung tâm hoạt động</p>
+<h3 class="text-2xl font-black mb-2" id="totalCenters">0</h3>
+<p class="text-[10px] text-[#61896f]">Trên 12 tỉnh thành</p>
+</div>
+</section>
+<section class="px-8 pt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="chart-container lg:col-span-2">
+<div class="flex justify-between items-center mb-6">
+<h4 class="text-sm font-bold uppercase tracking-wider text-[#61896f]">So sánh Lịch hẹn &amp; Doanh thu (30 ngày)</h4>
+<div class="flex gap-4">
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded-full bg-primary"></span>
+<span class="text-[10px] font-bold">Lịch hẹn</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded-full bg-blue-500"></span>
+<span class="text-[10px] font-bold">Doanh thu</span>
+</div>
+</div>
+</div>
+<div class="h-[300px] w-full relative flex items-end justify-between px-2 pt-4">
+<div class="absolute inset-0 flex flex-col justify-between py-4 pointer-events-none opacity-10">
+<div class="border-t border-black dark:border-white"></div>
+<div class="border-t border-black dark:border-white"></div>
+<div class="border-t border-black dark:border-white"></div>
+<div class="border-t border-black dark:border-white"></div>
+</div>
+<div class="w-full flex items-end justify-around h-full gap-2 z-0">
+<div class="w-1 bg-primary h-[30%] rounded-t-full relative"><div class="absolute -top-1 left-0 w-1 h-1 bg-blue-500 rounded-full translate-y-[-20px]"></div></div>
+<div class="w-1 bg-primary h-[45%] rounded-t-full relative"><div class="absolute -top-1 left-0 w-1 h-1 bg-blue-500 rounded-full translate-y-[-40px]"></div></div>
+<div class="w-1 bg-primary h-[40%] rounded-t-full relative"><div class="absolute -top-1 left-0 w-1 h-1 bg-blue-500 rounded-full translate-y-[-10px]"></div></div>
+<div class="w-1 bg-primary h-[60%] rounded-t-full relative"><div class="absolute -top-1 left-0 w-1 h-1 bg-blue-500 rounded-full translate-y-[-50px]"></div></div>
+<div class="w-1 bg-primary h-[75%] rounded-t-full relative"><div class="absolute -top-1 left-0 w-1 h-1 bg-blue-500 rounded-full translate-y-[-30px]"></div></div>
+<div class="w-1 bg-primary h-[85%] rounded-t-full relative"><div class="absolute -top-1 left-0 w-1 h-1 bg-blue-500 rounded-full translate-y-[-70px]"></div></div>
+<div class="w-1 bg-primary h-[70%] rounded-t-full relative"><div class="absolute -top-1 left-0 w-1 h-1 bg-blue-500 rounded-full translate-y-[-20px]"></div></div>
+<div class="w-1 bg-primary h-[50%] rounded-t-full relative"><div class="absolute -top-1 left-0 w-1 h-1 bg-blue-500 rounded-full translate-y-[-10px]"></div></div>
+<div class="w-1 bg-primary h-[65%] rounded-t-full relative"><div class="absolute -top-1 left-0 w-1 h-1 bg-blue-500 rounded-full translate-y-[-40px]"></div></div>
+<div class="w-1 bg-primary h-[90%] rounded-t-full relative"><div class="absolute -top-1 left-0 w-1 h-1 bg-blue-500 rounded-full translate-y-[-60px]"></div></div>
+</div>
+</div>
+<div class="flex justify-between mt-4 text-[10px] text-[#61896f] font-bold px-2">
+<span>1 Th5</span><span>7 Th5</span><span>14 Th5</span><span>21 Th5</span><span>30 Th5</span>
+</div>
+</div>
+<div class="chart-container">
+<h4 class="text-sm font-bold uppercase tracking-wider text-[#61896f] mb-6">Vaccine Phổ biến Nhất</h4>
+<div class="relative w-48 h-48 mx-auto mb-8">
+<div class="absolute inset-0 rounded-full border-[16px] border-primary clip-path-polygon-[0_0,100%_0,100%_100%,0_100%]"></div>
+<div class="absolute inset-0 rounded-full border-[16px] border-blue-500 border-l-transparent border-t-transparent rotate-45"></div>
+<div class="absolute inset-0 rounded-full border-[16px] border-amber-500 border-l-transparent border-t-transparent border-r-transparent -rotate-90"></div>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-2xl font-black">100%</span>
+<span class="text-[10px] text-[#61896f] font-bold">Dữ liệu thực</span>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded bg-primary"></span>
+<span class="text-xs font-semibold">Influenza (Cúm)</span>
+</div>
+<span class="text-xs font-bold">45%</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded bg-blue-500"></span>
+<span class="text-xs font-semibold">Viêm gan B</span>
+</div>
+<span class="text-xs font-bold">30%</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded bg-amber-500"></span>
+<span class="text-xs font-semibold">HPV</span>
+</div>
+<span class="text-xs font-bold">15%</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded bg-gray-300"></span>
+<span class="text-xs font-semibold">Khác</span>
+</div>
+<span class="text-xs font-bold">10%</span>
+</div>
+</div>
+</div>
+</section>
+<section class="px-8 py-8">
+<h3 class="text-lg font-black mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">analytics</span>
+                Thông báo &amp; Danh sách nhanh
+            </h3>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="quick-list-card">
+<div class="px-4 py-3 bg-gray-50 dark:bg-white/5 border-b border-[#f0f4f2] dark:border-white/10 flex justify-between items-center">
+<h5 class="text-xs font-bold uppercase tracking-widest">Lịch hẹn gần đây</h5>
+<button class="text-[10px] text-primary font-bold hover:underline">Xem tất cả</button>
+</div>
+<div class="p-0 divide-y divide-[#f0f4f2] dark:divide-white/10">
+<div class="p-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+<div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 font-bold text-xs shrink-0">LH</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-bold truncate">Trần Văn A</p>
+<p class="text-[10px] text-[#61896f]">Hôm nay, 14:30 - TT Quận 1</p>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[9px] font-bold">Mới</span>
+</div>
+<div class="p-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+<div class="w-10 h-10 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 font-bold text-xs shrink-0">MT</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-bold truncate">Lê Minh Tâm</p>
+<p class="text-[10px] text-[#61896f]">Hôm nay, 15:00 - TT Quận 7</p>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[9px] font-bold">Mới</span>
+</div>
+<div class="p-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+<div class="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 font-bold text-xs shrink-0">HP</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-bold truncate">Ngô Hoàng Phúc</p>
+<p class="text-[10px] text-[#61896f]">Ngày mai, 08:30 - TT Tân Bình</p>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[9px] font-bold">Sắp tới</span>
+</div>
+</div>
+</div>
+<div class="quick-list-card">
+<div class="px-4 py-3 bg-gray-50 dark:bg-white/5 border-b border-[#f0f4f2] dark:border-white/10 flex justify-between items-center">
+<h5 class="text-xs font-bold uppercase tracking-widest">Người dùng mới</h5>
+<button class="text-[10px] text-primary font-bold hover:underline">Quản lý</button>
+</div>
+<div class="p-0 divide-y divide-[#f0f4f2] dark:divide-white/10">
+<div class="p-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+<div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-white/10 overflow-hidden shrink-0">
+<img alt="avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCR9Ad0_soZhmctjl6gw-LQ39fuxR2ST_1d5gAIIty7gtDyowAULopZBUM7Fm_oPFCtsi2INFzMyUhv-0Cz55_yoHw88_XTJbuNeCRqidv10Dg0s8OUPk4DnNBib7uu2vedK7O2ivE-nQRSZ3Nth7nKyrrl0UIOOzBBmgkaaaqBl3W0FFwl8T55qF2ucnd_W-t0iEYbSElmd2lP-AbLCLgnAHOimap7cy1GlC5VKiWA2ZTQwk9rEbq4JvL2fDPlxGp-heeZHPCXRtnj"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-bold truncate">Nguyễn Thị Bình</p>
+<p class="text-[10px] text-[#61896f]">Bình Chánh, TP.HCM</p>
+</div>
+<p class="text-[9px] text-[#61896f] font-medium italic">2 phút trước</p>
+</div>
+<div class="p-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+<div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-white/10 overflow-hidden shrink-0">
+<img alt="avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUs70suhmNJeELzflBsZImICELKHmXjPaFVthWFHbUXsMLYUpAgB0iBW_Zsp3-QJR8mO1kHKAJlowGEX3exptcBZWVyT86b1j7oM8QwzKi2HD6txtRH0q81ABnF1VWUwK5kDiySGpFCW-p9BcqdhmDNTUNm6i5cxFO8J2v2pnxU9ttXvoV9hPx6rugfCIlPGt5_oCLilgxFBmopr1nKt6N6jRlHYfiy4oCkxtIcM5erZh_RM-JRvTUYrJ2kpH6D9yAIok5wnmIxO4a"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-bold truncate">Phạm Minh Khôi</p>
+<p class="text-[10px] text-[#61896f]">Quận 3, TP.HCM</p>
+</div>
+<p class="text-[9px] text-[#61896f] font-medium italic">15 phút trước</p>
+</div>
+<div class="p-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+<div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-white/10 overflow-hidden shrink-0">
+<img alt="avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNCMiRSo57oYloJHvveYwuzdpF3boZaTr3Vl8L6FsNRncQxBF29gRGmyQj-xEfd_SxDYw2CG7CtVEnfnVDzr8rKR7T7H2nBzhy53b68d12eyyb6hZixGZVNRr5AMGPUlsFbnC4RlSsU-y2dURvw2GP1SngCC0zQw6HC2ExA87tDt6UvErC4HNDE9uCd3ch1Cqd0-LvB2be2uf5xLi5DtYZARKGgszjtL1DaAzSC8rVzpcT8coRWpb1pvVMAHEcCvNaOgGxmza8yjrS"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-bold truncate">Trương Quốc Huy</p>
+<p class="text-[10px] text-[#61896f]">Long An</p>
+</div>
+<p class="text-[9px] text-[#61896f] font-medium italic">40 phút trước</p>
+</div>
+</div>
+</div>
+<div class="quick-list-card">
+<div class="px-4 py-3 bg-red-50 dark:bg-red-900/10 border-b border-red-100 dark:border-white/10 flex justify-between items-center">
+<h5 class="text-xs font-bold uppercase tracking-widest text-red-600">Cảnh báo tồn kho</h5>
+<span class="material-symbols-outlined text-red-600 text-sm">warning</span>
+</div>
+<div class="p-0 divide-y divide-[#f0f4f2] dark:divide-white/10">
+<div class="p-3 flex items-center gap-3 hover:bg-red-50/30 transition-colors">
+<div class="bg-red-100 dark:bg-red-900/30 p-1.5 rounded-lg text-red-600 shrink-0">
+<span class="material-symbols-outlined text-sm">inventory_2</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-bold truncate">Shingrix (Thủy đậu)</p>
+<p class="text-[10px] text-red-500 font-bold uppercase">Hết hàng</p>
+</div>
+<div class="text-right">
+<p class="text-xs font-black text-red-600">0</p>
+<p class="text-[9px] text-[#61896f]">Liều</p>
+</div>
+</div>
+<div class="p-3 flex items-center gap-3 hover:bg-amber-50/30 transition-colors">
+<div class="bg-amber-100 dark:bg-amber-900/30 p-1.5 rounded-lg text-amber-600 shrink-0">
+<span class="material-symbols-outlined text-sm">inventory_2</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-bold truncate">Vaxigrip (Cúm)</p>
+<p class="text-[10px] text-amber-600 font-bold uppercase">Sắp hết hàng</p>
+</div>
+<div class="text-right">
+<p class="text-xs font-black text-amber-600">12</p>
+<p class="text-[9px] text-[#61896f]">Liều</p>
+</div>
+</div>
+<div class="p-3 flex items-center gap-3 hover:bg-amber-50/30 transition-colors">
+<div class="bg-amber-100 dark:bg-amber-900/30 p-1.5 rounded-lg text-amber-600 shrink-0">
+<span class="material-symbols-outlined text-sm">inventory_2</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-bold truncate">Pneumo 23</p>
+<p class="text-[10px] text-amber-600 font-bold uppercase">Sắp hết hàng</p>
+</div>
+<div class="text-right">
+<p class="text-xs font-black text-amber-600">45</p>
+<p class="text-[9px] text-[#61896f]">Liều</p>
+</div>
+</div>
+</div>
+<div class="mt-auto p-3 bg-gray-50 dark:bg-white/5 border-t border-[#f0f4f2] dark:border-white/10">
+<button class="w-full py-2 bg-red-500 hover:bg-red-600 text-white text-[10px] font-black rounded uppercase transition-colors">Đặt hàng ngay</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+</div>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+(function() {
+    // Load dashboard stats
+    async function loadDashboardStats() {
+        try {
+            const response = await fetch('/api/admin/dashboard/stats', {
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error('Failed to load stats');
+            const stats = await response.json();
+            
+            // Update stat cards
+            // Update total users
+            if (stats.totalUsers !== undefined) {
+                const totalUsersEl = document.getElementById('totalUsers');
+                if (totalUsersEl) {
+                    totalUsersEl.textContent = stats.totalUsers.toLocaleString('vi-VN');
+                }
+                // Update breakdown
+                const breakdownEl = document.getElementById('userBreakdown');
+                if (breakdownEl && stats.totalCustomers !== undefined && stats.totalDoctors !== undefined) {
+                    breakdownEl.innerHTML = `
+                        <span class="text-[10px] px-2 py-0.5 bg-gray-100 dark:bg-white/5 rounded-full">Khách: ${stats.totalCustomers}</span>
+                        <span class="text-[10px] px-2 py-0.5 bg-gray-100 dark:bg-white/5 rounded-full">BS: ${stats.totalDoctors}</span>
+                    `;
+                }
+            }
+            
+            // Update total appointments
+            if (stats.totalAppointments !== undefined) {
+                const totalAppointmentsEl = document.getElementById('totalAppointments');
+                if (totalAppointmentsEl) {
+                    totalAppointmentsEl.textContent = stats.totalAppointments.toLocaleString('vi-VN');
+                }
+            }
+            
+            // Update today appointments
+            if (stats.todayAppointments !== undefined) {
+                const todayBadge = document.getElementById('todayAppointmentsBadge');
+                if (todayBadge) {
+                    todayBadge.textContent = `Hôm nay: ${stats.todayAppointments}`;
+                }
+            }
+            
+            // Update total centers
+            if (stats.totalCenters !== undefined) {
+                const totalCentersEl = document.getElementById('totalCenters');
+                if (totalCentersEl) {
+                    totalCentersEl.textContent = stats.totalCenters;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading dashboard stats:', error);
+        }
+    }
+    
+    // Load detailed stats from /api/dashboard/stats (more comprehensive)
+    async function loadDetailedStats() {
+        try {
+            const response = await fetch('/api/dashboard/stats', {
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error('Failed to load detailed stats');
+            const stats = await response.json();
+            
+            // Update vaccination records
+            if (stats.injections && stats.injections.totalCount !== undefined) {
+                const vaccinationEl = document.getElementById('totalVaccinations');
+                if (vaccinationEl) {
+                    vaccinationEl.textContent = stats.injections.totalCount.toLocaleString('vi-VN');
+                }
+            }
+            
+            // Update revenue
+            if (stats.revenue && stats.revenue.monthly !== undefined) {
+                const revenueEl = document.getElementById('monthlyRevenue');
+                if (revenueEl) {
+                    const revenue = parseFloat(stats.revenue.monthly);
+                    if (revenue >= 1000000000) {
+                        revenueEl.textContent = (revenue / 1000000000).toFixed(2) + 'B';
+                    } else if (revenue >= 1000000) {
+                        revenueEl.textContent = (revenue / 1000000).toFixed(2) + 'M';
+                    } else {
+                        revenueEl.textContent = revenue.toLocaleString('vi-VN');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error loading detailed stats:', error);
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDashboardStats();
+        loadDetailedStats();
+    });
+})();
+/*]]>*/
+</script>
+</body></html>

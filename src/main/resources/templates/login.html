@@ -83,6 +83,17 @@
 
                 <!-- Form đăng nhập -->
                 <div class="glass-effect rounded-3xl shadow-xl border border-white/80 p-6 md:p-8">
+                    <!-- Thông báo tài khoản bị khóa -->
+                    <div th:if="${locked}" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                        <div class="flex items-start gap-2">
+                            <span class="material-symbols-outlined text-lg">block</span>
+                            <div class="flex-1">
+                                <p class="font-semibold mb-1">Tài khoản của bạn đã bị khóa</p>
+                                <p>Vui lòng gửi email đến <a href="mailto:thangtv5280@gmail.com" class="font-semibold underline">thangtv5280@gmail.com</a> để được hỗ trợ.</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Thông báo lỗi -->
                     <div id="errorMessage" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
                         <span id="errorText"></span>
@@ -138,7 +149,7 @@
                         </div>
                         <div class="flex items-center justify-between">
                             <label class="flex items-center">
-                                <input type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary">
+                                <input type="checkbox" id="rememberMe" name="rememberMe" class="rounded border-slate-300 text-primary focus:ring-primary">
                                 <span class="ml-2 text-sm text-text-muted">Ghi nhớ đăng nhập</span>
                             </label>
                             <a href="/forgot-password" class="text-sm text-primary hover:text-primary-dark font-semibold">Quên mật khẩu?</a>
@@ -208,14 +219,26 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include', // Quan trọng: Gửi cookie với request
                     body: JSON.stringify({ email, password })
                 });
                 
                 const data = await response.json();
                 
                 if (response.ok) {
-                    // Đăng nhập thành công - chuyển hướng đến trang home
-                    window.location.href = '/home';
+                    // Đăng nhập thành công - chuyển hướng dựa trên role
+                    const role = data.role;
+                    if (role === 'DOCTOR') {
+                        window.location.href = '/doctor/home';
+                    } else if (role === 'ADMIN') {
+                        window.location.href = '/admin/home';
+                    } else if (role === 'NURSE') {
+                        window.location.href = '/nurse/dashboard';
+                    } else if (role === 'RECEPTIONIST') {
+                        window.location.href = '/receptionist/dashboard';
+                    } else {
+                        window.location.href = '/home';
+                    }
                 } else if (response.status === 403 && data.email) {
                     // Email chưa xác thực
                     const unverifiedDiv = document.getElementById('unverifiedMessage');
@@ -249,10 +272,20 @@
                             unverifiedText.textContent = 'Có lỗi xảy ra. Vui lòng thử lại sau.';
                         }
                     };
+                } else if (response.status === 403 && data.error && (data.error.includes('khóa') || data.error.includes('locked'))) {
+                    // Tài khoản bị khóa - redirect về login với thông báo
+                    window.location.href = '/login?locked=true';
                 } else {
                     // Hiển thị lỗi
                     errorDiv.classList.remove('hidden');
-                    document.getElementById('errorText').textContent = data.error || 'Đăng nhập thất bại. Vui lòng thử lại.';
+                    let errorMessage = data.error || 'Đăng nhập thất bại. Vui lòng thử lại.';
+                    
+                    // Nếu là lỗi locked, hiển thị thông báo với email support
+                    if (errorMessage.includes('khóa') || errorMessage.includes('locked')) {
+                        errorMessage = 'Tài khoản của bạn đã bị khóa. Vui lòng gửi email đến thangtv5280@gmail.com để được hỗ trợ.';
+                    }
+                    
+                    document.getElementById('errorText').textContent = errorMessage;
                 }
             } catch (error) {
                 errorDiv.classList.remove('hidden');

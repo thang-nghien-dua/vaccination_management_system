@@ -5,5 +5,5 @@ public enum Role {
     RECEPTIONIST,  // Lễ tân
     DOCTOR,        // Bác sĩ (khám sàng lọc)
     NURSE,         // Y tá (tiêm vaccine, theo dõi phản ứng, nhập kho)
-    ADMIN          // Quản trị viên (quản lý hệ thống)
+    ADMIN          // Quản trị viên
 }

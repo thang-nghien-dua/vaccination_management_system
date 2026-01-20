@@ -6,11 +6,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ut.edu.vaccinationmanagementsystem.dto.VaccineLotDTO;
 import ut.edu.vaccinationmanagementsystem.entity.VaccineLot;
+import ut.edu.vaccinationmanagementsystem.entity.enums.VaccineLotStatus;
+import ut.edu.vaccinationmanagementsystem.repository.VaccineLotRepository;
 import ut.edu.vaccinationmanagementsystem.service.VaccineLotService;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/vaccine-lots")
@@ -18,6 +22,9 @@ public class VaccineLotController {
     
     @Autowired
     private VaccineLotService vaccineLotService;
+    
+    @Autowired
+    private VaccineLotRepository vaccineLotRepository;
     
     /**
      * GET /api/vaccine-lots
@@ -218,6 +225,54 @@ public class VaccineLotController {
             Map<String, String> message = new HashMap<>();
             message.put("message", "All vaccine lot statuses updated successfully");
             return ResponseEntity.ok(message);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * GET /api/vaccine-lots/available?vaccineId={}&centerId={}
+     * Lấy danh sách lô vaccine có sẵn (còn hàng, chưa hết hạn, status = AVAILABLE)
+     */
+    @GetMapping("/available")
+    public ResponseEntity<?> getAvailableVaccineLots(
+            @RequestParam(required = false) Long vaccineId,
+            @RequestParam(required = false) Long centerId) {
+        try {
+            List<VaccineLot> allLots = vaccineLotRepository.findAll();
+            LocalDate today = LocalDate.now();
+            
+            List<VaccineLot> availableLots = allLots.stream()
+                    .filter(lot -> lot.getStatus() == VaccineLotStatus.AVAILABLE)
+                    .filter(lot -> lot.getRemainingQuantity() != null && lot.getRemainingQuantity() > 0)
+                    .filter(lot -> lot.getExpiryDate() != null && lot.getExpiryDate().isAfter(today))
+                    .filter(lot -> vaccineId == null || (lot.getVaccine() != null && lot.getVaccine().getId().equals(vaccineId)))
+                    .collect(Collectors.toList());
+            
+            // Nếu có centerId, filter thêm theo center (cần check CenterVaccine)
+            if (centerId != null) {
+                // TODO: Có thể filter thêm theo center nếu cần
+                // Hiện tại chỉ filter theo vaccineId
+            }
+            
+            List<Map<String, Object>> result = availableLots.stream().map(lot -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", lot.getId());
+                map.put("lotNumber", lot.getLotNumber());
+                map.put("vaccineId", lot.getVaccine() != null ? lot.getVaccine().getId() : null);
+                map.put("vaccineName", lot.getVaccine() != null ? lot.getVaccine().getName() : null);
+                map.put("remainingQuantity", lot.getRemainingQuantity());
+                map.put("quantity", lot.getQuantity());
+                map.put("manufacturingDate", lot.getManufacturingDate());
+                map.put("expiryDate", lot.getExpiryDate());
+                map.put("supplier", lot.getSupplier());
+                map.put("status", lot.getStatus().name());
+                return map;
+            }).collect(Collectors.toList());
+            
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Internal server error: " + e.getMessage());

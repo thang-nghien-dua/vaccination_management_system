@@ -91,5 +91,23 @@ public class EmailService {
             e.printStackTrace();
         }
     }
+    
+    /**
+     * Gửi email đơn giản
+     */
+    public void sendEmail(String toEmail, String subject, String content) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(toEmail);
+            message.setSubject(subject);
+            message.setText(content);
+            mailSender.send(message);
+        } catch (Exception e) {
+            // Log error nhưng không throw exception
+            System.err.println("Failed to send email: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }
 

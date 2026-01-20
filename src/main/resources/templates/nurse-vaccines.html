@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html class="light" lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Quản lý Vaccine - Y tá</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="/js/sidebar.js"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0f766e",
+                        "primary-light": "#14b8a6",
+                        "primary-dark": "#134e4a",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav {
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.1) 0%, rgba(15, 118, 110, 0.05) 100%);
+            border-left: 4px solid #0f766e;
+            color: #0f766e;
+        }
+        .sidebar-nav-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar-nav-item:hover {
+            transform: translateX(4px);
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.1) 0%, rgba(15, 118, 110, 0.05) 100%);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen text-[#111813] dark:text-white font-display">
+<div class="flex min-h-screen">
+    <!-- Sidebar Overlay (mobile) -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-72 bg-white dark:bg-[#1a2e21] border-r border-[#f0f4f2] dark:border-[#2d3f33] fixed h-screen z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col overflow-hidden">
+        <div class="p-6 flex items-center gap-3 flex-shrink-0">
+            <button id="sidebarToggleBtn" class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors flex-shrink-0" title="Menu">
+                <span class="material-symbols-outlined text-xl">menu</span>
+            </button>
+            <h1 id="sidebarLogoText" class="text-xl font-bold tracking-tight flex-1 lg:block">VacciCare</h1>
+            <button id="sidebarCloseBtn" class="lg:hidden p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors flex-shrink-0" title="Đóng sidebar">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div id="sidebarUserProfile" class="px-4 mb-6 flex-shrink-0" th:if="${isAuthenticated}">
+            <div class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark rounded-xl">
+                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 bg-primary/20 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0" th:if="${currentUser?.fullName != null}">
+                    <span th:text="${#strings.substring(currentUser.fullName, 0, 1)}"></span>
+                </div>
+                <div class="flex flex-col overflow-hidden min-w-0 lg:block">
+                    <p id="sidebarUserName" class="text-sm font-bold truncate" th:text="${currentUser?.fullName ?: currentUser?.email}">Tên người dùng</p>
+                    <p id="sidebarUserRole" class="text-xs text-[#61896f] truncate">Y tá</p>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 px-3 py-3 space-y-2 overflow-y-auto min-h-0">
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/dashboard">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">dashboard</span>
+                <span class="text-sm">Dashboard</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/appointments">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">vaccines</span>
+                <span class="text-sm">Lịch hẹn</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl active-nav text-primary font-bold" href="/nurse/vaccines">
+                <span class="material-symbols-outlined text-xl">inventory</span>
+                <span class="text-sm font-semibold">Quản lý vaccine</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/reactions">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">warning</span>
+                <span class="text-sm">Phản ứng phụ</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/lich-su-tiem-y-ta">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">history</span>
+                <span class="text-sm">Lịch sử tiêm</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/trace">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">search</span>
+                <span class="text-sm">Truy vết</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/nurse/profile">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">person</span>
+                <span class="text-sm">Thông tin cá nhân</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium relative" href="/notifications">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">notifications</span>
+                <span class="text-sm">Thông báo</span>
+                <span id="notificationBadge" class="hidden absolute top-1.5 right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">0</span>
+            </a>
+        </nav>
+        <div class="mt-auto p-4 border-t border-[#f0f4f2] dark:border-[#2d3f33] flex-shrink-0">
+            <form th:action="@{/api/auth/logout}" method="post" class="w-full">
+                <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span class="text-sm font-medium">Đăng xuất</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-72">
+        <header class="sticky top-0 z-50 bg-gradient-to-r from-primary/10 via-primary/5 to-white/90 dark:from-primary/20 dark:via-primary/10 dark:to-[#102216]/90 backdrop-blur-xl border-b border-primary/20 dark:border-primary/30 px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors">
+                        <span class="material-symbols-outlined text-xl">menu</span>
+                    </button>
+                    <div>
+                        <h1 class="text-2xl font-bold text-[#111813] dark:text-white">Quản lý Vaccine</h1>
+                        <p class="text-sm text-[#61896f] mt-1">Xem tồn kho và lô vaccine</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="refreshBtn" class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" title="Làm mới">
+                        <span class="material-symbols-outlined">refresh</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-primary/20 dark:border-primary/30 p-6 hover:shadow-xl transition-all duration-300 hover:scale-105 group">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Tổng số vaccine</p>
+                            <p id="statTotalVaccines" class="text-2xl font-bold group-hover:text-primary transition-colors">0</p>
+                        </div>
+                        <div class="size-12 bg-primary/10 rounded-xl flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                            <span class="material-symbols-outlined text-primary text-2xl">vaccines</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-green-500/20 dark:border-green-500/30 p-6 hover:shadow-xl transition-all duration-300 hover:scale-105 group">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Tổng tồn kho</p>
+                            <p id="statTotalStock" class="text-2xl font-bold group-hover:text-green-500 transition-colors">0</p>
+                        </div>
+                        <div class="size-12 bg-green-500/10 rounded-xl flex items-center justify-center group-hover:bg-green-500/20 transition-colors">
+                            <span class="material-symbols-outlined text-green-500 text-2xl">inventory</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-blue-500/20 dark:border-blue-500/30 p-6 hover:shadow-xl transition-all duration-300 hover:scale-105 group">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Số trung tâm</p>
+                            <p id="statTotalCenters" class="text-2xl font-bold group-hover:text-blue-500 transition-colors">0</p>
+                        </div>
+                        <div class="size-12 bg-blue-500/10 rounded-xl flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                            <span class="material-symbols-outlined text-blue-500 text-2xl">location_on</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-primary/20 dark:border-primary/30 p-6 hover:shadow-xl transition-all duration-300">
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-sm font-semibold mb-2">Tìm kiếm vaccine</label>
+                        <input type="text" id="searchVaccine" placeholder="Nhập tên vaccine..." class="w-full px-4 py-2 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                    </div>
+                    <div class="flex items-end">
+                        <button id="clearSearchBtn" class="px-4 py-2 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-all">
+                            <span class="material-symbols-outlined">clear_all</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vaccine Inventory Table -->
+            <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-primary/20 dark:border-primary/30 p-6 hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold flex items-center gap-2">
+                        <span class="size-8 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center shadow-md">
+                            <span class="material-symbols-outlined text-white text-sm">inventory</span>
+                        </span>
+                        Danh sách vaccine và tồn kho
+                    </h3>
+                </div>
+                <div id="vaccineInventoryContainer" class="space-y-4">
+                    <div class="text-center py-12 text-[#61896f]">
+                        <span class="material-symbols-outlined text-6xl mb-4 block animate-pulse">hourglass_empty</span>
+                        <p>Đang tải thông tin vaccine...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    let vaccineInventory = [];
+    let statistics = {};
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        loadStatistics();
+        loadVaccineInventory();
+        
+        // Refresh button
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            loadStatistics();
+            loadVaccineInventory();
+        });
+        
+        // Search
+        document.getElementById('searchVaccine').addEventListener('input', (e) => {
+            filterVaccines(e.target.value);
+        });
+        
+        document.getElementById('clearSearchBtn').addEventListener('click', () => {
+            document.getElementById('searchVaccine').value = '';
+            filterVaccines('');
+        });
+    });
+
+    async function loadStatistics() {
+        try {
+            const response = await fetch('/api/nurse/statistics', {
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error('Failed to load statistics');
+            statistics = await response.json();
+            
+            if (statistics.vaccineInventory) {
+                const totalVaccines = statistics.vaccineInventory.length;
+                const totalStock = statistics.vaccineInventory.reduce((sum, v) => sum + (v.totalStock || 0), 0);
+                const totalCenters = new Set(statistics.vaccineInventory.flatMap(v => v.centersCount || [])).size || statistics.vaccineInventory[0]?.centersCount || 0;
+                
+                document.getElementById('statTotalVaccines').textContent = totalVaccines || 0;
+                document.getElementById('statTotalStock').textContent = totalStock || 0;
+                document.getElementById('statTotalCenters').textContent = totalCenters || 0;
+            }
+        } catch (error) {
+            console.error('Error loading statistics:', error);
+        }
+    }
+
+    async function loadVaccineInventory() {
+        try {
+            const response = await fetch('/api/nurse/statistics', {
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error('Failed to load vaccine inventory');
+            const data = await response.json();
+            vaccineInventory = data.vaccineInventory || [];
+            
+            renderVaccineInventory();
+        } catch (error) {
+            console.error('Error loading vaccine inventory:', error);
+            document.getElementById('vaccineInventoryContainer').innerHTML = `
+                <div class="text-center py-8 text-red-500">
+                    <span class="material-symbols-outlined text-4xl mb-2">error</span>
+                    <p>Có lỗi xảy ra khi tải thông tin vaccine</p>
+                    <p class="text-sm mt-2">${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    function filterVaccines(searchTerm) {
+        const filtered = searchTerm ? 
+            vaccineInventory.filter(v => v.name.toLowerCase().includes(searchTerm.toLowerCase())) : 
+            vaccineInventory;
+        renderVaccineInventory(filtered);
+    }
+
+    function renderVaccineInventory(vaccines = null) {
+        const container = document.getElementById('vaccineInventoryContainer');
+        const vaccinesToRender = vaccines || vaccineInventory;
+        
+        if (vaccinesToRender.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8 text-[#61896f]">
+                    <span class="material-symbols-outlined text-4xl mb-2">inventory</span>
+                    <p>Không có thông tin vaccine</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = `
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b-2 border-[#e2e8f0] dark:border-[#2d3f33]">
+                            <th class="text-left py-3 px-4 font-bold">Vaccine</th>
+                            <th class="text-left py-3 px-4 font-bold">Nhà sản xuất</th>
+                            <th class="text-right py-3 px-4 font-bold">Tổng tồn kho</th>
+                            <th class="text-right py-3 px-4 font-bold">Số trung tâm</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${vaccinesToRender.map(vaccine => `
+                            <tr class="border-b border-[#e2e8f0] dark:border-[#2d3f33] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors">
+                                <td class="py-3 px-4 font-semibold">${vaccine.name}</td>
+                                <td class="py-3 px-4 text-[#61896f]">${vaccine.manufacturer || 'N/A'}</td>
+                                <td class="py-3 px-4 text-right">
+                                    <span class="px-3 py-1 rounded-lg ${vaccine.totalStock > 0 ? 'bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'} font-bold">
+                                        ${vaccine.totalStock}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-right">${vaccine.centersCount}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+</script>
+</body>
+</html>

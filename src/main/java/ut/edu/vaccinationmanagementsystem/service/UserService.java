@@ -247,5 +247,122 @@ public class UserService {
             return userRepository.save(user);
         }
     }
+    
+    /**
+     * Admin tạo user mới
+     */
+    public User createUserByAdmin(ut.edu.vaccinationmanagementsystem.dto.AdminUserDTO dto) {
+        // Validate
+        if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
+            throw new RuntimeException("Email is required");
+        }
+        if (dto.getFullName() == null || dto.getFullName().trim().isEmpty()) {
+            throw new RuntimeException("Full name is required");
+        }
+        if (dto.getRole() == null) {
+            throw new RuntimeException("Role is required");
+        }
+        if (dto.getStatus() == null) {
+            throw new RuntimeException("Status is required");
+        }
+        
+        // Kiểm tra email đã tồn tại chưa
+        String emailLower = dto.getEmail().trim().toLowerCase();
+        if (userRepository.existsByEmail(emailLower)) {
+            throw new RuntimeException("Email already exists: " + emailLower);
+        }
+        
+        // Tạo user mới
+        User user = new User();
+        user.setEmail(emailLower);
+        
+        // Password: nếu có thì encode, nếu không thì null (cho OAuth users)
+        if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+            user.setAuthProvider(AuthProvider.EMAIL);
+        } else {
+            user.setPassword(null);
+            user.setAuthProvider(AuthProvider.EMAIL); // Mặc định EMAIL
+        }
+        
+        user.setFullName(dto.getFullName().trim());
+        user.setPhoneNumber(dto.getPhoneNumber());
+        user.setDayOfBirth(dto.getDayOfBirth());
+        user.setGender(dto.getGender());
+        user.setAddress(dto.getAddress());
+        user.setCitizenId(dto.getCitizenId());
+        user.setRole(dto.getRole());
+        user.setStatus(dto.getStatus());
+        user.setCreateAt(LocalDate.now());
+        
+        return userRepository.save(user);
+    }
+    
+    /**
+     * Admin cập nhật user
+     */
+    public User updateUserByAdmin(Long userId, ut.edu.vaccinationmanagementsystem.dto.AdminUserDTO dto) {
+        User user = getUserById(userId);
+        
+        // Validate
+        if (dto.getFullName() != null && dto.getFullName().trim().isEmpty()) {
+            throw new RuntimeException("Full name cannot be empty");
+        }
+        
+        // Cập nhật email (nếu thay đổi)
+        if (dto.getEmail() != null && !dto.getEmail().trim().equalsIgnoreCase(user.getEmail())) {
+            String newEmail = dto.getEmail().trim().toLowerCase();
+            if (userRepository.existsByEmail(newEmail)) {
+                throw new RuntimeException("Email already exists: " + newEmail);
+            }
+            user.setEmail(newEmail);
+        }
+        
+        // Cập nhật password (nếu có)
+        if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+        
+        // Cập nhật các thông tin khác
+        if (dto.getFullName() != null) {
+            user.setFullName(dto.getFullName().trim());
+        }
+        if (dto.getPhoneNumber() != null) {
+            user.setPhoneNumber(dto.getPhoneNumber().trim());
+        }
+        if (dto.getDayOfBirth() != null) {
+            user.setDayOfBirth(dto.getDayOfBirth());
+        }
+        if (dto.getGender() != null) {
+            user.setGender(dto.getGender());
+        }
+        if (dto.getAddress() != null) {
+            user.setAddress(dto.getAddress());
+        }
+        if (dto.getCitizenId() != null) {
+            user.setCitizenId(dto.getCitizenId().trim().isEmpty() ? null : dto.getCitizenId().trim());
+        }
+        if (dto.getRole() != null) {
+            user.setRole(dto.getRole());
+        }
+        if (dto.getStatus() != null) {
+            user.setStatus(dto.getStatus());
+        }
+        
+        return userRepository.save(user);
+    }
+    
+    /**
+     * Admin xóa user
+     */
+    public void deleteUserByAdmin(Long userId) {
+        User user = getUserById(userId);
+        
+        // Không cho phép xóa chính mình
+        // (Có thể thêm check này nếu cần)
+        
+        // Xóa user
+        userRepository.delete(user);
+    }
 }
 

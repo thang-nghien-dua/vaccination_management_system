@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Chi tiết Trung tâm Tiêm chủng - Hệ thống Quản lý Tiêm chủng</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .status-chip {
+            @apply px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider;
+        }
+        .tab-active {
+            @apply text-primary border-b-2 border-primary;
+        }
+        .tab-inactive {
+            @apply text-[#61896f] border-b-2 border-transparent hover:text-[#111813] dark:hover:text-white transition-all;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white antialiased">
+<div class="flex h-screen overflow-hidden">
+<main class="flex-1 flex flex-col overflow-y-auto">
+<!-- Breadcrumbs & Header -->
+<header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-8 py-4">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<button onclick="closeCenterDetail()" class="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-[#61896f] dark:text-zinc-400" title="Quay lại Quản lý Trung tâm">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div class="flex items-center gap-2">
+<a class="text-[#61896f] dark:text-zinc-400 text-sm font-medium hover:underline" th:href="@{/admin/home}">Hệ thống</a>
+<span class="text-[#61896f] dark:text-zinc-400 text-sm font-medium">/</span>
+<a class="text-[#61896f] dark:text-zinc-400 text-sm font-medium hover:underline" th:href="@{/admin/centers}">Trung tâm</a>
+<span class="text-[#61896f] dark:text-zinc-400 text-sm font-medium">/</span>
+<span class="text-[#111813] dark:text-white text-sm font-bold">Vaccine tại Trung tâm</span>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-4">
+<div>
+<h2 class="text-[#111813] dark:text-white text-3xl font-extrabold tracking-tight" id="centerTitle">Chi tiết Trung tâm</h2>
+<p class="text-[#61896f] dark:text-zinc-400 text-sm mt-1" id="centerAddress">Đang tải...</p>
+</div>
+</div>
+</header>
+<!-- Content Body -->
+<div class="p-8 flex-1 flex flex-col gap-6">
+<!-- Tabs -->
+<div class="flex gap-8 border-b border-zinc-200 dark:border-zinc-800">
+<button id="vaccinesTab" class="tab-active py-4 text-sm font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-lg leading-none">vaccines</span>
+                            Vaccine tại Trung tâm
+                        </button>
+<button onclick="switchTab('rooms')" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2" id="roomsTab">
+<span class="material-symbols-outlined text-lg leading-none">meeting_room</span>
+                            Phòng khám
+                        </button>
+<button onclick="switchTab('working-hours')" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2" id="workingHoursTab">
+<span class="material-symbols-outlined text-lg leading-none">schedule</span>
+                            Giờ làm việc
+                        </button>
+</div>
+<div class="space-y-6">
+<div class="flex items-center justify-between">
+<div class="relative w-72">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#61896f] text-lg">search</span>
+<input id="vaccineSearch" class="w-full pl-10 pr-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all" placeholder="Tìm tên vaccine..." type="text"/>
+</div>
+<button onclick="openAddVaccineModal()" class="flex items-center gap-2 px-5 py-2 bg-primary text-[#111813] font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all text-sm">
+<span class="material-symbols-outlined text-lg">add_box</span>
+                                Thêm Vaccine vào kho
+                            </button>
+</div>
+<div class="border border-[#f0f4f2] dark:border-white/10 rounded-2xl overflow-hidden bg-white dark:bg-zinc-900">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-gray-50 dark:bg-white/5 border-b border-[#f0f4f2] dark:border-white/10">
+<th class="px-6 py-3 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Tên Vaccine</th>
+<th class="px-6 py-3 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Nhà Sản Xuất</th>
+<th class="px-6 py-3 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Tồn kho</th>
+<th class="px-6 py-3 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Giá bán</th>
+<th class="px-6 py-3 text-[11px] font-black uppercase tracking-widest text-[#61896f] text-right">Trạng thái</th>
+<th class="px-6 py-3 text-[11px] font-black uppercase tracking-widest text-[#61896f] text-right">Hành động</th>
+</tr>
+</thead>
+<tbody id="vaccineTableBody" class="divide-y divide-[#f0f4f2] dark:divide-white/10">
+<!-- Dữ liệu sẽ được load từ API -->
+<tr>
+<td colspan="6" class="px-6 py-8 text-center text-[#61896f]">
+<span class="material-symbols-outlined animate-spin text-2xl mb-2 inline-block">refresh</span>
+<p>Đang tải dữ liệu...</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</div>
+<div class="px-8 border-b border-[#f0f4f2] dark:border-white/10 flex items-center justify-between">
+<div class="flex gap-8">
+<button id="vaccinesTab" class="tab-active py-4 text-sm font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-lg leading-none">vaccines</span>
+                            Vaccine tại Trung tâm
+                        </button>
+<button onclick="switchTab('rooms')" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2" id="roomsTab">
+<span class="material-symbols-outlined text-lg leading-none">meeting_room</span>
+                            Phòng khám
+                        </button>
+<button onclick="switchTab('working-hours')" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2" id="workingHoursTab">
+<span class="material-symbols-outlined text-lg leading-none">schedule</span>
+                            Giờ làm việc
+                        </button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-8">
+<div class="space-y-6">
+<div class="flex items-center justify-between">
+<div class="relative w-72">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#61896f] text-lg">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all" placeholder="Tìm tên vaccine..." type="text"/>
+</div>
+<button onclick="openAddVaccineModal()" class="flex items-center gap-2 px-5 py-2 bg-primary text-[#111813] font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all text-sm">
+<span class="material-symbols-outlined text-lg">add_box</span>
+                                Thêm Vaccine vào kho
+                            </button>
+</div>
+<div class="border border-[#f0f4f2] dark:border-white/10 rounded-2xl overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-gray-50 dark:bg-white/5 border-b border-[#f0f4f2] dark:border-white/10">
+<th class="px-6 py-3 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Tên Vaccine</th>
+<th class="px-6 py-3 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Nhà Sản Xuất</th>
+<th class="px-6 py-3 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Tồn kho</th>
+<th class="px-6 py-3 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Giá bán</th>
+<th class="px-6 py-3 text-[11px] font-black uppercase tracking-widest text-[#61896f] text-right">Trạng thái</th>
+<th class="px-6 py-3 text-[11px] font-black uppercase tracking-widest text-[#61896f] text-right">Hành động</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#f0f4f2] dark:divide-white/10">
+<!-- Dữ liệu sẽ được load từ API và render bằng JavaScript -->
+<tr>
+<td colspan="5" class="px-6 py-8 text-center text-[#61896f]">
+<span class="material-symbols-outlined animate-spin text-2xl mb-2 inline-block">refresh</span>
+<p>Đang tải dữ liệu...</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+<script>
+// Lấy centerId từ URL
+const urlParams = new URLSearchParams(window.location.search);
+const centerIdFromPath = window.location.pathname.match(/\/centers\/(\d+)/);
+const centerId = centerIdFromPath ? centerIdFromPath[1] : null;
+
+let centerData = null;
+let centerVaccines = [];
+let currentTab = 'vaccines';
+
+// Load thông tin trung tâm
+async function loadCenterData() {
+    if (!centerId) {
+        console.error('Center ID not found');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/centers/${centerId}`);
+        if (response.ok) {
+            centerData = await response.json();
+            updateCenterHeader();
+            loadCenterVaccines();
+        } else {
+            console.error('Failed to load center data');
+        }
+    } catch (error) {
+        console.error('Error loading center data:', error);
+    }
+}
+
+function updateCenterHeader() {
+    if (!centerData) return;
+    
+    const titleElement = document.getElementById('centerTitle');
+    const addressElement = document.getElementById('centerAddress');
+    
+    if (titleElement) {
+        titleElement.textContent = centerData.name || 'Chi tiết Trung tâm';
+    }
+    
+    if (addressElement) {
+        addressElement.textContent = centerData.address || 'N/A';
+    }
+}
+
+// Load vaccine tại trung tâm
+async function loadCenterVaccines() {
+    if (!centerId) return;
+    
+    try {
+        const response = await fetch(`/api/centers/${centerId}/vaccines`);
+        if (response.ok) {
+            centerVaccines = await response.json();
+            renderVaccines();
+        } else {
+            console.error('Failed to load center vaccines');
+        }
+    } catch (error) {
+        console.error('Error loading center vaccines:', error);
+    }
+}
+
+function renderVaccines() {
+    const tbody = document.getElementById('vaccineTableBody');
+    if (!tbody) return;
+    
+    if (centerVaccines.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="px-6 py-8 text-center text-[#61896f]">
+                    Chưa có vaccine nào tại trung tâm này
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = centerVaccines.map(cv => {
+        const vaccine = cv.vaccine || {};
+        const stock = cv.stockQuantity || 0;
+        const price = vaccine.price || 0;
+        const centerVaccineId = cv.id;
+        
+        let statusClass = 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+        let statusText = 'Còn hàng';
+        let stockClass = 'text-primary';
+        
+        if (stock === 0) {
+            statusClass = 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+            statusText = 'Hết hàng';
+            stockClass = 'text-red-500';
+        } else if (stock < 50) {
+            statusClass = 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+            statusText = 'Sắp hết';
+            stockClass = 'text-amber-500';
+        }
+        
+        // Lấy danh sách diseases
+        const diseases = vaccine.diseases || [];
+        const diseaseText = diseases.length > 0 ? diseases.map(d => d.name).join(', ') : (vaccine.diseasePrevention || '');
+        
+        return `
+            <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                <td class="px-6 py-4">
+                    <span class="text-sm font-bold">${vaccine.name || 'N/A'}</span>
+                    <p class="text-[10px] text-[#61896f]">${diseaseText}</p>
+                </td>
+                <td class="px-6 py-4 text-sm">${vaccine.manufacturer || 'N/A'}</td>
+                <td class="px-6 py-4">
+                    <span class="text-sm font-bold ${stockClass}">${stock.toLocaleString('vi-VN')} liều</span>
+                </td>
+                <td class="px-6 py-4 text-sm font-medium">${price.toLocaleString('vi-VN')}đ</td>
+                <td class="px-6 py-4 text-right">
+                    <span class="status-chip ${statusClass}">${statusText}</span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <div class="flex justify-end gap-2">
+                        <button onclick="editVaccineStock(${centerVaccineId}, ${stock})" class="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg text-amber-500 transition-colors" title="Cập nhật số lượng">
+                            <span class="material-symbols-outlined text-lg">edit</span>
+                        </button>
+                        <button onclick="deleteVaccineFromCenter(${centerVaccineId}, '${vaccine.name || 'N/A'}')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg text-red-500 transition-colors" title="Xóa khỏi trung tâm">
+                            <span class="material-symbols-outlined text-lg">delete</span>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Chuyển tab
+function switchTab(tab) {
+    if (!centerId) return;
+    
+    // Điều hướng đến trang tương ứng
+    if (tab === 'rooms') {
+        window.location.href = `/admin/centers/${centerId}/rooms`;
+    } else if (tab === 'working-hours') {
+        window.location.href = `/admin/centers/${centerId}/working-hours`;
+    }
+    // Nếu tab là 'vaccines', giữ nguyên trang hiện tại (không làm gì)
+}
+
+// Đóng cửa sổ và quay lại trang danh sách
+function closeCenterDetail() {
+    window.location.href = '/admin/centers';
+}
+
+let allVaccines = [];
+
+// Load danh sách tất cả vaccine để chọn
+async function loadAllVaccines() {
+    try {
+        const response = await fetch('/api/vaccines');
+        if (response.ok) {
+            allVaccines = await response.json();
+        } else {
+            console.error('Failed to load vaccines');
+        }
+    } catch (error) {
+        console.error('Error loading vaccines:', error);
+    }
+}
+
+// Mở modal thêm vaccine
+async function openAddVaccineModal() {
+    await loadAllVaccines();
+    
+    // Tạo modal HTML
+    const modalHTML = `
+        <div id="addVaccineModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#102216]/60 backdrop-blur-sm">
+            <div class="bg-white dark:bg-[#102216] w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden border border-white/10">
+                <div class="px-6 py-4 border-b border-[#f0f4f2] dark:border-white/10 flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-[#111813] dark:text-white">Thêm Vaccine vào Trung tâm</h3>
+                    <button onclick="closeAddVaccineModal()" class="p-2 hover:bg-[#f0f4f2] dark:hover:bg-white/10 rounded-full text-[#61896f] transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <form id="addVaccineForm" onsubmit="handleAddVaccine(event)">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Chọn Vaccine</label>
+                                <select id="vaccineSelect" name="vaccineId" required class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all">
+                                    <option value="">-- Chọn vaccine --</option>
+                                    ${allVaccines.map(v => `
+                                        <option value="${v.id}">${v.name} - ${v.manufacturer || 'N/A'}</option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Số lượng tồn kho</label>
+                                <input type="number" id="stockQuantity" name="stockQuantity" min="0" required 
+                                       class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all"
+                                       placeholder="Nhập số lượng">
+                            </div>
+                        </div>
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button type="button" onclick="closeAddVaccineModal()" class="px-6 py-2 text-sm font-bold text-[#61896f] hover:text-[#111813] dark:hover:text-white transition-colors">
+                                Hủy
+                            </button>
+                            <button type="submit" class="px-8 py-2.5 bg-primary text-[#111813] text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
+                                Thêm vào kho
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Thêm modal vào body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function closeAddVaccineModal() {
+    const modal = document.getElementById('addVaccineModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+async function handleAddVaccine(event) {
+    event.preventDefault();
+    
+    if (!centerId) {
+        alert('Không tìm thấy ID trung tâm');
+        return;
+    }
+    
+    const formData = new FormData(event.target);
+    const vaccineId = formData.get('vaccineId');
+    const stockQuantity = parseInt(formData.get('stockQuantity'));
+    
+    if (!vaccineId || !stockQuantity || stockQuantity < 0) {
+        alert('Vui lòng điền đầy đủ thông tin hợp lệ');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/centers/${centerId}/vaccines`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                vaccineId: parseInt(vaccineId),
+                stockQuantity: stockQuantity
+            })
+        });
+        
+        if (response.ok) {
+            alert('Thêm vaccine vào trung tâm thành công!');
+            closeAddVaccineModal();
+            loadCenterVaccines(); // Reload danh sách vaccine
+        } else {
+            const error = await response.json();
+            alert('Lỗi: ' + (error.error || 'Không thể thêm vaccine'));
+        }
+    } catch (error) {
+        console.error('Error adding vaccine:', error);
+        alert('Có lỗi xảy ra khi thêm vaccine');
+    }
+}
+
+// Mở modal cập nhật thông tin trung tâm
+function openUpdateCenterModal() {
+    if (!centerData) {
+        alert('Chưa tải được thông tin trung tâm');
+        return;
+    }
+    
+    // Tạo modal HTML
+    const modalHTML = `
+        <div id="updateCenterModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#102216]/60 backdrop-blur-sm">
+            <div class="bg-white dark:bg-[#102216] w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden border border-white/10">
+                <div class="px-6 py-4 border-b border-[#f0f4f2] dark:border-white/10 flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-[#111813] dark:text-white">Cập nhật Thông tin Trung tâm</h3>
+                    <button onclick="closeUpdateCenterModal()" class="p-2 hover:bg-[#f0f4f2] dark:hover:bg-white/10 rounded-full text-[#61896f] transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <form id="updateCenterForm" onsubmit="handleUpdateCenter(event)">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Tên trung tâm</label>
+                                <input type="text" id="centerName" name="name" required 
+                                       value="${centerData.name || ''}"
+                                       class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Địa chỉ</label>
+                                <input type="text" id="centerAddress" name="address" required 
+                                       value="${centerData.address || ''}"
+                                       class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Số điện thoại</label>
+                                <input type="text" id="centerPhone" name="phoneNumber" required 
+                                       value="${centerData.phoneNumber || ''}"
+                                       class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Email</label>
+                                <input type="email" id="centerEmail" name="email" 
+                                       value="${centerData.email || ''}"
+                                       class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Sức chứa hàng ngày</label>
+                                <input type="number" id="centerCapacity" name="dailyCapacity" min="1" required 
+                                       value="${centerData.dailyCapacity || 0}"
+                                       class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Trạng thái</label>
+                                <select id="centerStatus" name="status" required 
+                                        class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all">
+                                    <option value="ACTIVE" ${centerData.status === 'ACTIVE' ? 'selected' : ''}>Đang hoạt động</option>
+                                    <option value="INACTIVE" ${centerData.status === 'INACTIVE' ? 'selected' : ''}>Tạm dừng</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button type="button" onclick="closeUpdateCenterModal()" class="px-6 py-2 text-sm font-bold text-[#61896f] hover:text-[#111813] dark:hover:text-white transition-colors">
+                                Hủy
+                            </button>
+                            <button type="submit" class="px-8 py-2.5 bg-[#111813] dark:bg-white text-white dark:text-[#111813] text-sm font-bold rounded-xl hover:opacity-90 transition-all">
+                                Cập nhật
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Thêm modal vào body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function closeUpdateCenterModal() {
+    const modal = document.getElementById('updateCenterModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+async function handleUpdateCenter(event) {
+    event.preventDefault();
+    
+    if (!centerId) {
+        alert('Không tìm thấy ID trung tâm');
+        return;
+    }
+    
+    const formData = new FormData(event.target);
+    const updateData = {
+        name: formData.get('name'),
+        address: formData.get('address'),
+        phoneNumber: formData.get('phoneNumber'),
+        email: formData.get('email') || null,
+        dailyCapacity: parseInt(formData.get('dailyCapacity')),
+        status: formData.get('status')
+    };
+    
+    try {
+        const response = await fetch(`/api/centers/${centerId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updateData)
+        });
+        
+        if (response.ok) {
+            alert('Cập nhật thông tin trung tâm thành công!');
+            closeUpdateCenterModal();
+            loadCenterData(); // Reload thông tin trung tâm
+        } else {
+            const error = await response.json();
+            alert('Lỗi: ' + (error.error || 'Không thể cập nhật thông tin'));
+        }
+    } catch (error) {
+        console.error('Error updating center:', error);
+        alert('Có lỗi xảy ra khi cập nhật thông tin');
+    }
+}
+
+// Cập nhật số lượng vaccine
+async function editVaccineStock(centerVaccineId, currentStock) {
+    const newStock = prompt(`Nhập số lượng tồn kho mới:`, currentStock);
+    if (newStock === null || newStock === '') return;
+    
+    const stock = parseInt(newStock);
+    if (isNaN(stock) || stock < 0) {
+        alert('Số lượng không hợp lệ');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/center-vaccines/${centerVaccineId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                stockQuantity: stock
+            })
+        });
+        
+        if (response.ok) {
+            alert('Cập nhật số lượng thành công!');
+            loadCenterVaccines();
+        } else {
+            const error = await response.json();
+            alert('Lỗi: ' + (error.error || 'Không thể cập nhật số lượng'));
+        }
+    } catch (error) {
+        console.error('Error updating vaccine stock:', error);
+        alert('Có lỗi xảy ra khi cập nhật số lượng');
+    }
+}
+
+// Xóa vaccine khỏi trung tâm
+async function deleteVaccineFromCenter(centerVaccineId, vaccineName) {
+    if (!confirm(`Bạn có chắc chắn muốn xóa vaccine "${vaccineName}" khỏi trung tâm này?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/center-vaccines/${centerVaccineId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            alert('Xóa vaccine khỏi trung tâm thành công!');
+            loadCenterVaccines();
+        } else {
+            const error = await response.json();
+            alert('Lỗi: ' + (error.error || 'Không thể xóa vaccine'));
+        }
+    } catch (error) {
+        console.error('Error deleting vaccine:', error);
+        alert('Có lỗi xảy ra khi xóa vaccine');
+    }
+}
+
+// Khởi tạo khi trang load
+document.addEventListener('DOMContentLoaded', () => {
+    if (centerId) {
+        loadCenterData();
+    } else {
+        console.error('Center ID not found in URL');
+    }
+});
+</script>
+
+</body></html>

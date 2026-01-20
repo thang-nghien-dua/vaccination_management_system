@@ -315,7 +315,51 @@ public class PaymentController {
             return xRealIp;
         }
         
-        return request.getRemoteAddr();
+            return request.getRemoteAddr();
+    }
+    
+    /**
+     * POST /api/payment/{appointmentId}/mark-paid-cash
+     * Đánh dấu thanh toán tiền mặt (cho Receptionist)
+     */
+    @PostMapping("/{appointmentId}/mark-paid-cash")
+    public ResponseEntity<?> markPaidCash(@PathVariable Long appointmentId) {
+        try {
+            Appointment appointment = appointmentRepository.findById(appointmentId)
+                    .orElseThrow(() -> new RuntimeException("Appointment not found"));
+            
+            Payment payment = paymentService.findByAppointment(appointment);
+            if (payment == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Payment not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+            }
+            
+            if (payment.getPaymentStatus() == PaymentStatus.PAID) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Payment already completed");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            
+            // Mark as paid
+            paymentService.markPaymentAsPaid(payment, "CASH-" + appointmentId);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Đánh dấu thanh toán thành công");
+            response.put("paymentStatus", payment.getPaymentStatus().toString());
+            response.put("appointmentId", appointmentId);
+            
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
     }
 }
 

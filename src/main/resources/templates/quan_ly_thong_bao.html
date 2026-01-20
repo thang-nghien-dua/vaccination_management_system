@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Quản lý Thông báo Hệ thống Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        .tab-active {
+            @apply text-primary border-b-2 border-primary;
+        }
+        .tab-inactive {
+            @apply text-[#61896f] border-b-2 border-transparent hover:text-[#111813] dark:hover:text-white transition-all;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white antialiased">
+<div class="flex h-screen overflow-hidden">
+<div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+<main class="flex-1 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
+<!-- Header with Tabs -->
+<header class="bg-white dark:bg-zinc-900 border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
+<div class="flex items-center gap-3 mb-4">
+<div class="flex items-center gap-2">
+<a class="text-[#61896f] dark:text-zinc-400 text-sm font-medium hover:underline" th:href="@{/admin/home}">Hệ thống</a>
+<span class="text-[#61896f] dark:text-zinc-400 text-sm font-medium">/</span>
+<span class="text-[#111813] dark:text-white text-sm font-bold">Thông báo</span>
+</div>
+</div>
+<!-- Tabs Navigation -->
+<div class="flex gap-8 border-b border-zinc-200 dark:border-zinc-800">
+<button onclick="window.location.href='/admin/notifications/send-individual'" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-lg leading-none">person</span>
+Cá nhân cụ thể
+</button>
+<button onclick="window.location.href='/admin/notifications/send-all'" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-lg leading-none">groups</span>
+Tất cả người dùng
+</button>
+<button onclick="window.location.href='/admin/notifications/send-role'" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-lg leading-none">shield_person</span>
+Theo vai trò
+</button>
+<button onclick="window.location.href='/admin/notifications/send-center'" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-lg leading-none">home_work</span>
+Theo Trung tâm
+</button>
+<button onclick="window.location.href='/admin/notifications/templates'" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-lg leading-none">description</span>
+Quản lý Template
+</button>
+</div>
+</header>
+<!-- Content -->
+<div class="flex-1 p-8">
+<!-- Page Heading -->
+<div class="mb-8">
+<h2 class="text-[#111813] dark:text-white text-3xl font-black tracking-tight">Quản lý Thông báo</h2>
+<p class="text-[#61896f] text-base font-normal mt-1">Theo dõi và điều hành hệ thống thông báo gửi tới người dùng</p>
+<div class="flex gap-3 mt-4">
+<button onclick="window.location.href='/admin/notifications/templates'" class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-zinc-900 border border-[#dbe6df] dark:border-zinc-800 text-[#111813] dark:text-white text-sm font-bold rounded-lg hover:bg-background-light transition-colors">
+<span class="material-symbols-outlined text-lg">description</span>
+                            Quản lý Template
+                        </button>
+<button onclick="window.location.href='/admin/notifications/send-individual'" class="flex items-center gap-2 px-6 py-2.5 bg-primary text-black text-sm font-bold rounded-lg hover:bg-primary/90 transition-all shadow-md">
+<span class="material-symbols-outlined text-lg">send</span>
+                            Gửi thông báo mới
+                        </button>
+</div>
+</div>
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<div class="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-[#dbe6df] dark:border-zinc-800 flex flex-col gap-2">
+<div class="flex justify-between items-center mb-1">
+<p class="text-[#61896f] text-xs font-bold uppercase tracking-widest">Tổng thông báo</p>
+<span class="material-symbols-outlined text-primary">analytics</span>
+</div>
+<p class="text-[#111813] dark:text-white text-3xl font-black">12,840</p>
+<div class="flex items-center gap-1 mt-1">
+<span class="text-[#078829] text-sm font-bold">+12.4%</span>
+<span class="text-[#61896f] text-xs">từ tháng trước</span>
+</div>
+</div>
+<div class="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-[#dbe6df] dark:border-zinc-800 flex flex-col gap-2">
+<div class="flex justify-between items-center mb-1">
+<p class="text-[#61896f] text-xs font-bold uppercase tracking-widest">Đã đọc</p>
+<span class="material-symbols-outlined text-blue-500">visibility</span>
+</div>
+<p class="text-[#111813] dark:text-white text-3xl font-black">10,250</p>
+<div class="flex items-center gap-1 mt-1">
+<span class="text-[#078829] text-sm font-bold">+5.2%</span>
+<span class="text-[#61896f] text-xs">tỷ lệ tăng</span>
+</div>
+</div>
+<div class="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-[#dbe6df] dark:border-zinc-800 flex flex-col gap-2">
+<div class="flex justify-between items-center mb-1">
+<p class="text-[#61896f] text-xs font-bold uppercase tracking-widest">Chưa đọc</p>
+<span class="material-symbols-outlined text-orange-500">mark_email_unread</span>
+</div>
+<p class="text-[#111813] dark:text-white text-3xl font-black">2,590</p>
+<div class="flex items-center gap-1 mt-1">
+<span class="text-red-500 text-sm font-bold">-2.1%</span>
+<span class="text-[#61896f] text-xs">đang tồn đọng</span>
+</div>
+</div>
+<div class="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-[#dbe6df] dark:border-zinc-800 flex flex-col gap-2">
+<div class="flex justify-between items-center mb-1">
+<p class="text-[#61896f] text-xs font-bold uppercase tracking-widest">Tỷ lệ đọc (%)</p>
+<span class="material-symbols-outlined text-primary">pie_chart</span>
+</div>
+<p class="text-[#111813] dark:text-white text-3xl font-black">79.8%</p>
+<div class="flex items-center gap-1 mt-1">
+<div class="w-full bg-gray-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full" style="width: 79.8%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+<!-- Line Chart -->
+<div class="lg:col-span-2 bg-white dark:bg-zinc-900 p-6 rounded-xl border border-[#dbe6df] dark:border-zinc-800">
+<div class="flex justify-between items-center mb-6">
+<div>
+<h3 class="text-lg font-bold text-[#111813] dark:text-white">Xu hướng gửi thông báo</h3>
+<p class="text-sm text-[#61896f]">Hoạt động gửi tin nhắn trong 7 ngày qua</p>
+</div>
+<select class="bg-background-light dark:bg-zinc-800 border-none rounded-lg text-xs font-bold px-3 py-1.5 focus:ring-primary">
+<option>7 ngày gần đây</option>
+<option>30 ngày gần đây</option>
+</select>
+</div>
+<div class="h-64 relative flex flex-col justify-end">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 400 150">
+<path d="M0,130 Q50,120 80,60 T160,80 T240,40 T320,70 T400,20" fill="none" stroke="#13ec5b" stroke-linecap="round" stroke-width="4"></path>
+<path d="M0,130 Q50,120 80,60 T160,80 T240,40 T320,70 T400,20 V150 H0 Z" fill="url(#grad1)" opacity="0.1"></path>
+<defs>
+<lineargradient id="grad1" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#13ec5b;stop-opacity:1"></stop>
+<stop offset="100%" style="stop-color:#13ec5b;stop-opacity:0"></stop>
+</lineargradient>
+</defs>
+</svg>
+<div class="flex justify-between mt-4">
+<span class="text-[11px] font-bold text-[#61896f]">Thứ 2</span>
+<span class="text-[11px] font-bold text-[#61896f]">Thứ 3</span>
+<span class="text-[11px] font-bold text-[#61896f]">Thứ 4</span>
+<span class="text-[11px] font-bold text-[#61896f]">Thứ 5</span>
+<span class="text-[11px] font-bold text-[#61896f]">Thứ 6</span>
+<span class="text-[11px] font-bold text-[#61896f]">Thứ 7</span>
+<span class="text-[11px] font-bold text-[#61896f]">Chủ Nhật</span>
+</div>
+</div>
+</div>
+<!-- Classification Chart -->
+<div class="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-[#dbe6df] dark:border-zinc-800">
+<h3 class="text-lg font-bold text-[#111813] dark:text-white mb-6">Phân loại thông báo</h3>
+<div class="flex justify-center relative py-4">
+<div class="size-48 rounded-full border-[16px] border-[#f0f4f2] dark:border-zinc-800 relative flex items-center justify-center">
+<svg class="absolute inset-0 size-full -rotate-90">
+<circle cx="50%" cy="50%" fill="transparent" r="44%" stroke="#13ec5b" stroke-dasharray="276 360" stroke-linecap="round" stroke-width="16"></circle>
+</svg>
+<div class="text-center">
+<p class="text-2xl font-black text-[#111813] dark:text-white">12.8k</p>
+<p class="text-[10px] text-[#61896f] uppercase font-bold tracking-tighter">Tổng số</p>
+</div>
+</div>
+</div>
+<div class="mt-8 space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="size-3 rounded-full bg-primary"></div>
+<span class="text-sm font-medium text-[#61896f]">Hệ thống</span>
+</div>
+<span class="text-sm font-bold text-[#111813] dark:text-white">60%</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="size-3 rounded-full bg-blue-400"></div>
+<span class="text-sm font-medium text-[#61896f]">Nhắc lịch</span>
+</div>
+<span class="text-sm font-bold text-[#111813] dark:text-white">25%</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="size-3 rounded-full bg-orange-400"></div>
+<span class="text-sm font-medium text-[#61896f]">Khuyến mãi</span>
+</div>
+<span class="text-sm font-bold text-[#111813] dark:text-white">15%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Detailed Table Section -->
+<section class="bg-white dark:bg-zinc-900 rounded-xl border border-[#dbe6df] dark:border-zinc-800 overflow-hidden">
+<div class="p-6 border-b border-[#dbe6df] dark:border-zinc-800 flex flex-wrap justify-between items-center gap-4">
+<h3 class="text-lg font-bold text-[#111813] dark:text-white">Danh sách chi tiết thông báo</h3>
+<div class="flex gap-2">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#61896f] text-xl">search</span>
+<input class="pl-10 pr-4 py-2 bg-background-light dark:bg-zinc-800 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary transition-all" placeholder="Tìm người nhận, tiêu đề..." type="text"/>
+</div>
+<button class="p-2 bg-background-light dark:bg-zinc-800 rounded-lg hover:bg-gray-200 transition-colors">
+<span class="material-symbols-outlined text-xl">filter_list</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-background-light/50 dark:bg-zinc-800/50">
+<tr>
+<th class="px-6 py-4 text-xs font-bold text-[#61896f] uppercase tracking-wider">Người nhận</th>
+<th class="px-6 py-4 text-xs font-bold text-[#61896f] uppercase tracking-wider">Loại</th>
+<th class="px-6 py-4 text-xs font-bold text-[#61896f] uppercase tracking-wider">Tiêu đề</th>
+<th class="px-6 py-4 text-xs font-bold text-[#61896f] uppercase tracking-wider">Trạng thái</th>
+<th class="px-6 py-4 text-xs font-bold text-[#61896f] uppercase tracking-wider text-center">Đã đọc</th>
+<th class="px-6 py-4 text-xs font-bold text-[#61896f] uppercase tracking-wider">Thời gian</th>
+<th class="px-6 py-4 text-xs font-bold text-[#61896f] uppercase tracking-wider"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#dbe6df] dark:divide-zinc-800">
+<!-- Row 1 -->
+<tr class="hover:bg-background-light dark:hover:bg-zinc-800 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-xs" data-alt="User avatar placeholder">NV</div>
+<div class="flex flex-col">
+<p class="text-sm font-bold">Nguyễn Văn A</p>
+<p class="text-[11px] text-[#61896f]">0912xxxx88</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-tighter">Nhắc lịch</span>
+</td>
+<td class="px-6 py-4 max-w-[240px]">
+<p class="text-sm font-medium truncate">Nhắc nhở tiêm chủng mũi 2 - Cúm mùa</p>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-1.5 text-primary text-xs font-bold">
+<div class="size-1.5 rounded-full bg-primary animate-pulse"></div>
+                                        Đã gửi
+                                    </div>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="material-symbols-outlined text-primary text-lg">visibility</span>
+</td>
+<td class="px-6 py-4">
+<p class="text-xs font-medium text-[#61896f]">Hôm nay, 14:30</p>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-xl">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-background-light dark:hover:bg-zinc-800 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-xs">TH</div>
+<div class="flex flex-col">
+<p class="text-sm font-bold">Trần Thị H</p>
+<p class="text-[11px] text-[#61896f]">0988xxxx23</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 rounded bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-tighter">Hệ thống</span>
+</td>
+<td class="px-6 py-4 max-w-[240px]">
+<p class="text-sm font-medium truncate">Xác thực đăng ký tài khoản thành công</p>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-1.5 text-primary text-xs font-bold">
+<div class="size-1.5 rounded-full bg-primary"></div>
+                                        Đã gửi
+                                    </div>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="material-symbols-outlined text-gray-300 dark:text-zinc-700 text-lg">visibility_off</span>
+</td>
+<td class="px-6 py-4">
+<p class="text-xs font-medium text-[#61896f]">Hôm nay, 12:15</p>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-xl">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-background-light dark:hover:bg-zinc-800 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-xs">LM</div>
+<div class="flex flex-col">
+<p class="text-sm font-bold">Lê Minh</p>
+<p class="text-[11px] text-[#61896f]">0934xxxx11</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-[10px] font-bold uppercase tracking-tighter">Khuyến mãi</span>
+</td>
+<td class="px-6 py-4 max-w-[240px]">
+<p class="text-sm font-medium truncate">Ưu đãi 20% gói tiêm gia đình tháng 10</p>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-1.5 text-red-500 text-xs font-bold">
+<div class="size-1.5 rounded-full bg-red-500"></div>
+                                        Thất bại
+                                    </div>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="material-symbols-outlined text-gray-300 dark:text-zinc-700 text-lg">visibility_off</span>
+</td>
+<td class="px-6 py-4">
+<p class="text-xs font-medium text-[#61896f]">Hôm qua, 18:00</p>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-xl">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-6 py-4 bg-background-light/30 dark:bg-zinc-800/30 border-t border-[#dbe6df] dark:border-zinc-800 flex justify-between items-center">
+<p class="text-xs font-medium text-[#61896f]">Hiển thị 10/12,840 kết quả</p>
+<div class="flex gap-1">
+<button class="size-8 flex items-center justify-center rounded border border-[#dbe6df] dark:border-zinc-700 text-[#61896f] disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-lg">chevron_left</span>
+</button>
+<button class="size-8 flex items-center justify-center rounded bg-primary text-black font-bold text-xs">1</button>
+<button class="size-8 flex items-center justify-center rounded border border-[#dbe6df] dark:border-zinc-700 text-[#61896f] font-bold text-xs hover:bg-white transition-colors">2</button>
+<button class="size-8 flex items-center justify-center rounded border border-[#dbe6df] dark:border-zinc-700 text-[#61896f] font-bold text-xs hover:bg-white transition-colors">3</button>
+<button class="size-8 flex items-center justify-center rounded border border-[#dbe6df] dark:border-zinc-700 text-[#61896f] hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-lg">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+</main>
+</div>
+</body></html>

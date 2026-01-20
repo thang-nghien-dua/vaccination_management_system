@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Quản lý Phản ứng Phụ Sau Tiêm - VacciCare</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+        .filled-icon {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white antialiased">
+<div class="flex h-screen overflow-hidden">
+<div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+<main class="flex-1 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
+        <div class="flex-1 p-8">
+<!-- Page Heading -->
+            <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
+<div class="max-w-2xl">
+<h2 class="text-3xl font-black tracking-tight text-[#111813] dark:text-white">Quản lý Phản ứng Phụ Sau Tiêm</h2>
+<p class="text-[#61896f] dark:text-[#a1b9a9] mt-1 text-sm">Theo dõi và xử lý kịp thời các trường hợp phản ứng sau tiêm để đảm bảo an toàn tối đa cho người dân.</p>
+</div>
+<div class="flex gap-3">
+                <button onclick="window.location.href='/admin/adverse-reactions/export'" class="flex items-center gap-2 px-4 h-10 bg-white dark:bg-white/5 border border-[#dbe6df] dark:border-white/10 rounded-lg text-sm font-bold hover:bg-[#f0f4f2] transition-all">
+<span class="material-symbols-outlined">download</span> Xuất báo cáo
+                    </button>
+                <button onclick="window.location.href='/admin/adverse-reactions/filter'" class="flex items-center gap-2 px-4 h-10 bg-primary text-[#111813] rounded-lg text-sm font-bold hover:brightness-95 transition-all shadow-sm">
+<span class="material-symbols-outlined">add</span> Báo cáo mới
+                    </button>
+</div>
+</div>
+        
+<!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<div class="bg-white dark:bg-white/5 p-6 rounded-xl border border-[#dbe6df] dark:border-white/10 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<p class="text-sm font-medium text-[#61896f]">Tổng số phản ứng</p>
+<span class="material-symbols-outlined text-[#111813] dark:text-primary">stacks</span>
+</div>
+<div class="flex items-baseline gap-2">
+                    <p class="text-3xl font-black" id="totalReactions">0</p>
+</div>
+</div>
+<div class="bg-white dark:bg-white/5 p-6 rounded-xl border border-[#dbe6df] dark:border-white/10 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<p class="text-sm font-medium text-[#61896f]">Chưa xử lý</p>
+<span class="material-symbols-outlined text-orange-500">pending_actions</span>
+</div>
+<div class="flex items-baseline gap-2">
+                    <p class="text-3xl font-black text-orange-500" id="unresolvedReactions">0</p>
+</div>
+</div>
+<div class="bg-white dark:bg-white/5 p-6 rounded-xl border border-[#dbe6df] dark:border-white/10 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<p class="text-sm font-medium text-[#61896f]">Đã xử lý</p>
+<span class="material-symbols-outlined text-green-500">check_circle</span>
+</div>
+<div class="flex items-baseline gap-2">
+                    <p class="text-3xl font-black text-green-600" id="resolvedReactions">0</p>
+</div>
+</div>
+<div class="bg-white dark:bg-white/5 p-6 rounded-xl border border-[#dbe6df] dark:border-white/10 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+                    <p class="text-sm font-medium text-[#61896f]">Mức độ nặng</p>
+<span class="material-symbols-outlined text-red-500">emergency</span>
+</div>
+<div class="flex items-baseline gap-2">
+                    <p class="text-3xl font-black text-red-500" id="severeReactions">0</p>
+</div>
+</div>
+</div>
+        
+<!-- Main Data Table -->
+        <div class="bg-white dark:bg-white/5 rounded-xl border border-[#dbe6df] dark:border-white/10 shadow-sm overflow-hidden flex flex-col">
+<div class="p-6 border-b border-[#dbe6df] dark:border-white/10 flex justify-between items-center bg-white dark:bg-transparent">
+<h3 class="text-lg font-bold">Danh sách phản ứng chi tiết</h3>
+<div class="flex gap-2">
+                    <select id="reactionTypeFilter" class="px-3 py-2 h-9 text-xs border border-[#dbe6df] dark:border-white/10 bg-white dark:bg-white/5 rounded-lg focus:ring-primary focus:border-primary transition-all text-[#111813] dark:text-white">
+                        <option value="">Tất cả mức độ</option>
+                        <option value="MILD">Nhẹ</option>
+                        <option value="MODERATE">Trung bình</option>
+                        <option value="SEVERE">Nặng</option>
+                    </select>
+                    <select id="statusFilter" class="px-3 py-2 h-9 text-xs border border-[#dbe6df] dark:border-white/10 bg-white dark:bg-white/5 rounded-lg focus:ring-primary focus:border-primary transition-all text-[#111813] dark:text-white">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="false">Chưa xử lý</option>
+                        <option value="true">Đã xử lý</option>
+                    </select>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#61896f] pointer-events-none">search</span>
+                        <input id="searchInput" class="pl-9 pr-4 py-2 h-9 text-xs border border-[#dbe6df] dark:border-white/10 bg-white dark:bg-white/5 rounded-lg focus:ring-primary focus:border-primary transition-all text-[#111813] dark:text-white placeholder:text-[#61896f]" placeholder="Tìm kiếm người dùng, vaccine, triệu chứng..." type="text"/>
+                    </div>
+</div>
+</div>
+<div class="overflow-x-auto flex-1">
+<table class="w-full text-left">
+<thead class="bg-[#f0f4f2]/50 dark:bg-white/5 text-[#61896f] text-xs font-bold uppercase">
+<tr>
+<th class="px-6 py-4">Người dùng</th>
+<th class="px-6 py-4">Vaccine</th>
+<th class="px-6 py-4">Mức độ</th>
+<th class="px-6 py-4">Triệu chứng</th>
+<th class="px-6 py-4">Thời gian</th>
+<th class="px-6 py-4">Trạng thái</th>
+<th class="px-6 py-4 text-right">Thao tác</th>
+</tr>
+</thead>
+                    <tbody id="reactionsTableBody" class="divide-y divide-[#dbe6df] dark:divide-white/10 text-sm">
+                        <tr>
+                            <td colspan="7" class="px-6 py-8 text-center text-[#61896f]">
+                                <span class="material-symbols-outlined animate-spin">refresh</span>
+                                <p class="mt-2">Đang tải dữ liệu...</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 bg-[#f0f4f2]/20 dark:bg-white/5 border-t border-[#dbe6df] dark:border-white/10 flex justify-between items-center">
+                <p class="text-xs text-[#61896f]" id="paginationText">Hiển thị 0 trên tổng số 0 kết quả</p>
+                <div class="flex gap-1" id="paginationButtons">
+                    <!-- Pagination buttons will be generated here -->
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+(function() {
+    let allReactions = [];
+    let currentPage = 1;
+    const itemsPerPage = 10;
+    
+    // Load reactions from API
+    async function loadReactions() {
+        try {
+            const response = await fetch('/api/adverse-reactions', {
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error('Failed to load reactions');
+            allReactions = await response.json();
+            filterReactions();
+            updateStats();
+        } catch (error) {
+            console.error('Error loading reactions:', error);
+            const tbody = document.getElementById('reactionsTableBody');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Lỗi khi tải dữ liệu</td></tr>';
+            }
+        }
+    }
+    
+    // Filter reactions
+    function filterReactions() {
+        const searchInput = document.getElementById('searchInput')?.value || '';
+        const reactionTypeFilter = document.getElementById('reactionTypeFilter')?.value || '';
+        const statusFilter = document.getElementById('statusFilter')?.value || '';
+        
+        let filtered = allReactions;
+        
+        // Filter by search
+        if (searchInput.trim()) {
+            const searchLower = searchInput.toLowerCase().trim();
+            filtered = filtered.filter(r => {
+                const userName = r.user?.fullName || '';
+                const vaccineName = r.vaccine?.name || '';
+                const symptoms = r.symptoms || '';
+                return userName.toLowerCase().includes(searchLower) ||
+                       vaccineName.toLowerCase().includes(searchLower) ||
+                       symptoms.toLowerCase().includes(searchLower);
+            });
+        }
+        
+        // Filter by reaction type
+        if (reactionTypeFilter) {
+            filtered = filtered.filter(r => r.reactionType === reactionTypeFilter);
+        }
+        
+        // Filter by status
+        if (statusFilter !== '') {
+            const resolved = statusFilter === 'true';
+            filtered = filtered.filter(r => r.resolved === resolved);
+        }
+        
+        renderReactions(filtered);
+        updatePagination(filtered.length);
+    }
+    
+    // Render reactions table
+    function renderReactions(reactions) {
+        const tbody = document.getElementById('reactionsTableBody');
+        if (!tbody) return;
+        
+        if (reactions.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-[#61896f]">Không có dữ liệu</td></tr>';
+            return;
+        }
+        
+        // Pagination
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const paginatedReactions = reactions.slice(start, end);
+        
+        tbody.innerHTML = paginatedReactions.map(reaction => {
+            const reactionTypeColors = {
+                'MILD': 'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400',
+                'MODERATE': 'bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400',
+                'SEVERE': 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400'
+            };
+            const reactionTypeLabels = {
+                'MILD': 'Nhẹ',
+                'MODERATE': 'Trung bình',
+                'SEVERE': 'Nặng'
+            };
+            const reactionTypeColor = reactionTypeColors[reaction.reactionType] || 'bg-gray-100 text-gray-600';
+            const reactionTypeLabel = reactionTypeLabels[reaction.reactionType] || reaction.reactionType;
+            
+            const userName = reaction.user?.fullName || 'N/A';
+            const userInitials = userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            const vaccineName = reaction.vaccine?.name || 'N/A';
+            const symptoms = reaction.symptoms || 'N/A';
+            const occurredAt = reaction.occurredAt ? new Date(reaction.occurredAt).toLocaleString('vi-VN') : 'N/A';
+            const isResolved = reaction.resolved;
+            
+            return `
+                <tr class="hover:bg-[#f0f4f2]/30 dark:hover:bg-white/5 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="size-8 rounded-full bg-[#f0f4f2] dark:bg-white/10 flex items-center justify-center text-xs font-bold text-primary">${userInitials}</div>
+                            <div>
+                                <p class="font-bold">${userName}</p>
+                                <p class="text-[10px] text-[#61896f]">ID: ${reaction.user?.id || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 font-medium">${vaccineName}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded ${reactionTypeColor} text-[10px] font-bold uppercase">${reactionTypeLabel}</span>
+                    </td>
+                    <td class="px-6 py-4 text-[#61896f] max-w-[150px] truncate" title="${symptoms}">${symptoms}</td>
+                    <td class="px-6 py-4 text-xs">${occurredAt}</td>
+                    <td class="px-6 py-4">
+                        ${isResolved 
+                            ? '<span class="flex items-center gap-1.5 text-green-600 font-bold text-xs"><span class="size-1.5 rounded-full bg-green-500"></span>Đã xử lý</span>'
+                            : '<span class="flex items-center gap-1.5 text-orange-500 font-bold text-xs"><span class="size-1.5 rounded-full bg-orange-500"></span>Đang xử lý</span>'
+                        }
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex justify-end gap-2">
+                            <button onclick="viewReactionDetail(${reaction.id})" class="p-2 hover:bg-[#f0f4f2] dark:hover:bg-white/10 rounded-lg text-primary transition-all" title="Xem chi tiết">
+                                <span class="material-symbols-outlined text-xl">visibility</span>
+                            </button>
+                            ${!isResolved 
+                                ? `<button onclick="resolveReaction(${reaction.id})" class="p-2 hover:bg-primary/20 rounded-lg text-primary transition-all" title="Đánh dấu hoàn thành">
+                                    <span class="material-symbols-outlined text-xl">check_circle</span>
+                                </button>`
+                                : `<button class="p-2 bg-primary/10 rounded-lg text-primary transition-all" title="Đã xử lý">
+                                    <span class="material-symbols-outlined text-xl filled-icon">check_circle</span>
+                                </button>`
+                            }
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+    
+    // Update stats
+    function updateStats() {
+        const total = allReactions.length;
+        const unresolved = allReactions.filter(r => !r.resolved).length;
+        const resolved = allReactions.filter(r => r.resolved).length;
+        const severe = allReactions.filter(r => r.reactionType === 'SEVERE').length;
+        
+        document.getElementById('totalReactions').textContent = total.toLocaleString('vi-VN');
+        document.getElementById('unresolvedReactions').textContent = unresolved.toLocaleString('vi-VN');
+        document.getElementById('resolvedReactions').textContent = resolved.toLocaleString('vi-VN');
+        document.getElementById('severeReactions').textContent = severe.toLocaleString('vi-VN');
+    }
+    
+    // Update pagination
+    function updatePagination(total) {
+        const totalPages = Math.ceil(total / itemsPerPage);
+        document.getElementById('paginationText').textContent = `Hiển thị ${Math.min((currentPage - 1) * itemsPerPage + 1, total)}-${Math.min(currentPage * itemsPerPage, total)} trên tổng số ${total} kết quả`;
+        
+        const paginationDiv = document.getElementById('paginationButtons');
+        if (!paginationDiv) return;
+        
+        let html = '';
+        if (currentPage > 1) {
+            html += `<button onclick="goToPage(${currentPage - 1})" class="size-8 flex items-center justify-center rounded border border-[#dbe6df] dark:border-white/10 hover:bg-[#f0f4f2] dark:hover:bg-white/10"><span class="material-symbols-outlined text-sm">chevron_left</span></button>`;
+        }
+        
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === currentPage) {
+                html += `<button class="size-8 flex items-center justify-center rounded bg-primary text-[#111813] font-bold text-xs">${i}</button>`;
+            } else {
+                html += `<button onclick="goToPage(${i})" class="size-8 flex items-center justify-center rounded border border-[#dbe6df] dark:border-white/10 hover:bg-[#f0f4f2] dark:hover:bg-white/10 text-xs">${i}</button>`;
+            }
+        }
+        
+        if (currentPage < totalPages) {
+            html += `<button onclick="goToPage(${currentPage + 1})" class="size-8 flex items-center justify-center rounded border border-[#dbe6df] dark:border-white/10 hover:bg-[#f0f4f2] dark:hover:bg-white/10"><span class="material-symbols-outlined text-sm">chevron_right</span></button>`;
+        }
+        
+        paginationDiv.innerHTML = html;
+    }
+    
+    // Go to page
+    window.goToPage = function(page) {
+        currentPage = page;
+        filterReactions();
+    };
+    
+    // View reaction detail
+    window.viewReactionDetail = function(id) {
+        window.location.href = `/admin/adverse-reactions/${id}`;
+    };
+    
+    // Resolve reaction
+    window.resolveReaction = async function(id) {
+        if (!confirm('Bạn có chắc chắn muốn đánh dấu phản ứng này đã được xử lý?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/adverse-reactions/${id}/resolve`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({})
+            });
+            
+            if (response.ok) {
+                alert('Đã đánh dấu phản ứng đã được xử lý!');
+                loadReactions();
+            } else {
+                const error = await response.json();
+                alert('Lỗi: ' + (error.error || 'Không thể cập nhật trạng thái'));
+            }
+        } catch (error) {
+            console.error('Error resolving reaction:', error);
+            alert('Có lỗi xảy ra khi cập nhật trạng thái');
+        }
+    };
+    
+    // Event listeners
+    document.getElementById('searchInput')?.addEventListener('input', () => {
+        currentPage = 1;
+        filterReactions();
+    });
+    
+    document.getElementById('reactionTypeFilter')?.addEventListener('change', () => {
+        currentPage = 1;
+        filterReactions();
+    });
+    
+    document.getElementById('statusFilter')?.addEventListener('change', () => {
+        currentPage = 1;
+        filterReactions();
+    });
+    
+    // Load on page load
+    loadReactions();
+})();
+/*]]>*/
+</script>
+</body>
+</html>

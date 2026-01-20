@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Doctor Sidebar Fragment -->
+<aside th:fragment="sidebar" class="w-64 bg-white text-gray-800 flex flex-col fixed h-full z-50 border-r border-gray-200 shadow-sm">
+    <!-- Header/Logo Section -->
+    <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="bg-primary p-2 rounded-lg">
+                <span class="material-symbols-outlined text-white font-bold text-xl">vaccines</span>
+            </div>
+            <div class="flex flex-col">
+                <h1 class="text-lg font-bold text-gray-900">Hệ thống Quản lý</h1>
+                <p class="text-xs text-gray-500 font-medium">Doctor Dashboard</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- User Profile -->
+    <div class="px-4 py-4 mb-4 border-b border-gray-200" th:if="${isAuthenticated}">
+        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg" th:if="${currentUser != null}">
+            <div class="bg-primary/20 rounded-full size-10 border-2 border-primary flex items-center justify-center">
+                <span class="text-primary font-bold text-lg" th:text="${currentUser.fullName != null ? #strings.substring(currentUser.fullName, 0, 1) : 'BS'}">BS</span>
+            </div>
+            <div class="flex flex-col overflow-hidden min-w-0">
+                <p class="text-sm font-bold truncate text-gray-900" th:text="${currentUser.fullName != null ? currentUser.fullName : currentUser.email}">Bác sĩ</p>
+                <p class="text-xs text-gray-500 truncate">Bác sĩ chuyên khoa</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Navigation -->
+    <nav class="flex-1 px-3 space-y-1">
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative text-gray-700 hover:bg-gray-50" 
+           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/doctor/home') ? 'active-nav-doctor bg-primary/10 text-primary' : ''}"
+           th:href="@{/doctor/home}">
+            <span class="material-symbols-outlined text-xl" th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/doctor/home') ? 'text-primary' : 'text-gray-500'}">dashboard</span>
+            <span class="font-medium">Dashboard</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative text-gray-700 hover:bg-gray-50" 
+           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/doctor/appointments') ? 'active-nav-doctor bg-primary/10 text-primary' : ''}"
+           th:href="@{/doctor/appointments}">
+            <span class="material-symbols-outlined text-xl" th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/doctor/appointments') ? 'text-primary' : 'text-gray-500'}">event_upcoming</span>
+            <span class="font-medium">Lịch hẹn cần khám</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative text-gray-700 hover:bg-gray-50" 
+           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/doctor/history') ? 'active-nav-doctor bg-primary/10 text-primary' : ''}"
+           th:href="@{/doctor/history}">
+            <span class="material-symbols-outlined text-xl" th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/doctor/history') ? 'text-primary' : 'text-gray-500'}">history</span>
+            <span class="font-medium">Lịch sử khám</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative text-gray-700 hover:bg-gray-50" 
+           th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/doctor/profile') ? 'active-nav-doctor bg-primary/10 text-primary' : ''}"
+           th:href="@{/doctor/profile}">
+            <span class="material-symbols-outlined text-xl" th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/doctor/profile') ? 'text-primary' : 'text-gray-500'}">person</span>
+            <span class="font-medium">Cá nhân</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative text-gray-700 hover:bg-gray-50" 
+           th:classappend="${#httpServletRequest != null and (#strings.contains(#httpServletRequest.requestURI, '/doctor/notifications') or #strings.contains(#httpServletRequest.requestURI, '/notifications')) ? 'active-nav-doctor bg-primary/10 text-primary' : ''}"
+           th:href="@{/notifications}">
+            <span class="material-symbols-outlined text-xl" th:classappend="${#httpServletRequest != null and (#strings.contains(#httpServletRequest.requestURI, '/doctor/notifications') or #strings.contains(#httpServletRequest.requestURI, '/notifications')) ? 'text-primary' : 'text-gray-500'}">notifications</span>
+            <span class="font-medium">Thông báo</span>
+        </a>
+    </nav>
+    
+    <!-- Logout -->
+    <div class="p-6 border-t border-gray-200">
+        <form th:action="@{/api/auth/logout}" method="post" class="inline w-full">
+            <button type="submit" class="w-full flex items-center justify-center gap-2 py-2.5 bg-gray-50 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-100 transition-all border border-gray-200">
+                <span class="material-symbols-outlined text-sm">logout</span>
+                Đăng xuất
+            </button>
+        </form>
+    </div>
+</aside>
+
+<style>
+    .active-nav-doctor {
+        background-color: rgba(19, 236, 91, 0.1) !important;
+        border-left: 4px solid #13ec5b;
+        color: #13ec5b !important;
+    }
+    .active-nav-doctor .material-symbols-outlined {
+        color: #13ec5b !important;
+    }
+</style>
+</body>
+</html>

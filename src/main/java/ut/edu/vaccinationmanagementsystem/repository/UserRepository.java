@@ -33,5 +33,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Tìm user INACTIVE được tạo trước ngày chỉ định
     @Query("SELECT u FROM User u WHERE u.status = :status AND u.createAt < :cutoffDate")
     List<User> findInactiveUsersBeforeDate(@Param("status") UserStatus status, @Param("cutoffDate") LocalDate cutoffDate);
+    
+    // Tìm user theo citizenId (CMND/CCCD)
+    Optional<User> findByCitizenId(String citizenId);
 }
 

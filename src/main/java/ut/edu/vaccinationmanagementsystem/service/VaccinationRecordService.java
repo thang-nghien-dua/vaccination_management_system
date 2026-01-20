@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ut.edu.vaccinationmanagementsystem.entity.*;
 import ut.edu.vaccinationmanagementsystem.entity.enums.AppointmentStatus;
 import ut.edu.vaccinationmanagementsystem.repository.*;
+import ut.edu.vaccinationmanagementsystem.service.EmailService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -31,6 +32,90 @@ public class VaccinationRecordService {
     @Autowired
     private VaccineLotRepository vaccineLotRepository;
     
+    @Autowired
+    private AppointmentHistoryRepository appointmentHistoryRepository;
+    
+    @Autowired
+    private EmailService emailService;
+    
+    /**
+     * Tạo số chứng nhận tiêm chủng tự động
+     * Format: CERT-YYYYMMDD-HHMMSS-XXXX (XXXX là số random 4 chữ số)
+     */
+    private String generateCertificateNumber() {
+        LocalDateTime now = LocalDateTime.now();
+        String dateTime = String.format("%04d%02d%02d-%02d%02d%02d",
+                now.getYear(), now.getMonthValue(), now.getDayOfMonth(),
+                now.getHour(), now.getMinute(), now.getSecond());
+        int random = (int)(Math.random() * 10000);
+        return String.format("CERT-%s-%04d", dateTime, random);
+    }
+    
+    /**
+     * Tạo AppointmentHistory khi status thay đổi
+     */
+    private void createAppointmentHistory(Appointment appointment, AppointmentStatus oldStatus, 
+                                         AppointmentStatus newStatus, User changedBy, String reason) {
+        AppointmentHistory history = new AppointmentHistory();
+        history.setAppointment(appointment);
+        history.setOldStatus(oldStatus);
+        history.setNewStatus(newStatus);
+        history.setChangedBy(changedBy);
+        history.setChangedAt(LocalDateTime.now());
+        history.setReason(reason);
+        appointmentHistoryRepository.save(history);
+    }
+    
+    /**
+     * Gửi email chứng nhận tiêm chủng
+     */
+    private void sendCertificateEmail(VaccinationRecord record) {
+        try {
+            User userToNotify = record.getUser();
+            String email = userToNotify.getEmail();
+            String fullName = userToNotify.getFullName();
+            
+            // Nếu là family member, lấy thông tin từ appointment
+            if (record.getAppointment().getFamilyMember() != null) {
+                fullName = record.getAppointment().getFamilyMember().getFullName();
+            }
+            
+            String subject = "Chứng nhận tiêm chủng - " + record.getVaccine().getName();
+            String content = String.format(
+                "Xin chào %s,\n\n" +
+                "Bạn đã hoàn thành tiêm vaccine %s (Mũi %d) tại %s.\n\n" +
+                "Thông tin tiêm chủng:\n" +
+                "- Ngày tiêm: %s\n" +
+                "- Giờ tiêm: %s\n" +
+                "- Số chứng nhận: %s\n" +
+                "- Số lô vaccine: %s\n" +
+                "- Vị trí tiêm: %s\n" +
+                "%s\n\n" +
+                "Bạn có thể tải chứng nhận tại: %s/api/vaccination-records/%d/certificate\n\n" +
+                "Trân trọng,\n" +
+                "Hệ thống Tiêm chủng Quốc gia",
+                fullName,
+                record.getVaccine().getName(),
+                record.getDoseNumber(),
+                record.getAppointment().getCenter() != null ? record.getAppointment().getCenter().getName() : "N/A",
+                record.getInjectionDate(),
+                record.getInjectionTime(),
+                record.getCertificateNumber(),
+                record.getBatchNumber(),
+                record.getInjectionSite() != null ? record.getInjectionSite() : "N/A",
+                record.getNextDoseDate() != null ? String.format("- Ngày tiêm mũi tiếp theo: %s", record.getNextDoseDate()) : "",
+                System.getProperty("app.base-url", "http://localhost:8080"),
+                record.getId()
+            );
+            
+            emailService.sendEmail(email, subject, content);
+        } catch (Exception e) {
+            // Log error nhưng không throw exception
+            System.err.println("Failed to send certificate email: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
     /**
      * Tạo VaccinationRecord khi tiêm thành công
      * Đồng thời trừ stock quantity của vaccine tại trung tâm
@@ -42,7 +127,7 @@ public class VaccinationRecordService {
      * @param injectionTime Giờ tiêm
      * @param injectionSite Vị trí tiêm (ví dụ: "LEFT_ARM", "RIGHT_ARM")
      * @param doseAmount Liều lượng (ví dụ: 0.5ml)
-     * @param certificateNumber Số chứng nhận tiêm chủng
+     * @param certificateNumber Số chứng nhận tiêm chủng (nếu null sẽ tự động generate)
      * @return VaccinationRecord đã được tạo
      */
     public VaccinationRecord createVaccinationRecord(
@@ -146,6 +231,11 @@ public class VaccinationRecordService {
         record.setInjectionSite(injectionSite);
         record.setBatchNumber(vaccineLot.getLotNumber());
         record.setDoseAmount(doseAmount);
+        
+        // Generate certificateNumber nếu chưa có
+        if (certificateNumber == null || certificateNumber.trim().isEmpty()) {
+            certificateNumber = generateCertificateNumber();
+        }
         record.setCertificateNumber(certificateNumber);
         
         // Tính nextDoseDate nếu có daysBetweenDoses
@@ -168,16 +258,36 @@ public class VaccinationRecordService {
         vaccineLot.setRemainingQuantity(currentLotRemaining - 1);
         vaccineLotRepository.save(vaccineLot);
         
+        // Lưu trạng thái cũ trước khi cập nhật
+        AppointmentStatus oldStatus = appointment.getStatus();
+        
         // Cập nhật appointment status thành COMPLETED
         appointment.setStatus(AppointmentStatus.COMPLETED);
         appointment.setUpdatedAt(LocalDateTime.now());
         appointmentRepository.save(appointment);
         
+        // Tạo AppointmentHistory
+        createAppointmentHistory(appointment, oldStatus, AppointmentStatus.COMPLETED, 
+                                nurse, "Hoàn thành tiêm vaccine");
+        
         // Lưu VaccinationRecord
-        return vaccinationRecordRepository.save(record);
+        VaccinationRecord savedRecord = vaccinationRecordRepository.save(record);
+        
+        // Gửi email chứng nhận
+        sendCertificateEmail(savedRecord);
+        
+        return savedRecord;
     }
     
     @Autowired
     private UserRepository userRepository;
+    
+    /**
+     * Lấy VaccinationRecord theo ID
+     */
+    public VaccinationRecord getVaccinationRecordById(Long id) {
+        return vaccinationRecordRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Vaccination record not found with id: " + id));
+    }
 }
 

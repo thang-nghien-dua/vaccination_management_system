@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hồ sơ Bác sĩ chuyên môn - Hệ thống Quản lý Tiêm chủng</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bg-medical-pattern {
+            background-color: #f6f8f6;
+            background-image: radial-gradient(#13ec5b22 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#111813] font-display min-h-screen">
+<div class="flex min-h-screen">
+<!-- Sidebar Fragment -->
+<div th:replace="~{fragments/doctor-sidebar :: sidebar}"></div>
+<!-- Main Content -->
+<main class="flex-1 ml-64 min-h-screen overflow-y-auto bg-medical-pattern">
+<!-- Header -->
+<header class="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-[#f0f4f2] px-8 py-4 flex items-center justify-between">
+<h1 class="text-xl font-bold text-[#111813]">Hồ sơ Bác sĩ chuyên môn</h1>
+<div class="flex items-center gap-4">
+<button class="size-10 flex items-center justify-center rounded-lg bg-[#f0f4f2] text-[#61896f] relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white"></span>
+</button>
+<div class="h-8 w-[1px] bg-[#f0f4f2]"></div>
+<div class="flex items-center gap-3">
+<span class="text-sm font-medium text-[#111813]">Thứ Hai, 22 Tháng 5</span>
+<span class="material-symbols-outlined text-[#61896f]">calendar_today</span>
+</div>
+</div>
+</header>
+<div class="p-8 max-w-6xl mx-auto space-y-6">
+<!-- Profile Header Card -->
+<div class="bg-white dark:bg-zinc-900 rounded-xl p-8 border border-[#dbe6df] shadow-sm relative overflow-hidden">
+<div class="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-primary/5 to-transparent pointer-events-none"></div>
+<div class="flex flex-col md:flex-row gap-8 items-start relative z-10">
+<div class="relative group">
+<div class="w-32 h-32 rounded-full border-4 border-primary/20 overflow-hidden bg-zinc-100">
+<img alt="Profile photo of Dr. Nguyen Van A" class="w-full h-full object-cover" data-alt="Professional portrait of a smiling male doctor in lab coat" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsoGj6az8hvk9JWS1_t-tlN_MM9B65K7jCGCvoLrO07k8YsSwtX9-uvBaSvAxjZHesk8xBCfwLlkZC51KlrmXjETFB2YTRCN84lniIZeebgzjAQcALW-i-NI49bb65BT4IMlvZoE_KkDrOSYZYwQJcff4PzkKhn9FraNspCKSqVLucwNIvpTLSFy4P9GiJlqkFxdMg9t3R4diVGSL6zSpFaGK6LZmkkycyU1an5eyZ3-uGG_wRKOMZcZRNX8exohJI946qBvM1-G9p"/>
+</div>
+<button class="absolute bottom-0 right-0 bg-primary text-white size-8 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+<span class="material-symbols-outlined text-base">photo_camera</span>
+</button>
+</div>
+<div class="flex-1 space-y-2">
+<div class="flex items-center gap-3">
+<h2 class="text-3xl font-extrabold text-[#111813] dark:text-white">BS. Nguyễn Văn A</h2>
+<span class="px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider rounded border border-primary/20">Verified Professional</span>
+</div>
+<p class="text-lg text-[#61896f] font-medium flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">special_character</span>
+                                Chuyên khoa Truyền nhiễm &amp; Tiêm chủng nhi khoa
+                            </p>
+<div class="flex flex-wrap gap-4 pt-2">
+<div class="flex items-center gap-2 text-sm text-[#61896f]">
+<span class="material-symbols-outlined text-base">mail</span>
+<span>vana.nguyen@vaxguard.vn</span>
+</div>
+<div class="flex items-center gap-2 text-sm text-[#61896f]">
+<span class="material-symbols-outlined text-base">badge</span>
+<span>Giấy phép: #12345/BYT-CCHN</span>
+</div>
+<div class="flex items-center gap-2 text-sm text-[#61896f]">
+<span class="material-symbols-outlined text-base">location_on</span>
+<span>Khoa Nội - Phòng Tiêm 04</span>
+</div>
+</div>
+</div>
+<button class="flex items-center gap-2 px-6 py-2.5 bg-zinc-900 dark:bg-primary text-white dark:text-zinc-900 rounded-lg font-bold hover:opacity-90 transition-all self-start">
+<span class="material-symbols-outlined text-sm">edit</span>
+                            Chỉnh sửa hồ sơ
+                        </button>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Statistics Column -->
+<div class="lg:col-span-1 space-y-6">
+<div class="grid grid-cols-1 gap-4">
+<!-- Stats Card 1 -->
+<div class="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-[#dbe6df] shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<p class="text-sm font-bold text-[#61896f] uppercase tracking-wider">Tổng ca khám</p>
+<div class="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">groups</span>
+</div>
+</div>
+<div class="flex items-end gap-2">
+<h3 class="text-3xl font-extrabold text-[#111813] dark:text-white" id="totalScreenings">0</h3>
+</div>
+<p class="text-xs text-[#61896f] mt-2">Tổng số ca khám sàng lọc</p>
+</div>
+<!-- Stats Card 2 -->
+<div class="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-[#dbe6df] shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<p class="text-sm font-bold text-[#61896f] uppercase tracking-wider">Tỷ lệ phê duyệt</p>
+<div class="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">fact_check</span>
+</div>
+</div>
+<div class="flex items-end gap-2">
+<h3 class="text-3xl font-extrabold text-[#111813] dark:text-white" id="approvalRate">0%</h3>
+</div>
+<div class="w-full bg-[#f0f4f2] h-2 rounded-full mt-4">
+<div class="bg-primary h-full rounded-full shadow-[0_0_8px_rgba(19,236,91,0.5)]" id="approvalRateBar" style="width: 0%"></div>
+</div>
+<p class="text-xs text-[#61896f] mt-2">Tỷ lệ phê duyệt</p>
+</div>
+</div>
+<!-- Flat Illustration Decoration -->
+<div class="bg-primary/5 rounded-xl p-6 border border-primary/10 flex flex-col items-center text-center">
+<div class="w-full max-w-[180px] mb-4">
+<svg viewbox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+<circle cx="100" cy="100" fill="#13ec5b22" r="80"></circle>
+<path d="M60 140 L80 140 L80 120 L120 120 L120 140 L140 140 L140 180 L60 180 Z" fill="#13ec5b" opacity="0.8"></path>
+<rect fill="#111813" height="70" rx="10" width="20" x="90" y="60"></rect>
+<circle cx="100" cy="50" fill="#111813" r="20"></circle>
+<path d="M130 80 Q150 80 150 100" fill="none" stroke="#13ec5b" stroke-width="4"></path>
+<path d="M50 80 Q70 80 70 100" fill="none" stroke="#13ec5b" stroke-width="4"></path>
+</svg>
+</div>
+<h4 class="font-bold text-[#111813]">Hệ thống bảo mật cao</h4>
+<p class="text-xs text-[#61896f] mt-1">Dữ liệu y tế của bác sĩ và bệnh nhân luôn được mã hóa an toàn.</p>
+</div>
+</div>
+<!-- Work Schedule Column -->
+<div class="lg:col-span-2 space-y-6">
+<div class="bg-white dark:bg-zinc-900 rounded-xl border border-[#dbe6df] shadow-sm overflow-hidden">
+<div class="p-6 border-b border-[#f0f4f2] flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">schedule</span>
+<h3 class="text-xl font-bold text-[#111813] dark:text-white">Lịch làm việc tuần này</h3>
+</div>
+<div class="flex gap-2">
+<button class="size-8 rounded border border-zinc-200 flex items-center justify-center hover:bg-zinc-50 transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="size-8 rounded border border-zinc-200 flex items-center justify-center hover:bg-zinc-50 transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full border-collapse">
+<thead>
+<tr class="bg-zinc-50 dark:bg-zinc-800/50">
+<th class="p-4 text-left text-xs font-bold text-[#61896f] uppercase border-b border-[#f0f4f2] w-24">Thời gian</th>
+<th class="p-4 text-center text-xs font-bold text-[#61896f] uppercase border-b border-[#f0f4f2]">Thứ 2</th>
+<th class="p-4 text-center text-xs font-bold text-[#61896f] uppercase border-b border-[#f0f4f2]">Thứ 3</th>
+<th class="p-4 text-center text-xs font-bold text-[#61896f] uppercase border-b border-[#f0f4f2]">Thứ 4</th>
+<th class="p-4 text-center text-xs font-bold text-[#61896f] uppercase border-b border-[#f0f4f2]">Thứ 5</th>
+<th class="p-4 text-center text-xs font-bold text-[#61896f] uppercase border-b border-[#f0f4f2]">Thứ 6</th>
+<th class="p-4 text-center text-xs font-bold text-[#61896f] uppercase border-b border-[#f0f4f2]">Thứ 7</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#f0f4f2]">
+<!-- Morning Slot -->
+<tr>
+<td class="p-4 text-xs font-bold text-[#111813] dark:text-white bg-zinc-50 dark:bg-zinc-800/30">SÁNG<br/><span class="font-normal text-[#61896f]">08:00 - 12:00</span></td>
+<td class="p-2">
+<div class="bg-primary/10 border-l-4 border-primary p-2 rounded text-[10px] leading-tight font-bold text-green-800">
+                                                    PHÒNG TIÊM 04<br/>Khám sàng lọc
+                                                </div>
+</td>
+<td class="p-2">
+<div class="bg-zinc-100 p-2 rounded text-[10px] leading-tight font-medium text-zinc-400 text-center">Nghỉ</div>
+</td>
+<td class="p-2">
+<div class="bg-primary/10 border-l-4 border-primary p-2 rounded text-[10px] leading-tight font-bold text-green-800">
+                                                    PHÒNG TIÊM 04<br/>Khám sàng lọc
+                                                </div>
+</td>
+<td class="p-2">
+<div class="bg-zinc-100 p-2 rounded text-[10px] leading-tight font-medium text-zinc-400 text-center">Nghỉ</div>
+</td>
+<td class="p-2">
+<div class="bg-primary/10 border-l-4 border-primary p-2 rounded text-[10px] leading-tight font-bold text-green-800">
+                                                    PHÒNG TIÊM 04<br/>Khám sàng lọc
+                                                </div>
+</td>
+<td class="p-2">
+<div class="bg-zinc-100 p-2 rounded text-[10px] leading-tight font-medium text-zinc-400 text-center">Nghỉ</div>
+</td>
+</tr>
+<!-- Afternoon Slot -->
+<tr>
+<td class="p-4 text-xs font-bold text-[#111813] dark:text-white bg-zinc-50 dark:bg-zinc-800/30">CHIỀU<br/><span class="font-normal text-[#61896f]">13:30 - 17:30</span></td>
+<td class="p-2">
+<div class="bg-zinc-100 p-2 rounded text-[10px] leading-tight font-medium text-zinc-400 text-center">Nghỉ</div>
+</td>
+<td class="p-2">
+<div class="bg-primary/10 border-l-4 border-primary p-2 rounded text-[10px] leading-tight font-bold text-green-800">
+                                                    PHÒNG TIÊM 01<br/>Tư vấn vắc xin
+                                                </div>
+</td>
+<td class="p-2">
+<div class="bg-zinc-100 p-2 rounded text-[10px] leading-tight font-medium text-zinc-400 text-center">Nghỉ</div>
+</td>
+<td class="p-2">
+<div class="bg-primary/10 border-l-4 border-primary p-2 rounded text-[10px] leading-tight font-bold text-green-800">
+                                                    PHÒNG TIÊM 01<br/>Tư vấn vắc xin
+                                                </div>
+</td>
+<td class="p-2">
+<div class="bg-zinc-100 p-2 rounded text-[10px] leading-tight font-medium text-zinc-400 text-center">Nghỉ</div>
+</td>
+<td class="p-2">
+<div class="bg-primary/10 border-l-4 border-primary p-2 rounded text-[10px] leading-tight font-bold text-green-800">
+                                                    TỔNG ĐÀI HỖ TRỢ<br/>Trực tuyến
+                                                </div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 bg-zinc-50 dark:bg-zinc-800/50 flex justify-end gap-3">
+<button class="px-4 py-2 text-xs font-bold text-[#61896f] border border-zinc-200 rounded-lg hover:bg-white transition-all">Xuất lịch PDF</button>
+<button class="px-4 py-2 text-xs font-bold text-white bg-zinc-900 dark:bg-zinc-700 rounded-lg hover:opacity-90 transition-all">Quản lý ca trực</button>
+</div>
+</div>
+<!-- Professional Info Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-[#dbe6df] shadow-sm">
+<h4 class="text-sm font-bold text-[#111813] dark:text-white mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">school</span>
+                                    Bằng cấp &amp; Chứng chỉ
+                                </h4>
+<ul class="space-y-3">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-green-500 text-sm mt-0.5">check_circle</span>
+<div class="text-sm">
+<p class="font-bold text-[#111813]">Thạc sĩ Y khoa</p>
+<p class="text-[#61896f]">Đại học Y Dược TP.HCM (2015)</p>
+</div>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-green-500 text-sm mt-0.5">check_circle</span>
+<div class="text-sm">
+<p class="font-bold text-[#111813]">Chứng chỉ An toàn tiêm chủng</p>
+<p class="text-[#61896f]">Viện Pasteur TP.HCM (2020)</p>
+</div>
+</li>
+</ul>
+</div>
+<div class="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-[#dbe6df] shadow-sm">
+<h4 class="text-sm font-bold text-[#111813] dark:text-white mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">work</span>
+                                    Kinh nghiệm làm việc
+                                </h4>
+<ul class="space-y-3">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-zinc-400 text-sm mt-0.5">history</span>
+<div class="text-sm">
+<p class="font-bold text-[#111813]">Hơn 10 năm kinh nghiệm</p>
+<p class="text-[#61896f]">Lâm sàng nhi khoa &amp; Tư vấn dự phòng</p>
+</div>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-zinc-400 text-sm mt-0.5">history</span>
+<div class="text-sm">
+<p class="font-bold text-[#111813]">Thành viên Hội Y học Dự phòng</p>
+<p class="text-[#61896f]">Cố vấn chuyên môn khu vực phía Nam</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<footer class="p-8 text-center">
+<p class="text-xs text-[#61896f]">© 2023 VaxGuard Vaccination Management System. Bản quyền thuộc về Bộ Y Tế.</p>
+    </footer>
+    </main>
+    </div>
+    
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        (function() {
+            const currentUser = /*[[${currentUser}]]*/ null;
+            
+            // Update doctor name
+            if (currentUser) {
+                const nameElements = document.querySelectorAll('h2');
+                nameElements.forEach(el => {
+                    if (el.textContent.includes('BS.') || el.textContent.includes('Nguyễn')) {
+                        el.textContent = 'BS. ' + (currentUser.fullName || currentUser.email);
+                    }
+                });
+                
+                // Update email
+                const emailElements = document.querySelectorAll('span');
+                emailElements.forEach(el => {
+                    if (el.textContent.includes('vana.nguyen@vaxguard.vn')) {
+                        el.textContent = currentUser.email || 'N/A';
+                    }
+                });
+            }
+            
+            // Load profile statistics
+            async function loadProfileStats() {
+                try {
+                    const response = await fetch('/api/doctor/profile/stats');
+                    if (!response.ok) throw new Error('Failed to load profile stats');
+                    const stats = await response.json();
+                    
+                    // Update total screenings
+                    const totalEl = document.getElementById('totalScreenings');
+                    if (totalEl) {
+                        totalEl.textContent = stats.totalScreenings || 0;
+                    }
+                    
+                    // Update approval rate
+                    const approvalRateEl = document.getElementById('approvalRate');
+                    const approvalRateBarEl = document.getElementById('approvalRateBar');
+                    if (approvalRateEl) {
+                        approvalRateEl.textContent = (stats.approvalRate || 0) + '%';
+                    }
+                    if (approvalRateBarEl) {
+                        approvalRateBarEl.style.width = (stats.approvalRate || 0) + '%';
+                    }
+                } catch (error) {
+                    console.error('Error loading profile stats:', error);
+                }
+            }
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                loadProfileStats();
+            });
+        })();
+        /*]]>*/
+    </script>
+    </body></html>
