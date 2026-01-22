@@ -328,7 +328,7 @@ public class HomeController {
      * Trang thông báo
      */
     @GetMapping("/notifications")
-    public String notifications(Model model) {
+    public String notifications(@RequestParam(required = false) String role, Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
             return "redirect:/login";
@@ -337,6 +337,9 @@ public class HomeController {
             User currentUser = getCurrentUser(authentication);
             model.addAttribute("currentUser", currentUser);
             model.addAttribute("isAuthenticated", true);
+            if (role != null) {
+                model.addAttribute("forcedRole", role);
+            }
         } catch (Exception e) {
             return "redirect:/login";
         }
@@ -348,7 +351,7 @@ public class HomeController {
      * Trang chi tiết thông báo
      */
     @GetMapping("/notifications/{id}")
-    public String notificationDetail(@PathVariable Long id, Model model) {
+    public String notificationDetail(@PathVariable Long id, @RequestParam(required = false) String role, Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
             return "redirect:/login";
@@ -357,6 +360,9 @@ public class HomeController {
             User currentUser = getCurrentUser(authentication);
             model.addAttribute("currentUser", currentUser);
             model.addAttribute("isAuthenticated", true);
+            if (role != null) {
+                model.addAttribute("forcedRole", role);
+            }
             model.addAttribute("notificationId", id);
         } catch (Exception e) {
             return "redirect:/login";

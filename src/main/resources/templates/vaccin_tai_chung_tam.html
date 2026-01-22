@@ -84,6 +84,10 @@
 <span class="material-symbols-outlined text-lg leading-none">schedule</span>
                             Giờ làm việc
                         </button>
+<button onclick="switchTab('staff')" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2" id="staffTab">
+<span class="material-symbols-outlined text-lg leading-none">badge</span>
+                            Nhân viên
+                        </button>
 </div>
 <div class="space-y-6">
 <div class="flex items-center justify-between">
@@ -320,6 +324,8 @@ function switchTab(tab) {
         window.location.href = `/admin/centers/${centerId}/rooms`;
     } else if (tab === 'working-hours') {
         window.location.href = `/admin/centers/${centerId}/working-hours`;
+    } else if (tab === 'staff') {
+        window.location.href = `/admin/centers/${centerId}/staff`;
     }
     // Nếu tab là 'vaccines', giữ nguyên trang hiện tại (không làm gì)
 }

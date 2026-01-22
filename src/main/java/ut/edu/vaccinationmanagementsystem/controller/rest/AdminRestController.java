@@ -10,8 +10,10 @@ import ut.edu.vaccinationmanagementsystem.dto.AdminUserDTO;
 import ut.edu.vaccinationmanagementsystem.dto.VaccineDTO;
 import ut.edu.vaccinationmanagementsystem.entity.*;
 import ut.edu.vaccinationmanagementsystem.entity.enums.AppointmentStatus;
+import ut.edu.vaccinationmanagementsystem.entity.enums.PaymentStatus;
 import ut.edu.vaccinationmanagementsystem.entity.enums.Role;
 import ut.edu.vaccinationmanagementsystem.entity.enums.UserStatus;
+import java.math.BigDecimal;
 import ut.edu.vaccinationmanagementsystem.service.UserService;
 import ut.edu.vaccinationmanagementsystem.service.VaccineService;
 import ut.edu.vaccinationmanagementsystem.service.VaccinationRecordService;
@@ -62,6 +64,12 @@ public class AdminRestController {
     
     @Autowired
     private VaccinationRecordRepository vaccinationRecordRepository;
+    
+    @Autowired
+    private ut.edu.vaccinationmanagementsystem.repository.StaffInfoRepository staffInfoRepository;
+    
+    @Autowired
+    private NotificationRepository notificationRepository;
     
     /**
      * Lấy thông tin user hiện tại từ SecurityContext
@@ -507,6 +515,7 @@ public class AdminRestController {
                 
                 // Thông tin trung tâm
                 if (apt.getCenter() != null) {
+                    map.put("centerId", apt.getCenter().getId());
                     map.put("centerName", apt.getCenter().getName());
                 }
                 
@@ -573,6 +582,129 @@ public class AdminRestController {
             error.put("error", e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
         } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * GET /api/admin/centers/{centerId}
+     * Lấy thông tin chi tiết của một trung tâm
+     */
+    @GetMapping("/centers/{centerId}")
+    public ResponseEntity<?> getCenterById(@PathVariable Long centerId) {
+        try {
+            User currentUser = getCurrentUser();
+            checkAdminPermission(currentUser);
+            
+            Optional<VaccinationCenter> centerOpt = vaccinationCenterRepository.findById(centerId);
+            if (centerOpt.isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Center not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+            }
+            
+            VaccinationCenter center = centerOpt.get();
+            Map<String, Object> result = new HashMap<>();
+            result.put("id", center.getId());
+            result.put("name", center.getName());
+            result.put("address", center.getAddress());
+            result.put("phoneNumber", center.getPhoneNumber());
+            result.put("email", center.getEmail());
+            result.put("capacity", center.getCapacity());
+            result.put("status", center.getStatus().name());
+            result.put("createdAt", center.getCreatedAt());
+            
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * GET /api/admin/centers/{centerId}/staff
+     * Lấy danh sách nhân viên của một trung tâm
+     */
+    @GetMapping("/centers/{centerId}/staff")
+    public ResponseEntity<?> getStaffByCenter(@PathVariable Long centerId) {
+        try {
+            User currentUser = getCurrentUser();
+            checkAdminPermission(currentUser);
+            
+            System.out.println("Getting staff for center ID: " + centerId);
+            List<StaffInfo> staffInfos = staffInfoRepository.findByCenterId(centerId);
+            System.out.println("Found " + staffInfos.size() + " staff members");
+            
+            List<Map<String, Object>> result = staffInfos.stream().map(info -> {
+                User user = info.getUser();
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", user.getId());
+                map.put("email", user.getEmail());
+                map.put("fullName", user.getFullName());
+                map.put("phoneNumber", user.getPhoneNumber());
+                map.put("role", user.getRole().name());
+                map.put("status", user.getStatus().name());
+                map.put("employeeId", info.getEmployeeId());
+                map.put("specialization", info.getSpecialization());
+                map.put("licenseNumber", info.getLicenseNumber());
+                map.put("hireDate", info.getHireDate());
+                map.put("department", info.getDepartment());
+                return map;
+            }).collect(Collectors.toList());
+            
+            System.out.println("Returning " + result.size() + " staff members");
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * GET /api/admin/centers/{centerId}/staff/stats
+     * Lấy thống kê nhân viên của một trung tâm
+     */
+    @GetMapping("/centers/{centerId}/staff/stats")
+    public ResponseEntity<?> getStaffStatsByCenter(@PathVariable Long centerId) {
+        try {
+            User currentUser = getCurrentUser();
+            checkAdminPermission(currentUser);
+            
+            System.out.println("Getting staff stats for center ID: " + centerId);
+            List<StaffInfo> staffInfos = staffInfoRepository.findByCenterId(centerId);
+            System.out.println("Found " + staffInfos.size() + " staff members for stats");
+            
+            long totalStaff = staffInfos.size();
+            long activeStaff = staffInfos.stream()
+                    .filter(info -> info.getUser().getStatus() == ut.edu.vaccinationmanagementsystem.entity.enums.UserStatus.ACTIVE)
+                    .count();
+            long inactiveStaff = staffInfos.stream()
+                    .filter(info -> info.getUser().getStatus() == ut.edu.vaccinationmanagementsystem.entity.enums.UserStatus.INACTIVE)
+                    .count();
+            long lockedStaff = staffInfos.stream()
+                    .filter(info -> info.getUser().getStatus() == ut.edu.vaccinationmanagementsystem.entity.enums.UserStatus.LOCKED)
+                    .count();
+            
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("totalStaff", totalStaff);
+            stats.put("activeStaff", activeStaff);
+            stats.put("inactiveStaff", inactiveStaff);
+            stats.put("lockedStaff", lockedStaff);
+            stats.put("onLeave", inactiveStaff + lockedStaff); // Tạm nghỉ = INACTIVE + LOCKED
+            
+            System.out.println("Stats: total=" + totalStaff + ", active=" + activeStaff + ", onLeave=" + (inactiveStaff + lockedStaff));
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            e.printStackTrace();
             Map<String, String> error = new HashMap<>();
             error.put("error", "Internal server error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
@@ -927,6 +1059,620 @@ public class AdminRestController {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    /**
+     * GET /api/admin/staff-all
+     * Lấy danh sách tất cả nhân viên và trạng thái gán trung tâm
+     */
+    @GetMapping("/staff-all")
+    public ResponseEntity<?> getAllStaffWithAssignment() {
+        try {
+            User currentUser = getCurrentUser();
+            checkAdminPermission(currentUser);
+            
+            List<User> staffUsers = userRepository.findAll().stream()
+                    .filter(u -> u.getRole() == Role.DOCTOR || 
+                               u.getRole() == Role.NURSE || 
+                               u.getRole() == Role.RECEPTIONIST)
+                    .collect(Collectors.toList());
+            
+            List<Map<String, Object>> result = staffUsers.stream().map(user -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", user.getId());
+                map.put("email", user.getEmail());
+                map.put("fullName", user.getFullName());
+                map.put("role", user.getRole().name());
+                map.put("status", user.getStatus().name());
+                map.put("createAt", user.getCreateAt());
+                
+                // Lấy thông tin StaffInfo
+                Optional<StaffInfo> infoOpt = staffInfoRepository.findByUser(user);
+                if (infoOpt.isPresent()) {
+                    StaffInfo info = infoOpt.get();
+                    map.put("employeeId", info.getEmployeeId());
+                    if (info.getCenter() != null) {
+                        map.put("assigned", true);
+                        map.put("centerId", info.getCenter().getId());
+                        map.put("centerName", info.getCenter().getName());
+                    } else {
+                        map.put("assigned", false);
+                    }
+                } else {
+                    map.put("assigned", false);
+                }
+                
+                return map;
+            }).collect(Collectors.toList());
+            
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * POST /api/admin/centers/{centerId}/staff/assign
+     * Gán danh sách nhân viên vào trung tâm
+     */
+    @PostMapping("/centers/{centerId}/staff/assign")
+    public ResponseEntity<?> assignStaffToCenter(@PathVariable Long centerId, @RequestBody List<Long> userIds) {
+        try {
+            User currentUser = getCurrentUser();
+            checkAdminPermission(currentUser);
+            
+            VaccinationCenter center = vaccinationCenterRepository.findById(centerId)
+                    .orElseThrow(() -> new RuntimeException("Center not found"));
+            
+            for (Long userId : userIds) {
+                User user = userRepository.findById(userId)
+                        .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+                
+                StaffInfo info = staffInfoRepository.findByUser(user)
+                        .orElseGet(() -> {
+                            StaffInfo newInfo = new StaffInfo();
+                            newInfo.setUser(user);
+                            newInfo.setEmployeeId("EMP" + user.getId()); // Default ID
+                            return newInfo;
+                        });
+                
+                info.setCenter(center);
+                staffInfoRepository.save(info);
+            }
+            
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Staff assigned successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * POST /api/admin/staff/unassign/{userId}
+     * Hủy gán nhân viên khỏi trung tâm
+     */
+    @PostMapping("/staff/unassign/{userId}")
+    public ResponseEntity<?> unassignStaff(@PathVariable Long userId) {
+        try {
+            User currentUser = getCurrentUser();
+            checkAdminPermission(currentUser);
+            
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            StaffInfo info = staffInfoRepository.findByUser(user)
+                    .orElseThrow(() -> new RuntimeException("Staff info not found"));
+            
+            info.setCenter(null);
+            staffInfoRepository.save(info);
+            
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Staff unassigned successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * GET /api/admin/notifications/stats
+     * Lấy thống kê notifications cho admin
+     */
+    @GetMapping("/notifications/stats")
+    public ResponseEntity<?> getNotificationStats() {
+        try {
+            User currentUser = getCurrentUser();
+            checkAdminPermission(currentUser);
+            
+            List<Notification> allNotifications = notificationRepository.findAll();
+            
+            long totalNotifications = allNotifications.size();
+            long readCount = allNotifications.stream().filter(n -> n.getIsRead() != null && n.getIsRead()).count();
+            long unreadCount = totalNotifications - readCount;
+            double readRate = totalNotifications > 0 ? (double) readCount / totalNotifications * 100 : 0;
+            
+            // Tính toán thay đổi so với tháng trước (tạm thời dùng dữ liệu hiện tại)
+            // TODO: Có thể cải thiện bằng cách so sánh với dữ liệu tháng trước
+            long lastMonthTotal = totalNotifications; // Placeholder
+            double totalChange = lastMonthTotal > 0 ? ((double)(totalNotifications - lastMonthTotal) / lastMonthTotal) * 100 : 0;
+            double readChange = readCount > 0 ? 5.2 : 0; // Placeholder
+            double unreadChange = unreadCount > 0 ? -2.1 : 0; // Placeholder
+            
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("total", totalNotifications);
+            stats.put("read", readCount);
+            stats.put("unread", unreadCount);
+            stats.put("readRate", Math.round(readRate * 10.0) / 10.0);
+            stats.put("totalChange", Math.round(totalChange * 10.0) / 10.0);
+            stats.put("readChange", readChange);
+            stats.put("unreadChange", unreadChange);
+            
+            return ResponseEntity.ok(stats);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * GET /api/admin/notifications/trend
+     * Lấy xu hướng gửi thông báo trong 7 ngày qua
+     */
+    @GetMapping("/notifications/trend")
+    public ResponseEntity<?> getNotificationTrend(@RequestParam(defaultValue = "7") int days) {
+        try {
+            User currentUser = getCurrentUser();
+            checkAdminPermission(currentUser);
+            
+            LocalDate endDate = LocalDate.now();
+            LocalDate startDate = endDate.minusDays(days - 1);
+            
+            List<Notification> notifications = notificationRepository.findAll().stream()
+                    .filter(n -> n.getCreatedAt() != null && 
+                            n.getCreatedAt().toLocalDate().isAfter(startDate.minusDays(1)) &&
+                            n.getCreatedAt().toLocalDate().isBefore(endDate.plusDays(1)))
+                    .collect(Collectors.toList());
+            
+            // Nhóm theo ngày
+            Map<LocalDate, Long> dailyCounts = notifications.stream()
+                    .collect(Collectors.groupingBy(
+                            n -> n.getCreatedAt().toLocalDate(),
+                            Collectors.counting()
+                    ));
+            
+            // Tạo mảng cho 7 ngày
+            List<Map<String, Object>> trend = new java.util.ArrayList<>();
+            for (int i = days - 1; i >= 0; i--) {
+                LocalDate date = endDate.minusDays(i);
+                long count = dailyCounts.getOrDefault(date, 0L);
+                Map<String, Object> dayData = new HashMap<>();
+                dayData.put("date", date.toString());
+                dayData.put("count", count);
+                trend.add(dayData);
+            }
+            
+            return ResponseEntity.ok(trend);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * GET /api/admin/notifications/classification
+     * Lấy phân loại thông báo theo type
+     */
+    @GetMapping("/notifications/classification")
+    public ResponseEntity<?> getNotificationClassification() {
+        try {
+            User currentUser = getCurrentUser();
+            checkAdminPermission(currentUser);
+            
+            List<Notification> allNotifications = notificationRepository.findAll();
+            long total = allNotifications.size();
+            
+            // Phân loại theo type
+            Map<String, Long> typeCounts = allNotifications.stream()
+                    .collect(Collectors.groupingBy(
+                            n -> n.getType() != null ? n.getType().name() : "UNKNOWN",
+                            Collectors.counting()
+                    ));
+            
+            // Tính phần trăm
+            Map<String, Object> classification = new HashMap<>();
+            for (Map.Entry<String, Long> entry : typeCounts.entrySet()) {
+                double percentage = total > 0 ? (double) entry.getValue() / total * 100 : 0;
+                Map<String, Object> typeData = new HashMap<>();
+                typeData.put("count", entry.getValue());
+                typeData.put("percentage", Math.round(percentage));
+                classification.put(entry.getKey(), typeData);
+            }
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("total", total);
+            result.put("classification", classification);
+            
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * GET /api/admin/notifications
+     * Lấy danh sách tất cả notifications (cho admin)
+     */
+    @GetMapping("/notifications")
+    public ResponseEntity<?> getAllNotifications(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int size) {
+        try {
+            User currentUser = getCurrentUser();
+            checkAdminPermission(currentUser);
+            
+            List<Notification> notifications = notificationRepository.findAll();
+            
+            // Filter theo search
+            if (search != null && !search.trim().isEmpty()) {
+                String searchLower = search.toLowerCase();
+                notifications = notifications.stream()
+                        .filter(n -> (n.getTitle() != null && n.getTitle().toLowerCase().contains(searchLower)) ||
+                                   (n.getUser() != null && n.getUser().getFullName() != null && 
+                                    n.getUser().getFullName().toLowerCase().contains(searchLower)) ||
+                                   (n.getUser() != null && n.getUser().getEmail() != null && 
+                                    n.getUser().getEmail().toLowerCase().contains(searchLower)))
+                        .collect(Collectors.toList());
+            }
+            
+            // Sắp xếp theo thời gian tạo giảm dần
+            notifications = notifications.stream()
+                    .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                    .collect(Collectors.toList());
+            
+            // Pagination
+            int total = notifications.size();
+            int start = page * size;
+            int end = Math.min(start + size, total);
+            List<Notification> pageNotifications = start < total ? notifications.subList(start, end) : new java.util.ArrayList<>();
+            
+            List<Map<String, Object>> result = pageNotifications.stream().map(n -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", n.getId());
+                map.put("title", n.getTitle());
+                map.put("content", n.getContent());
+                map.put("type", n.getType() != null ? n.getType().name() : "UNKNOWN");
+                map.put("status", n.getStatus() != null ? n.getStatus().name() : "UNKNOWN");
+                map.put("isRead", n.getIsRead() != null ? n.getIsRead() : false);
+                map.put("createdAt", n.getCreatedAt());
+                map.put("sentAt", n.getSentAt());
+                
+                // Thông tin user
+                if (n.getUser() != null) {
+                    Map<String, Object> userInfo = new HashMap<>();
+                    userInfo.put("id", n.getUser().getId());
+                    userInfo.put("fullName", n.getUser().getFullName());
+                    userInfo.put("email", n.getUser().getEmail());
+                    userInfo.put("phoneNumber", n.getUser().getPhoneNumber());
+                    map.put("user", userInfo);
+                }
+                
+                return map;
+            }).collect(Collectors.toList());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("notifications", result);
+            response.put("total", total);
+            response.put("page", page);
+            response.put("size", size);
+            response.put("totalPages", (int) Math.ceil((double) total / size));
+            
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * GET /api/admin/dashboard/recent-appointments
+     * Lấy danh sách lịch hẹn gần đây
+     */
+    @GetMapping("/dashboard/recent-appointments")
+    public ResponseEntity<?> getRecentAppointments(@RequestParam(defaultValue = "5") int limit) {
+        try {
+            User currentUser = getCurrentUser();
+            checkAdminPermission(currentUser);
+            
+            List<Appointment> appointments = appointmentRepository.findAll().stream()
+                    .filter(apt -> apt.getAppointmentDate() != null)
+                    .sorted((a, b) -> {
+                        int dateCompare = b.getAppointmentDate().compareTo(a.getAppointmentDate());
+                        if (dateCompare != 0) return dateCompare;
+                        if (a.getAppointmentTime() != null && b.getAppointmentTime() != null) {
+                            return b.getAppointmentTime().compareTo(a.getAppointmentTime());
+                        }
+                        return dateCompare;
+                    })
+                    .limit(limit)
+                    .collect(Collectors.toList());
+            
+            List<Map<String, Object>> result = appointments.stream().map(apt -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", apt.getId());
+                map.put("bookingCode", apt.getBookingCode());
+                map.put("appointmentDate", apt.getAppointmentDate());
+                map.put("appointmentTime", apt.getAppointmentTime());
+                map.put("status", apt.getStatus().name());
+                
+                // Thông tin bệnh nhân
+                Map<String, Object> patientInfo = new HashMap<>();
+                if (apt.getBookedForUser() != null) {
+                    patientInfo.put("fullName", apt.getBookedForUser().getFullName());
+                } else if (apt.getFamilyMember() != null) {
+                    patientInfo.put("fullName", apt.getFamilyMember().getFullName());
+                } else if (apt.getBookedByUser() != null) {
+                    patientInfo.put("fullName", apt.getBookedByUser().getFullName());
+                }
+                map.put("patientInfo", patientInfo);
+                
+                // Thông tin trung tâm
+                if (apt.getCenter() != null) {
+                    map.put("centerName", apt.getCenter().getName());
+                }
+                
+                return map;
+            }).collect(Collectors.toList());
+            
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * GET /api/admin/dashboard/recent-users
+     * Lấy danh sách người dùng mới
+     */
+    @GetMapping("/dashboard/recent-users")
+    public ResponseEntity<?> getRecentUsers(@RequestParam(defaultValue = "5") int limit) {
+        try {
+            User currentUser = getCurrentUser();
+            checkAdminPermission(currentUser);
+            
+            List<User> users = userRepository.findAll().stream()
+                    .filter(u -> u.getCreateAt() != null)
+                    .sorted((a, b) -> b.getCreateAt().compareTo(a.getCreateAt()))
+                    .limit(limit)
+                    .collect(Collectors.toList());
+            
+            List<Map<String, Object>> result = users.stream().map(user -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", user.getId());
+                map.put("fullName", user.getFullName());
+                map.put("email", user.getEmail());
+                map.put("phoneNumber", user.getPhoneNumber());
+                map.put("address", user.getAddress());
+                map.put("createAt", user.getCreateAt());
+                map.put("role", user.getRole().name());
+                
+                return map;
+            }).collect(Collectors.toList());
+            
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * GET /api/admin/dashboard/popular-vaccines
+     * Lấy danh sách vaccine phổ biến nhất
+     */
+    @GetMapping("/dashboard/popular-vaccines")
+    public ResponseEntity<?> getPopularVaccines(@RequestParam(defaultValue = "10") int limit) {
+        try {
+            User currentUser = getCurrentUser();
+            checkAdminPermission(currentUser);
+            
+            List<Object[]> results = vaccinationRecordRepository.findVaccinesWithVaccinationCount();
+            
+            List<Map<String, Object>> vaccines = results.stream()
+                    .map(result -> {
+                        Vaccine vaccine = (Vaccine) result[0];
+                        Long count = (Long) result[1];
+                        
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("id", vaccine.getId());
+                        map.put("name", vaccine.getName());
+                        map.put("count", count);
+                        return map;
+                    })
+                    .sorted((a, b) -> Long.compare((Long) b.get("count"), (Long) a.get("count")))
+                    .limit(limit)
+                    .collect(Collectors.toList());
+            
+            // Tính tổng và phần trăm
+            long total = vaccines.stream().mapToLong(v -> (Long) v.get("count")).sum();
+            if (total > 0) {
+                vaccines = vaccines.stream().map(v -> {
+                    double percentage = ((Long) v.get("count") * 100.0) / total;
+                    v.put("percentage", Math.round(percentage));
+                    return v;
+                }).collect(Collectors.toList());
+            }
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("vaccines", vaccines);
+            result.put("total", total);
+            
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * GET /api/admin/dashboard/appointments-revenue-trend
+     * Lấy xu hướng lịch hẹn và doanh thu trong 30 ngày
+     */
+    @GetMapping("/dashboard/appointments-revenue-trend")
+    public ResponseEntity<?> getAppointmentsRevenueTrend(@RequestParam(defaultValue = "30") int days) {
+        try {
+            User currentUser = getCurrentUser();
+            checkAdminPermission(currentUser);
+            
+            LocalDate endDate = LocalDate.now();
+            LocalDate startDate = endDate.minusDays(days - 1);
+            
+            // Lấy appointments trong khoảng thời gian
+            List<Appointment> appointments = appointmentRepository.findAll().stream()
+                    .filter(apt -> apt.getAppointmentDate() != null &&
+                            !apt.getAppointmentDate().isBefore(startDate) &&
+                            !apt.getAppointmentDate().isAfter(endDate))
+                    .collect(Collectors.toList());
+            
+            // Lấy payments trong khoảng thời gian
+            List<Payment> payments = paymentRepository.findAll().stream()
+                    .filter(p -> p.getPaidAt() != null &&
+                            p.getPaidAt().toLocalDate().isAfter(startDate.minusDays(1)) &&
+                            p.getPaidAt().toLocalDate().isBefore(endDate.plusDays(1)) &&
+                            p.getPaymentStatus() == PaymentStatus.PAID)
+                    .collect(Collectors.toList());
+            
+            // Nhóm theo ngày
+            Map<LocalDate, Long> dailyAppointments = appointments.stream()
+                    .collect(Collectors.groupingBy(
+                            Appointment::getAppointmentDate,
+                            Collectors.counting()
+                    ));
+            
+            Map<LocalDate, java.math.BigDecimal> dailyRevenue = payments.stream()
+                    .collect(Collectors.groupingBy(
+                            p -> p.getPaidAt().toLocalDate(),
+                            Collectors.reducing(
+                                    java.math.BigDecimal.ZERO,
+                                    Payment::getAmount,
+                                    java.math.BigDecimal::add
+                            )
+                    ));
+            
+            // Tạo mảng cho tất cả các ngày
+            List<Map<String, Object>> trend = new java.util.ArrayList<>();
+            for (int i = days - 1; i >= 0; i--) {
+                LocalDate date = endDate.minusDays(i);
+                long appointmentCount = dailyAppointments.getOrDefault(date, 0L);
+                java.math.BigDecimal revenue = dailyRevenue.getOrDefault(date, java.math.BigDecimal.ZERO);
+                
+                Map<String, Object> dayData = new HashMap<>();
+                dayData.put("date", date.toString());
+                dayData.put("appointments", appointmentCount);
+                dayData.put("revenue", revenue);
+                trend.add(dayData);
+            }
+            
+            return ResponseEntity.ok(trend);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * GET /api/admin/dashboard/inventory-alerts
+     * Lấy cảnh báo tồn kho (vaccine sắp hết hoặc hết hàng)
+     */
+    @GetMapping("/dashboard/inventory-alerts")
+    public ResponseEntity<?> getInventoryAlerts(@RequestParam(defaultValue = "10") int limit) {
+        try {
+            User currentUser = getCurrentUser();
+            checkAdminPermission(currentUser);
+            
+            List<CenterVaccine> centerVaccines = centerVaccineRepository.findAll();
+            
+            // Lọc vaccine có stockQuantity <= 50 hoặc null
+            List<Map<String, Object>> alerts = centerVaccines.stream()
+                    .filter(cv -> cv.getStockQuantity() == null || cv.getStockQuantity() <= 50)
+                    .sorted((a, b) -> {
+                        int stockA = a.getStockQuantity() != null ? a.getStockQuantity() : 0;
+                        int stockB = b.getStockQuantity() != null ? b.getStockQuantity() : 0;
+                        return Integer.compare(stockA, stockB);
+                    })
+                    .limit(limit)
+                    .map(cv -> {
+                        Map<String, Object> alert = new HashMap<>();
+                        alert.put("id", cv.getId());
+                        alert.put("vaccineId", cv.getVaccine().getId());
+                        alert.put("vaccineName", cv.getVaccine().getName());
+                        alert.put("centerId", cv.getCenter().getId());
+                        alert.put("centerName", cv.getCenter().getName());
+                        alert.put("stockQuantity", cv.getStockQuantity() != null ? cv.getStockQuantity() : 0);
+                        alert.put("status", cv.getStockQuantity() == null || cv.getStockQuantity() == 0 ? "OUT_OF_STOCK" : "LOW_STOCK");
+                        return alert;
+                    })
+                    .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(alerts);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Internal server error: " + e.getMessage());

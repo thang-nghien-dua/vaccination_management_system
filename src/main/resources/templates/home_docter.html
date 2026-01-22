@@ -1,14 +1,21 @@
 <!DOCTYPE html>
 
-<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Dashboard Bác sĩ Tổng quan</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
+<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Dashboard Bác sĩ Tổng quan</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
@@ -32,13 +39,15 @@
             },
         }
     </script>
-<style>
+    <style>
         body {
             font-family: 'Manrope', sans-serif;
         }
+
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
+
         .active-nav-doctor {
             background-color: rgba(19, 236, 91, 0.1) !important;
             border-left: 4px solid #13ec5b;
@@ -46,247 +55,294 @@
         }
     </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white transition-colors duration-200">
-<div class="flex min-h-screen">
-<!-- Sidebar Fragment -->
-<div th:replace="~{fragments/doctor-sidebar :: sidebar}"></div>
-<!-- Main Content Area -->
-<main class="flex-1 ml-64 min-h-screen" th:if="${isAuthenticated}">
-<!-- Top Navigation -->
-<header class="h-20 bg-white dark:bg-sidebar-dark/50 border-b border-gray-200 dark:border-white/10 flex items-center justify-between px-8 sticky top-0 z-40 backdrop-blur-md">
-<div class="flex items-center gap-4">
-<h2 class="text-xl font-bold">Dashboard Tổng quan</h2>
-</div>
-<div class="flex items-center gap-6">
-<div class="relative hidden md:block">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
-<input class="pl-10 pr-4 py-2 bg-gray-100 dark:bg-white/5 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary/50" placeholder="Tìm kiếm bệnh nhân..." type="text"/>
-</div>
-<div class="flex items-center gap-3">
-<button class="p-2 rounded-full bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300 relative">
-<span class="material-symbols-outlined">notifications</span>
-<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-sidebar-dark"></span>
-</button>
-<button class="p-2 rounded-full bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300">
-<span class="material-symbols-outlined">settings</span>
-</button>
-</div>
-</div>
-</header>
-<div class="p-8 space-y-8">
-<!-- Welcome Banner -->
-<div class="bg-gradient-to-r from-sidebar-dark to-green-900 rounded-xl p-8 relative overflow-hidden shadow-lg border border-white/5">
-<div class="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
-<div class="max-w-xl text-center md:text-left">
-<h3 class="text-3xl font-extrabold text-white mb-2">Chào buổi sáng, Bác sĩ!</h3>
-<p class="text-green-100 text-lg opacity-90 mb-6" id="welcomeMessage">Đang tải thông tin...</p>
-                            <a th:href="@{/doctor/appointments}" class="bg-primary text-sidebar-dark px-6 py-3 rounded-lg font-bold flex items-center gap-2 hover:scale-105 transition-transform">
-                            <span class="material-symbols-outlined">calendar_month</span>
+
+<body
+    class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white transition-colors duration-200">
+    <div class="flex min-h-screen">
+        <!-- Sidebar Fragment -->
+        <div th:replace="~{fragments/doctor-sidebar :: sidebar}"></div>
+        <!-- Main Content Area -->
+        <main class="flex-1 ml-64 min-h-screen" th:if="${isAuthenticated}">
+            <!-- Top Navigation -->
+            <header
+                class="h-20 bg-white dark:bg-sidebar-dark/50 border-b border-gray-200 dark:border-white/10 flex items-center justify-between px-8 sticky top-0 z-40 backdrop-blur-md">
+                <div class="flex items-center gap-4">
+                    <h2 class="text-xl font-bold">Dashboard Tổng quan</h2>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="relative hidden md:block">
+                        <span
+                            class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+                        <input
+                            class="pl-10 pr-4 py-2 bg-gray-100 dark:bg-white/5 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary/50"
+                            placeholder="Tìm kiếm bệnh nhân..." type="text" />
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <a th:href="@{/notifications}"
+                            class="p-2 rounded-full bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300 relative inline-block">
+                            <span class="material-symbols-outlined">notifications</span>
+                            <span
+                                class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-sidebar-dark"></span>
+                        </a>
+                        <button class="p-2 rounded-full bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300">
+                            <span class="material-symbols-outlined">settings</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+            <div class="p-8 space-y-8">
+                <!-- Welcome Banner -->
+                <div
+                    class="bg-gradient-to-r from-sidebar-dark to-green-900 rounded-xl p-8 relative overflow-hidden shadow-lg border border-white/5">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+                        <div class="max-w-xl text-center md:text-left">
+                            <h3 class="text-3xl font-extrabold text-white mb-2">Chào buổi sáng, Bác sĩ!</h3>
+                            <p class="text-green-100 text-lg opacity-90 mb-6" id="welcomeMessage">Đang tải thông tin...
+                            </p>
+                            <a th:href="@{/doctor/appointments}"
+                                class="bg-primary text-sidebar-dark px-6 py-3 rounded-lg font-bold flex items-center gap-2 hover:scale-105 transition-transform">
+                                <span class="material-symbols-outlined">calendar_month</span>
                                 Xem lịch trình hôm nay
                             </a>
-</div>
-<div class="w-64 h-64 bg-center bg-no-repeat bg-contain" data-alt="Hình minh họa bác sĩ tiêm chủng vaccine" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAsL7m7eKSCoYiOxEr3APJJQwfz9HQWRpRMy86QFmyz_hBxrzES-bNrhiVBCCfeLz8n1iDGNAyyFYU8Qnz2Nn0qg6QH153wmZv5BMI2TqoX8OtuRlFJIDblF5mGtGKikWvirQJCjQQkuQdYY55JOkVeSJh4EFPsEJlyMu6NgXx5yO4mCEIr8SAoRRrZDx2X13KDaWltZoZuov6taTBR24U1D9kIeJsF2NEXxeWYOWI1Y7AN6xyy10n4CUcKzRXzGWiWrWgs92TQIXFh");'></div>
-</div>
-<!-- Decorative Background elements -->
-<div class="absolute -bottom-10 -right-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
-</div>
-<!-- Stats Grid -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-<div class="bg-white dark:bg-sidebar-dark/50 p-6 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm hover:shadow-md transition-shadow">
-<div class="flex items-center justify-between mb-4">
-<div class="p-2 bg-blue-500/10 rounded-lg text-blue-500">
-<span class="material-symbols-outlined">assignment</span>
-</div>
-<span class="text-green-500 text-sm font-bold bg-green-500/10 px-2 py-0.5 rounded-full">+12%</span>
-</div>
-<p class="text-gray-500 dark:text-gray-400 font-medium">Tổng lịch hẹn</p>
-<h4 class="text-3xl font-bold mt-1" id="totalAppointments">0</h4>
-</div>
-<div class="bg-white dark:bg-sidebar-dark/50 p-6 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm hover:shadow-md transition-shadow">
-<div class="flex items-center justify-between mb-4">
-<div class="p-2 bg-primary/10 rounded-lg text-primary">
-<span class="material-symbols-outlined">task_alt</span>
-</div>
-<span class="text-green-500 text-sm font-bold bg-green-500/10 px-2 py-0.5 rounded-full">+5%</span>
-</div>
-<p class="text-gray-500 dark:text-gray-400 font-medium">Đã khám</p>
-            <h4 class="text-3xl font-bold mt-1" id="completedAppointments">0</h4>
-</div>
-<div class="bg-white dark:bg-sidebar-dark/50 p-6 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm hover:shadow-md transition-shadow">
-<div class="flex items-center justify-between mb-4">
-<div class="p-2 bg-amber-500/10 rounded-lg text-amber-500">
-<span class="material-symbols-outlined">pending_actions</span>
-</div>
-<span class="text-red-500 text-sm font-bold bg-red-500/10 px-2 py-0.5 rounded-full">-2%</span>
-</div>
-<p class="text-gray-500 dark:text-gray-400 font-medium">Phê duyệt</p>
-            <h4 class="text-3xl font-bold mt-1" id="approvedAppointments">0</h4>
-</div>
-<div class="bg-white dark:bg-sidebar-dark/50 p-6 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm hover:shadow-md transition-shadow">
-<div class="flex items-center justify-between mb-4">
-<div class="p-2 bg-red-500/10 rounded-lg text-red-500">
-<span class="material-symbols-outlined">cancel</span>
-</div>
-<span class="text-red-500 text-sm font-bold bg-red-500/10 px-2 py-0.5 rounded-full">-1%</span>
-</div>
-<p class="text-gray-500 dark:text-gray-400 font-medium">Từ chối</p>
-            <h4 class="text-3xl font-bold mt-1" id="rejectedAppointments">0</h4>
-</div>
-</div>
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-<!-- Left: Upcoming Appointments -->
-<div class="lg:col-span-2 space-y-6">
-<div class="flex items-center justify-between px-2">
-            <h3 class="text-xl font-bold">Lịch hẹn sắp tới</h3>
-            <a class="text-primary text-sm font-bold hover:underline" th:href="@{/doctor/appointments}">Xem tất cả</a>
-</div>
-<div class="bg-white dark:bg-sidebar-dark/50 rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden shadow-sm">
-<table class="w-full text-left border-collapse">
-<thead>
-<tr class="bg-gray-50 dark:bg-white/5 border-b border-gray-100 dark:border-white/10">
-<th class="px-6 py-4 text-sm font-bold text-gray-600 dark:text-gray-400">Bệnh nhân</th>
-<th class="px-6 py-4 text-sm font-bold text-gray-600 dark:text-gray-400">Vaccine</th>
-<th class="px-6 py-4 text-sm font-bold text-gray-600 dark:text-gray-400">Giờ hẹn</th>
-<th class="px-6 py-4 text-sm font-bold text-gray-600 dark:text-gray-400">Trạng thái</th>
-<th class="px-6 py-4 text-sm font-bold text-gray-600 dark:text-gray-400 text-center">Tác vụ</th>
-</tr>
-</thead>
-            <tbody id="appointmentsTableBody" class="divide-y divide-gray-100 dark:divide-white/10">
-            <!-- Data will be loaded dynamically -->
-            </tbody>
-</table>
-</div>
-</div>
-<!-- Right: Statistics Chart Placeholder -->
-<div class="space-y-6">
-<div class="px-2">
-<h3 class="text-xl font-bold">Thống kê theo tuần</h3>
-</div>
-<div class="bg-white dark:bg-sidebar-dark/50 rounded-xl border border-gray-200 dark:border-white/10 p-6 shadow-sm">
-<div class="h-64 flex flex-col items-end gap-1">
-<!-- Mock Chart Visualization -->
-<div class="flex-1 w-full flex items-end justify-between gap-3 pt-6">
-<div class="flex flex-col items-center gap-2 flex-1">
-<div class="w-full bg-primary/10 rounded-t-lg h-[40%] hover:bg-primary/30 transition-all cursor-pointer"></div>
-<span class="text-[10px] font-bold text-gray-400">T2</span>
-</div>
-<div class="flex flex-col items-center gap-2 flex-1">
-<div class="w-full bg-primary/10 rounded-t-lg h-[60%] hover:bg-primary/30 transition-all cursor-pointer"></div>
-<span class="text-[10px] font-bold text-gray-400">T3</span>
-</div>
-<div class="flex flex-col items-center gap-2 flex-1">
-<div class="w-full bg-primary/10 rounded-t-lg h-[85%] hover:bg-primary/30 transition-all cursor-pointer"></div>
-<span class="text-[10px] font-bold text-gray-400">T4</span>
-</div>
-<div class="flex flex-col items-center gap-2 flex-1">
-<div class="w-full bg-primary/40 rounded-t-lg h-[95%] border-t-4 border-primary shadow-lg shadow-primary/20"></div>
-<span class="text-[10px] font-bold text-primary">T5</span>
-</div>
-<div class="flex flex-col items-center gap-2 flex-1">
-<div class="w-full bg-primary/10 rounded-t-lg h-[55%] hover:bg-primary/30 transition-all cursor-pointer"></div>
-<span class="text-[10px] font-bold text-gray-400">T6</span>
-</div>
-<div class="flex flex-col items-center gap-2 flex-1">
-<div class="w-full bg-primary/10 rounded-t-lg h-[30%] hover:bg-primary/30 transition-all cursor-pointer"></div>
-<span class="text-[10px] font-bold text-gray-400">T7</span>
-</div>
-<div class="flex flex-col items-center gap-2 flex-1">
-<div class="w-full bg-primary/10 rounded-t-lg h-[20%] hover:bg-primary/30 transition-all cursor-pointer"></div>
-<span class="text-[10px] font-bold text-gray-400">CN</span>
-</div>
-</div>
-</div>
-<div class="mt-6 pt-6 border-t border-gray-100 dark:border-white/10 space-y-4">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-2">
-<span class="w-3 h-3 bg-primary rounded-full"></span>
-<span class="text-sm font-medium text-gray-500">Lịch tiêm cao nhất</span>
-</div>
-<span class="text-sm font-bold">Thứ 5</span>
-</div>
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-2">
-<span class="w-3 h-3 bg-primary/20 rounded-full"></span>
-<span class="text-sm font-medium text-gray-500">Trung bình/ngày</span>
-</div>
-<span class="text-sm font-bold">18 ca</span>
-</div>
-</div>
-</div>
-<!-- Mini Calendar or Extra Widget -->
-<div class="bg-primary/10 rounded-xl p-6 border border-primary/20">
-<h4 class="font-bold text-sidebar-dark dark:text-primary mb-2 flex items-center gap-2">
-<span class="material-symbols-outlined">lightbulb</span>
+                        </div>
+                        <div class="w-64 h-64 bg-center bg-no-repeat bg-contain"
+                            data-alt="Hình minh họa bác sĩ tiêm chủng vaccine"
+                            style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAsL7m7eKSCoYiOxEr3APJJQwfz9HQWRpRMy86QFmyz_hBxrzES-bNrhiVBCCfeLz8n1iDGNAyyFYU8Qnz2Nn0qg6QH153wmZv5BMI2TqoX8OtuRlFJIDblF5mGtGKikWvirQJCjQQkuQdYY55JOkVeSJh4EFPsEJlyMu6NgXx5yO4mCEIr8SAoRRrZDx2X13KDaWltZoZuov6taTBR24U1D9kIeJsF2NEXxeWYOWI1Y7AN6xyy10n4CUcKzRXzGWiWrWgs92TQIXFh");'>
+                        </div>
+                    </div>
+                    <!-- Decorative Background elements -->
+                    <div class="absolute -bottom-10 -right-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
+                </div>
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div
+                        class="bg-white dark:bg-sidebar-dark/50 p-6 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-2 bg-blue-500/10 rounded-lg text-blue-500">
+                                <span class="material-symbols-outlined">assignment</span>
+                            </div>
+                            <span
+                                class="text-green-500 text-sm font-bold bg-green-500/10 px-2 py-0.5 rounded-full">+12%</span>
+                        </div>
+                        <p class="text-gray-500 dark:text-gray-400 font-medium">Tổng lịch hẹn</p>
+                        <h4 class="text-3xl font-bold mt-1" id="totalAppointments">0</h4>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-sidebar-dark/50 p-6 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-2 bg-primary/10 rounded-lg text-primary">
+                                <span class="material-symbols-outlined">task_alt</span>
+                            </div>
+                            <span
+                                class="text-green-500 text-sm font-bold bg-green-500/10 px-2 py-0.5 rounded-full">+5%</span>
+                        </div>
+                        <p class="text-gray-500 dark:text-gray-400 font-medium">Đã khám</p>
+                        <h4 class="text-3xl font-bold mt-1" id="completedAppointments">0</h4>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-sidebar-dark/50 p-6 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-2 bg-amber-500/10 rounded-lg text-amber-500">
+                                <span class="material-symbols-outlined">pending_actions</span>
+                            </div>
+                            <span
+                                class="text-red-500 text-sm font-bold bg-red-500/10 px-2 py-0.5 rounded-full">-2%</span>
+                        </div>
+                        <p class="text-gray-500 dark:text-gray-400 font-medium">Phê duyệt</p>
+                        <h4 class="text-3xl font-bold mt-1" id="approvedAppointments">0</h4>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-sidebar-dark/50 p-6 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-2 bg-red-500/10 rounded-lg text-red-500">
+                                <span class="material-symbols-outlined">cancel</span>
+                            </div>
+                            <span
+                                class="text-red-500 text-sm font-bold bg-red-500/10 px-2 py-0.5 rounded-full">-1%</span>
+                        </div>
+                        <p class="text-gray-500 dark:text-gray-400 font-medium">Từ chối</p>
+                        <h4 class="text-3xl font-bold mt-1" id="rejectedAppointments">0</h4>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Left: Upcoming Appointments -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="flex items-center justify-between px-2">
+                            <h3 class="text-xl font-bold">Lịch hẹn sắp tới</h3>
+                            <a class="text-primary text-sm font-bold hover:underline"
+                                th:href="@{/doctor/appointments}">Xem tất cả</a>
+                        </div>
+                        <div
+                            class="bg-white dark:bg-sidebar-dark/50 rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden shadow-sm">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr
+                                        class="bg-gray-50 dark:bg-white/5 border-b border-gray-100 dark:border-white/10">
+                                        <th class="px-6 py-4 text-sm font-bold text-gray-600 dark:text-gray-400">Bệnh
+                                            nhân</th>
+                                        <th class="px-6 py-4 text-sm font-bold text-gray-600 dark:text-gray-400">Vaccine
+                                        </th>
+                                        <th class="px-6 py-4 text-sm font-bold text-gray-600 dark:text-gray-400">Giờ hẹn
+                                        </th>
+                                        <th class="px-6 py-4 text-sm font-bold text-gray-600 dark:text-gray-400">Trạng
+                                            thái</th>
+                                        <th
+                                            class="px-6 py-4 text-sm font-bold text-gray-600 dark:text-gray-400 text-center">
+                                            Tác vụ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="appointmentsTableBody" class="divide-y divide-gray-100 dark:divide-white/10">
+                                    <!-- Data will be loaded dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Right: Statistics Chart Placeholder -->
+                    <div class="space-y-6">
+                        <div class="px-2">
+                            <h3 class="text-xl font-bold">Thống kê theo tuần</h3>
+                        </div>
+                        <div
+                            class="bg-white dark:bg-sidebar-dark/50 rounded-xl border border-gray-200 dark:border-white/10 p-6 shadow-sm">
+                            <div class="h-64 flex flex-col items-end gap-1">
+                                <!-- Mock Chart Visualization -->
+                                <div class="flex-1 w-full flex items-end justify-between gap-3 pt-6">
+                                    <div class="flex flex-col items-center gap-2 flex-1">
+                                        <div
+                                            class="w-full bg-primary/10 rounded-t-lg h-[40%] hover:bg-primary/30 transition-all cursor-pointer">
+                                        </div>
+                                        <span class="text-[10px] font-bold text-gray-400">T2</span>
+                                    </div>
+                                    <div class="flex flex-col items-center gap-2 flex-1">
+                                        <div
+                                            class="w-full bg-primary/10 rounded-t-lg h-[60%] hover:bg-primary/30 transition-all cursor-pointer">
+                                        </div>
+                                        <span class="text-[10px] font-bold text-gray-400">T3</span>
+                                    </div>
+                                    <div class="flex flex-col items-center gap-2 flex-1">
+                                        <div
+                                            class="w-full bg-primary/10 rounded-t-lg h-[85%] hover:bg-primary/30 transition-all cursor-pointer">
+                                        </div>
+                                        <span class="text-[10px] font-bold text-gray-400">T4</span>
+                                    </div>
+                                    <div class="flex flex-col items-center gap-2 flex-1">
+                                        <div
+                                            class="w-full bg-primary/40 rounded-t-lg h-[95%] border-t-4 border-primary shadow-lg shadow-primary/20">
+                                        </div>
+                                        <span class="text-[10px] font-bold text-primary">T5</span>
+                                    </div>
+                                    <div class="flex flex-col items-center gap-2 flex-1">
+                                        <div
+                                            class="w-full bg-primary/10 rounded-t-lg h-[55%] hover:bg-primary/30 transition-all cursor-pointer">
+                                        </div>
+                                        <span class="text-[10px] font-bold text-gray-400">T6</span>
+                                    </div>
+                                    <div class="flex flex-col items-center gap-2 flex-1">
+                                        <div
+                                            class="w-full bg-primary/10 rounded-t-lg h-[30%] hover:bg-primary/30 transition-all cursor-pointer">
+                                        </div>
+                                        <span class="text-[10px] font-bold text-gray-400">T7</span>
+                                    </div>
+                                    <div class="flex flex-col items-center gap-2 flex-1">
+                                        <div
+                                            class="w-full bg-primary/10 rounded-t-lg h-[20%] hover:bg-primary/30 transition-all cursor-pointer">
+                                        </div>
+                                        <span class="text-[10px] font-bold text-gray-400">CN</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-6 pt-6 border-t border-gray-100 dark:border-white/10 space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-3 h-3 bg-primary rounded-full"></span>
+                                        <span class="text-sm font-medium text-gray-500">Lịch tiêm cao nhất</span>
+                                    </div>
+                                    <span class="text-sm font-bold">Thứ 5</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-3 h-3 bg-primary/20 rounded-full"></span>
+                                        <span class="text-sm font-medium text-gray-500">Trung bình/ngày</span>
+                                    </div>
+                                    <span class="text-sm font-bold">18 ca</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Mini Calendar or Extra Widget -->
+                        <div class="bg-primary/10 rounded-xl p-6 border border-primary/20">
+                            <h4 class="font-bold text-sidebar-dark dark:text-primary mb-2 flex items-center gap-2">
+                                <span class="material-symbols-outlined">lightbulb</span>
                                 Mẹo làm việc
                             </h4>
-<p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Đừng quên nhắc nhở bệnh nhân về các mũi tiêm nhắc lại sau 6 tháng để đảm bảo hiệu quả vaccine tốt nhất.</p>
-</div>
-</div>
-</div>
-</div>
-    </main>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Đừng quên nhắc nhở bệnh
+                                nhân về các mũi tiêm nhắc lại sau 6 tháng để đảm bảo hiệu quả vaccine tốt nhất.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
-    
+
     <script th:inline="javascript">
-        /*<![CDATA[*/
-        (function() {
-            async function loadDashboardStats() {
-                try {
-                    // Load dashboard statistics
-                    const statsResponse = await fetch('/api/doctor/dashboard/stats');
-                    if (statsResponse.ok) {
-                        const stats = await statsResponse.json();
-                        document.getElementById('totalAppointments').textContent = stats.totalAppointments || 0;
-                        document.getElementById('completedAppointments').textContent = stats.completedAppointments || 0;
-                        document.getElementById('approvedAppointments').textContent = stats.approvedAppointments || 0;
-                        document.getElementById('rejectedAppointments').textContent = stats.rejectedAppointments || 0;
-                        
-                        const welcomeText = document.querySelector('.text-green-100');
-                        if (welcomeText && stats.totalAppointments > 0) {
-                            welcomeText.textContent = `Bạn có ${stats.totalAppointments} lịch hẹn mới trong ngày hôm nay. Hãy kiểm tra danh sách bên dưới để bắt đầu ca làm việc.`;
+            /*<![CDATA[*/
+            (function () {
+                async function loadDashboardStats() {
+                    try {
+                        // Load dashboard statistics
+                        const statsResponse = await fetch('/api/doctor/dashboard/stats');
+                        if (statsResponse.ok) {
+                            const stats = await statsResponse.json();
+                            document.getElementById('totalAppointments').textContent = stats.totalAppointments || 0;
+                            document.getElementById('completedAppointments').textContent = stats.completedAppointments || 0;
+                            document.getElementById('approvedAppointments').textContent = stats.approvedAppointments || 0;
+                            document.getElementById('rejectedAppointments').textContent = stats.rejectedAppointments || 0;
+
+                            const welcomeText = document.querySelector('.text-green-100');
+                            if (welcomeText && stats.totalAppointments > 0) {
+                                welcomeText.textContent = `Bạn có ${stats.totalAppointments} lịch hẹn mới trong ngày hôm nay. Hãy kiểm tra danh sách bên dưới để bắt đầu ca làm việc.`;
+                            }
                         }
+
+                        // Load pending appointments for table
+                        const appointmentsResponse = await fetch('/api/doctor/appointments/pending');
+                        if (appointmentsResponse.ok) {
+                            const appointments = await appointmentsResponse.json();
+                            loadAppointmentsTable(appointments.slice(0, 4));
+                        }
+                    } catch (error) {
+                        console.error('Error loading dashboard stats:', error);
                     }
-                    
-                    // Load pending appointments for table
-                    const appointmentsResponse = await fetch('/api/doctor/appointments/pending');
-                    if (appointmentsResponse.ok) {
-                        const appointments = await appointmentsResponse.json();
-                        loadAppointmentsTable(appointments.slice(0, 4));
-                    }
-                } catch (error) {
-                    console.error('Error loading dashboard stats:', error);
                 }
-            }
-            
-            function loadAppointmentsTable(appointments) {
-                const tbody = document.getElementById('appointmentsTableBody');
-                if (!tbody) return;
-                
-                tbody.innerHTML = '';
-                
-                if (appointments.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Không có lịch hẹn nào</td></tr>';
-                    return;
-                }
-                
-                appointments.forEach(apt => {
-                    const patientName = apt.patientInfo?.fullName || 'N/A';
-                    const initials = patientName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                    const vaccineName = apt.vaccineInfo?.name || 'N/A';
-                    const time = apt.appointmentTime ? new Date('2000-01-01T' + apt.appointmentTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'}) : 'N/A';
-                    
-                    let statusBadge = '';
-                    if (apt.status === 'APPROVED') {
-                        statusBadge = '<span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold border border-green-200">Đã phê duyệt</span>';
-                    } else if (apt.status === 'PENDING' || apt.status === 'CHECKED_IN') {
-                        statusBadge = '<span class="px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold border border-amber-200">Chờ khám</span>';
-                    } else if (apt.status === 'REJECTED') {
-                        statusBadge = '<span class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-bold border border-gray-200">Bị hủy</span>';
+
+                function loadAppointmentsTable(appointments) {
+                    const tbody = document.getElementById('appointmentsTableBody');
+                    if (!tbody) return;
+
+                    tbody.innerHTML = '';
+
+                    if (appointments.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Không có lịch hẹn nào</td></tr>';
+                        return;
                     }
-                    
-                    const row = document.createElement('tr');
-                    row.className = 'hover:bg-gray-50 dark:hover:bg-white/5 transition-colors';
-                    row.innerHTML = `
+
+                    appointments.forEach(apt => {
+                        const patientName = apt.patientInfo?.fullName || 'N/A';
+                        const initials = patientName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                        const vaccineName = apt.vaccineInfo?.name || 'N/A';
+                        const time = apt.appointmentTime ? new Date('2000-01-01T' + apt.appointmentTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+
+                        let statusBadge = '';
+                        if (apt.status === 'APPROVED') {
+                            statusBadge = '<span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold border border-green-200">Đã phê duyệt</span>';
+                        } else if (apt.status === 'PENDING' || apt.status === 'CHECKED_IN') {
+                            statusBadge = '<span class="px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold border border-amber-200">Chờ khám</span>';
+                        } else if (apt.status === 'REJECTED') {
+                            statusBadge = '<span class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-bold border border-gray-200">Bị hủy</span>';
+                        }
+
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-gray-50 dark:hover:bg-white/5 transition-colors';
+                        row.innerHTML = `
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
                                 <div class="size-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">${initials}</div>
@@ -302,14 +358,16 @@
                             </a>
                         </td>
                     `;
-                    tbody.appendChild(row);
+                        tbody.appendChild(row);
+                    });
+                }
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    loadDashboardStats();
                 });
-            }
-            
-            document.addEventListener('DOMContentLoaded', function() {
-                loadDashboardStats();
-            });
-        })();
+            })();
         /*]]>*/
     </script>
-    </body></html>
+</body>
+
+</html>

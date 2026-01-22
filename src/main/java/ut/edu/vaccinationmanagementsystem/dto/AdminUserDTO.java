@@ -21,6 +21,14 @@ public class AdminUserDTO {
     private Role role;
     private UserStatus status;
     
+    // Staff-related fields
+    private Long centerId;
+    private String employeeId;
+    private String specialization;
+    private String licenseNumber;
+    private LocalDate hireDate;
+    private String department;
+    
     // Getters and Setters
     public String getEmail() {
         return email;
@@ -100,6 +108,54 @@ public class AdminUserDTO {
     
     public void setStatus(UserStatus status) {
         this.status = status;
+    }
+    
+    public Long getCenterId() {
+        return centerId;
+    }
+    
+    public void setCenterId(Long centerId) {
+        this.centerId = centerId;
+    }
+    
+    public String getEmployeeId() {
+        return employeeId;
+    }
+    
+    public void setEmployeeId(String employeeId) {
+        this.employeeId = employeeId;
+    }
+    
+    public String getSpecialization() {
+        return specialization;
+    }
+    
+    public void setSpecialization(String specialization) {
+        this.specialization = specialization;
+    }
+    
+    public String getLicenseNumber() {
+        return licenseNumber;
+    }
+    
+    public void setLicenseNumber(String licenseNumber) {
+        this.licenseNumber = licenseNumber;
+    }
+    
+    public LocalDate getHireDate() {
+        return hireDate;
+    }
+    
+    public void setHireDate(LocalDate hireDate) {
+        this.hireDate = hireDate;
+    }
+    
+    public String getDepartment() {
+        return department;
+    }
+    
+    public void setDepartment(String department) {
+        this.department = department;
     }
 }
 

@@ -186,20 +186,25 @@
                                 <span class="material-symbols-outlined text-primary text-3xl">syringe</span>
                                 Phiếu thực hiện tiêm chủng
                             </h3>
-                            <form class="space-y-8">
+                            <form id="injectionForm" class="space-y-8">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div class="space-y-2">
                                         <label class="text-sm font-bold text-[#111813] dark:text-white">Số lô Vaccine
                                             (Batch Number) <span class="text-red-500">*</span></label>
                                         <div class="relative">
                                             <span
-                                                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#61896f]">barcode_scanner</span>
-                                            <input id="vaccineLotInput" type="text"
-                                                class="w-full pl-12 pr-4 py-3 bg-background-light dark:bg-background-dark border-border-light dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-semibold"
-                                                placeholder="Nhập số lô vaccine" required />
+                                                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#61896f] pointer-events-none">barcode_scanner</span>
+                                            <select id="vaccineLotInput"
+                                                onchange="document.getElementById('vaccineLotHint').textContent = this.value ? 'Đã chọn lô: ' + this.value : 'Chọn lô vaccine có sẵn'"
+                                                class="w-full pl-12 pr-4 py-3 bg-background-light dark:bg-background-dark border-border-light dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-semibold appearance-none cursor-pointer"
+                                                required>
+                                                <option value="">-- Chọn lô vaccine --</option>
+                                            </select>
+                                            <span
+                                                class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#61896f] pointer-events-none">expand_more</span>
                                         </div>
-                                        <p id="vaccineLotHint" class="text-[10px] text-[#61896f]">Nhập số lô vaccine để
-                                            xác nhận</p>
+                                        <p id="vaccineLotHint" class="text-[10px] text-[#61896f]">Chọn lô vaccine có sẵn
+                                        </p>
                                     </div>
                                     <div class="space-y-2">
                                         <label class="text-sm font-bold text-[#111813] dark:text-white">Vị trí tiêm
@@ -224,6 +229,7 @@
                                         </div>
                                     </div>
                                 </div>
+
                                 <div class="space-y-4 pt-6 border-t border-border-light dark:border-border-dark">
                                     <label class="text-sm font-bold text-[#111813] dark:text-white">Ghi chú phản ứng sau
                                         tiêm (30 phút theo dõi)</label>
@@ -231,55 +237,57 @@
                                         <label
                                             class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark rounded-xl border border-border-light dark:border-border-dark cursor-pointer hover:border-primary/50 transition-colors">
                                             <input class="rounded text-primary focus:ring-primary size-5"
-                                                type="checkbox" />
+                                                type="checkbox" name="reaction" value="NORMAL" checked />
                                             <span class="text-sm font-medium">Bình thường</span>
                                         </label>
                                         <label
                                             class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark rounded-xl border border-border-light dark:border-border-dark cursor-pointer hover:border-primary/50 transition-colors">
                                             <input class="rounded text-primary focus:ring-primary size-5"
-                                                type="checkbox" />
+                                                type="checkbox" name="reaction" value="SWELLING" />
                                             <span class="text-sm font-medium">Sưng đỏ</span>
                                         </label>
                                         <label
                                             class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark rounded-xl border border-border-light dark:border-border-dark cursor-pointer hover:border-primary/50 transition-colors">
                                             <input class="rounded text-primary focus:ring-primary size-5"
-                                                type="checkbox" />
+                                                type="checkbox" name="reaction" value="FEVER" />
                                             <span class="text-sm font-medium">Sốt nhẹ</span>
                                         </label>
                                         <label
                                             class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark rounded-xl border border-border-light dark:border-border-dark cursor-pointer hover:border-primary/50 transition-colors">
                                             <input class="rounded text-primary focus:ring-primary size-5"
-                                                type="checkbox" />
+                                                type="checkbox" name="reaction" value="DIZZY" />
                                             <span class="text-sm font-medium">Chóng mặt</span>
                                         </label>
                                     </div>
                                     <div class="space-y-2">
                                         <label class="text-xs font-bold text-[#61896f]">Ghi chú chi tiết khác</label>
-                                        <textarea
+                                        <textarea id="observationNotes"
                                             class="w-full px-4 py-3 bg-background-light dark:bg-background-dark border-border-light dark:border-border-dark rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm"
                                             placeholder="Nhập các quan sát khác về tình trạng bệnh nhân sau tiêm..."
                                             rows="4"></textarea>
                                     </div>
                                 </div>
+
                                 <div
                                     class="pt-10 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-border-light dark:border-border-dark mt-10">
                                     <div
-                                        class="flex items-center gap-3 text-orange-500 bg-orange-50 dark:bg-orange-900/20 px-4 py-2 rounded-lg border border-orange-100 dark:border-orange-800">
-                                        <span class="material-symbols-outlined text-lg">warning</span>
-                                        <p class="text-xs font-bold">Lưu ý: Chỉ xác nhận khi đã thực hiện xong kỹ thuật
-                                            tiêm</p>
+                                        class="flex items-center gap-3 text-orange-600 bg-orange-50 dark:bg-orange-900/20 px-4 py-3 rounded-xl border border-orange-100 dark:border-orange-800/50">
+                                        <span class="material-symbols-outlined text-lg">info</span>
+                                        <p class="text-xs font-bold leading-tight">Lưu ý: Chỉ xác nhận khi đã thực hiện
+                                            xong kỹ thuật tiêm vaccine</p>
                                     </div>
                                     <div class="flex items-center gap-4 w-full md:w-auto">
                                         <button onclick="window.location.href='/nurse/dashboard'"
-                                            class="px-6 py-3 bg-white dark:bg-background-dark border border-border-light dark:border-border-dark text-[#61896f] font-bold rounded-xl hover:bg-gray-50 transition-all"
+                                            class="px-8 py-3 bg-white dark:bg-background-dark border border-border-light dark:border-border-dark text-[#61896f] font-bold rounded-xl hover:bg-gray-50 transition-all shadow-sm"
                                             type="button">
                                             Hủy bỏ
                                         </button>
                                         <button id="confirmInjectionBtn"
-                                            class="px-8 py-3 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
+                                            class="px-10 py-3 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2 group"
                                             type="submit">
-                                            <span>Xác nhận hoàn thành tiêm</span>
-                                            <span class="material-symbols-outlined fill-icon text-lg">task_alt</span>
+                                            <span>Xác nhận hoàn thành</span>
+                                            <span
+                                                class="material-symbols-outlined fill-icon text-xl group-hover:translate-x-1 transition-transform">task_alt</span>
                                         </button>
                                     </div>
                                 </div>
@@ -335,6 +343,13 @@
                         }
 
                         appointmentData = await response.json();
+                        console.log('=== DEBUG: Appointment Data ===');
+                        console.log('Full response:', appointmentData);
+                        console.log('Available vaccine lots:', appointmentData.availableVaccineLots);
+                        console.log('Vaccine ID:', appointmentData.vaccineInfo?.id);
+                        console.log('Vaccine Name:', appointmentData.vaccineInfo?.name);
+                        console.log('Center ID:', appointmentData.centerInfo?.id);
+                        console.log('Center Name:', appointmentData.centerInfo?.name);
                         renderAppointmentData();
                     } catch (error) {
                         console.error('Error loading appointment data:', error);
@@ -394,137 +409,183 @@
                         document.getElementById('screeningNotes').textContent = 'Chưa có kết quả sàng lọc';
                     }
 
-                    // Vaccine lots - Store for validation
+                    // Vaccine lots - Populate dropdown with available lots
                     window.availableVaccineLots = appointmentData.availableVaccineLots || [];
-                    const lotInput = document.getElementById('vaccineLotInput');
-                    if (lotInput && window.availableVaccineLots.length > 0) {
-                        const lotNumbers = window.availableVaccineLots.map(lot => lot.lotNumber).join(', ');
-                        document.getElementById('vaccineLotHint').textContent = `Gợi ý: ${lotNumbers}`;
-                    } else if (lotInput) {
-                        document.getElementById('vaccineLotHint').textContent = 'Nhập số lô vaccine để xác nhận';
+                    const lotSelect = document.getElementById('vaccineLotInput');
+                    const lotHint = document.getElementById('vaccineLotHint');
+
+                    if (lotSelect) {
+                        // Clear existing options except first one
+                        lotSelect.innerHTML = '<option value="">-- Chọn lô vaccine --</option>';
+
+                        if (window.availableVaccineLots.length > 0) {
+                            lotSelect.disabled = false;
+
+                            // Add options for each available lot
+                            window.availableVaccineLots.forEach(lot => {
+                                const option = document.createElement('option');
+                                option.value = lot.lotNumber;
+                                const expiredText = lot.isExpired ? ' (HẾT HẠN)' : '';
+                                option.textContent = `${lot.lotNumber} (Còn: ${lot.remainingQuantity} liều, HSD: ${lot.expiryDate})${expiredText}`;
+                                if (lot.isExpired) option.classList.add('text-red-500');
+                                lotSelect.appendChild(option);
+                            });
+
+                            // Auto-select first lot if only one available
+                            if (window.availableVaccineLots.length === 1) {
+                                lotSelect.value = window.availableVaccineLots[0].lotNumber;
+                                lotSelect.dispatchEvent(new Event('change'));
+                            }
+
+                            lotHint.textContent = `Có ${window.availableVaccineLots.length} lô vaccine khả dụng`;
+                            lotHint.className = "text-[10px] text-primary-dark dark:text-primary font-bold";
+                        } else {
+                            lotHint.textContent = 'Trống: Không tìm thấy lô vaccine nào cho loại này';
+                            lotHint.className = "text-[10px] text-red-500 font-bold";
+                            lotSelect.disabled = true;
+                        }
                     }
                 }
 
                 // Handle form submit
-                document.querySelector('form').addEventListener('submit', async function (e) {
-                    e.preventDefault();
+                const injectionForm = document.getElementById('injectionForm');
+                if (injectionForm) {
+                    injectionForm.addEventListener('submit', async function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
 
-                    const vaccineLotNumber = document.getElementById('vaccineLotInput').value.trim();
-                    const injectionSite = document.querySelector('input[name="injectionSite"]:checked')?.value;
-                    const reactionNotes = document.querySelector('textarea').value;
+                        const vaccineLotNumber = document.getElementById('vaccineLotInput').value.trim();
+                        // Get injection site and other notes
+                        const injectionSite = document.querySelector('input[name="injectionSite"]:checked').value;
+                        const observationNotes = document.getElementById('observationNotes').value;
 
-                    if (!vaccineLotNumber) {
-                        alert('Vui lòng nhập số lô vaccine');
-                        return;
-                    }
+                        // Collect selected reactions (for future use or logging)
+                        const selectedReactions = Array.from(document.querySelectorAll('input[name="reaction"]:checked'))
+                            .map(cb => cb.parentNode.querySelector('span').innerText);
 
-                    if (!injectionSite) {
-                        alert('Vui lòng chọn vị trí tiêm');
-                        return;
-                    }
-
-                    const confirmBtn = document.getElementById('confirmInjectionBtn');
-                    confirmBtn.disabled = true;
-                    confirmBtn.innerHTML = '<span class="material-symbols-outlined animate-spin text-lg">sync</span><span>Đang xử lý...</span>';
-
-                    try {
-                        // Get vaccine lot by lot number
-                        const lotResponse = await fetch(`/api/vaccine-lots/lot-number/${encodeURIComponent(vaccineLotNumber)}`, {
-                            credentials: 'include'
-                        });
-
-                        if (!lotResponse.ok) {
-                            const error = await lotResponse.json();
-                            throw new Error(error.error || 'Không tìm thấy số lô vaccine này');
+                        if (!vaccineLotNumber) {
+                            alert('Vui lòng nhập số lô vaccine');
+                            return;
                         }
 
-                        const vaccineLot = await lotResponse.json();
-
-                        // Validate vaccine lot
-                        if (vaccineLot.remainingQuantity == null || vaccineLot.remainingQuantity <= 0) {
-                            throw new Error('Lô vaccine này đã hết hàng');
+                        if (!injectionSite) {
+                            alert('Vui lòng chọn vị trí tiêm');
+                            return;
                         }
 
-                        if (vaccineLot.status !== 'AVAILABLE') {
-                            throw new Error('Lô vaccine này không khả dụng');
-                        }
+                        const confirmBtn = document.getElementById('confirmInjectionBtn');
+                        confirmBtn.disabled = true;
+                        confirmBtn.innerHTML = '<span class="material-symbols-outlined animate-spin text-lg">sync</span><span>Đang xử lý...</span>';
 
-                        // Get current user (nurse) ID
-                        const userResponse = await fetch('/api/users/profile', {
-                            credentials: 'include'
-                        });
-                        if (!userResponse.ok) {
-                            throw new Error('Failed to get current user');
-                        }
-                        const userData = await userResponse.json();
-                        const nurseId = userData.id;
-
-                        // Create vaccination record
-                        const requestBody = {
-                            appointmentId: appointmentId,
-                            vaccineLotId: vaccineLot.id,
-                            nurseId: nurseId,
-                            injectionSite: injectionSite,
-                            doseAmount: null, // Optional
-                            injectionDate: new Date().toISOString().split('T')[0],
-                            injectionTime: new Date().toTimeString().split(' ')[0].substring(0, 5)
-                        };
-
-                        const response = await fetch('/api/vaccination-records', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            credentials: 'include',
-                            body: JSON.stringify(requestBody)
-                        });
-
-                        console.log('Response status:', response.status);
-                        console.log('Response ok:', response.ok);
-
-                        // Check if response is successful (200-299)
-                        if (response.status < 200 || response.status >= 300) {
-                            let errorMessage = 'Failed to create vaccination record';
-                            try {
-                                const error = await response.json();
-                                errorMessage = error.error || errorMessage;
-                            } catch (e) {
-                                errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-                            }
-                            throw new Error(errorMessage);
-                        }
-
-                        let result;
                         try {
-                            result = await response.json();
-                            console.log('Vaccination record created:', result);
-                        } catch (e) {
-                            console.error('Error parsing response JSON:', e);
-                            throw new Error('Invalid response from server');
+                            // Get vaccine lot by lot number
+                            const lotResponse = await fetch(`/api/vaccine-lots/lot-number/${encodeURIComponent(vaccineLotNumber)}`, {
+                                credentials: 'include'
+                            });
+
+                            if (!lotResponse.ok) {
+                                const error = await lotResponse.json();
+                                throw new Error(error.error || 'Không tìm thấy số lô vaccine này');
+                            }
+
+                            const vaccineLot = await lotResponse.json();
+
+                            // Validate vaccine lot
+                            if (vaccineLot.remainingQuantity == null || vaccineLot.remainingQuantity <= 0) {
+                                throw new Error('Lô vaccine này đã hết hàng');
+                            }
+
+                            if (vaccineLot.status !== 'AVAILABLE') {
+                                throw new Error('Lô vaccine này không khả dụng');
+                            }
+
+                            // Get current user (nurse) ID
+                            const userResponse = await fetch('/api/users/profile', {
+                                credentials: 'include'
+                            });
+                            if (!userResponse.ok) {
+                                throw new Error('Failed to get current user');
+                            }
+                            const userData = await userResponse.json();
+                            const nurseId = userData.id;
+
+                            // Create vaccination record
+                            const requestBody = {
+                                appointmentId: appointmentId,
+                                vaccineLotId: vaccineLot.id,
+                                nurseId: nurseId,
+                                injectionSite: injectionSite,
+                                doseAmount: 0.5,
+                                notes: observationNotes + (selectedReactions.length > 0 ? " | Phản ứng: " + selectedReactions.join(", ") : ""),
+                                injectionDate: new Date().toISOString().split('T')[0],
+                                injectionTime: new Date().toTimeString().split(' ')[0].substring(0, 5)
+                            };
+
+                            const response = await fetch('/api/vaccination-records', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                credentials: 'include',
+                                body: JSON.stringify(requestBody)
+                            });
+
+                            console.log('Response status:', response.status);
+                            console.log('Response ok:', response.ok);
+
+                            // Check if response is successful (200-299)
+                            if (response.status < 200 || response.status >= 300) {
+                                let errorMessage = 'Failed to create vaccination record';
+                                try {
+                                    const responseText = await response.text();
+                                    console.error('Error response text:', responseText);
+                                    try {
+                                        const error = JSON.parse(responseText);
+                                        errorMessage = error.error || errorMessage;
+                                    } catch (parseError) {
+                                        errorMessage = `HTTP ${response.status}: ${responseText.substring(0, 200)}`;
+                                    }
+                                } catch (e) {
+                                    errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                                }
+                                throw new Error(errorMessage);
+                            }
+
+                            let result;
+                            try {
+                                const responseText = await response.text();
+                                console.log('Response text:', responseText);
+                                result = JSON.parse(responseText);
+                                console.log('Vaccination record created:', result);
+                            } catch (e) {
+                                console.error('Error parsing response JSON:', e);
+                                console.error('Response might not be valid JSON');
+                                throw new Error('Lỗi xử lý phản hồi từ server. Vui lòng kiểm tra console để biết chi tiết.');
+                            }
+
+                            // Hiển thị thông báo thành công với thông tin chi tiết
+                            const successMessage = `✅ Ghi nhận tiêm vaccine thành công!\n\n` +
+                                `📋 Mã chứng nhận: ${result.certificateNumber || 'N/A'}\n` +
+                                `💉 Vaccine: ${result.vaccineName || 'N/A'}\n` +
+                                `🔢 Mũi tiêm: ${result.doseNumber || 1}\n` +
+                                `📅 Ngày tiêm: ${result.injectionDate || 'N/A'}\n\n` +
+                                `Đang chuyển đến trang lịch sử tiêm...`;
+
+                            alert(successMessage);
+
+                            // Thêm delay nhỏ để đảm bảo database transaction đã commit
+                            // và thêm cache-busting parameter để force refresh
+                            setTimeout(() => {
+                                window.location.href = '/nurse/lich-su-tiem-y-ta?refresh=' + Date.now();
+                            }, 500);
+                        } catch (error) {
+                            console.error('Error creating vaccination record:', error);
+                            alert('Lỗi: ' + error.message);
+                            confirmBtn.disabled = false;
+                            confirmBtn.innerHTML = '<span>Xác nhận hoàn thành tiêm</span><span class="material-symbols-outlined fill-icon text-lg">task_alt</span>';
                         }
-
-                        // Hiển thị thông báo thành công với thông tin chi tiết
-                        const successMessage = `✅ Ghi nhận tiêm vaccine thành công!\n\n` +
-                            `📋 Mã chứng nhận: ${result.certificateNumber || 'N/A'}\n` +
-                            `💉 Vaccine: ${result.vaccineName || 'N/A'}\n` +
-                            `🔢 Mũi tiêm: ${result.doseNumber || 1}\n` +
-                            `📅 Ngày tiêm: ${result.injectionDate || 'N/A'}\n\n` +
-                            `Đang chuyển đến trang lịch sử tiêm...`;
-
-                        alert(successMessage);
-
-                        // Thêm delay nhỏ để đảm bảo database transaction đã commit
-                        // và thêm cache-busting parameter để force refresh
-                        setTimeout(() => {
-                            window.location.href = '/nurse/lich-su-tiem-y-ta?refresh=' + Date.now();
-                        }, 500);
-                    } catch (error) {
-                        console.error('Error creating vaccination record:', error);
-                        alert('Lỗi: ' + error.message);
-                        confirmBtn.disabled = false;
-                        confirmBtn.innerHTML = '<span>Xác nhận hoàn thành tiêm</span><span class="material-symbols-outlined fill-icon text-lg">task_alt</span>';
-                    }
-                });
+                    });
+                }
 
                 // Load data on page load
                 document.addEventListener('DOMContentLoaded', function () {

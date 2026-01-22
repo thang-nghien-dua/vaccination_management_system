@@ -72,6 +72,9 @@ public class VaccinationRecordController {
     @PostMapping
     public ResponseEntity<?> createVaccinationRecord(@RequestBody VaccinationRecordDTO dto) {
         try {
+            System.out.println("=== Creating Vaccination Record ===");
+            System.out.println("DTO: " + dto);
+            
             User currentUser = getCurrentUser();
             
             // Validate required fields
@@ -91,6 +94,8 @@ public class VaccinationRecordController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
             }
             
+            System.out.println("Creating vaccination record for appointment: " + dto.getAppointmentId());
+            
             // Tạo VaccinationRecord
             VaccinationRecord record = vaccinationRecordService.createVaccinationRecord(
                     dto.getAppointmentId(),
@@ -100,27 +105,46 @@ public class VaccinationRecordController {
                     dto.getInjectionTime() != null ? dto.getInjectionTime() : LocalTime.now(),
                     dto.getInjectionSite(),
                     dto.getDoseAmount(),
+                    dto.getNotes(),
                     null // certificateNumber sẽ được tự động generate
             );
             
+            System.out.println("Vaccination record created successfully: " + record.getId());
+            
+            // Safely extract data to avoid lazy loading issues
             Map<String, Object> result = new HashMap<>();
             result.put("id", record.getId());
-            result.put("appointmentId", record.getAppointment().getId());
-            result.put("vaccineName", record.getVaccine().getName());
-            result.put("injectionDate", record.getInjectionDate());
-            result.put("injectionTime", record.getInjectionTime());
+            
+            // Safe navigation for appointment
+            if (record.getAppointment() != null) {
+                result.put("appointmentId", record.getAppointment().getId());
+            }
+            
+            // Safe navigation for vaccine
+            if (record.getVaccine() != null) {
+                result.put("vaccineName", record.getVaccine().getName());
+            }
+            
+            result.put("injectionDate", record.getInjectionDate() != null ? record.getInjectionDate().toString() : null);
+            result.put("injectionTime", record.getInjectionTime() != null ? record.getInjectionTime().toString() : null);
             result.put("doseNumber", record.getDoseNumber());
             result.put("certificateNumber", record.getCertificateNumber());
             result.put("batchNumber", record.getBatchNumber());
-            result.put("nextDoseDate", record.getNextDoseDate());
+            result.put("nextDoseDate", record.getNextDoseDate() != null ? record.getNextDoseDate().toString() : null);
             result.put("message", "Vaccination record created successfully");
+            
+            System.out.println("Returning response: " + result);
             
             return ResponseEntity.status(HttpStatus.CREATED).body(result);
         } catch (RuntimeException e) {
+            System.err.println("RuntimeException in createVaccinationRecord: " + e.getMessage());
+            e.printStackTrace();
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         } catch (Exception e) {
+            System.err.println("Exception in createVaccinationRecord: " + e.getMessage());
+            e.printStackTrace();
             Map<String, String> error = new HashMap<>();
             error.put("error", "Internal server error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
@@ -165,14 +189,41 @@ public class VaccinationRecordController {
             result.put("doseAmount", record.getDoseAmount());
             result.put("certificateNumber", record.getCertificateNumber());
             result.put("nextDoseDate", record.getNextDoseDate());
+            result.put("notes", record.getNotes()); // Ghi chú sau tiêm của y tá
             result.put("createdAt", record.getCreatedAt());
+            
+            // Thông tin khám sàng lọc từ appointment
+            if (record.getAppointment() != null && record.getAppointment().getScreening() != null) {
+                ut.edu.vaccinationmanagementsystem.entity.Screening screening = record.getAppointment().getScreening();
+                Map<String, Object> screeningInfo = new HashMap<>();
+                screeningInfo.put("id", screening.getId());
+                screeningInfo.put("bodyTemperature", screening.getBodyTemperature());
+                screeningInfo.put("bloodPressure", screening.getBloodPressure());
+                screeningInfo.put("heartRate", screening.getHeartRate());
+                screeningInfo.put("screeningResult", screening.getScreeningResult().name());
+                screeningInfo.put("notes", screening.getNotes());
+                screeningInfo.put("screenedAt", screening.getScreenedAt());
+                if (screening.getDoctor() != null) {
+                    screeningInfo.put("doctorName", screening.getDoctor().getFullName());
+                }
+                result.put("screening", screeningInfo);
+            }
             
             // Thông tin người được tiêm
             if (record.getAppointment().getFamilyMember() != null) {
-                result.put("patientName", record.getAppointment().getFamilyMember().getFullName());
+                ut.edu.vaccinationmanagementsystem.entity.FamilyMember fm = record.getAppointment().getFamilyMember();
+                result.put("patientName", fm.getFullName());
+                result.put("patientPhone", fm.getPhoneNumber() != null ? fm.getPhoneNumber() : record.getUser().getPhoneNumber());
+                result.put("patientDob", fm.getDateOfBirth());
+                result.put("patientGender", fm.getGender());
+                result.put("patientAddress", record.getUser().getAddress()); // Sử dụng địa chỉ của tài khoản quản lý
                 result.put("patientType", "FAMILY_MEMBER");
             } else {
                 result.put("patientName", record.getUser().getFullName());
+                result.put("patientPhone", record.getUser().getPhoneNumber());
+                result.put("patientDob", record.getUser().getDayOfBirth());
+                result.put("patientGender", record.getUser().getGender());
+                result.put("patientAddress", record.getUser().getAddress());
                 result.put("patientType", "USER");
             }
             

@@ -14,6 +14,7 @@ public class VaccinationRecordDTO {
     private LocalTime injectionTime;
     private String injectionSite;
     private Double doseAmount;
+    private String notes;
     
     // Getters and Setters
     public Long getAppointmentId() {
@@ -70,6 +71,14 @@ public class VaccinationRecordDTO {
     
     public void setDoseAmount(Double doseAmount) {
         this.doseAmount = doseAmount;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 }
 

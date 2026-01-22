@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi">
+
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Chi tiết thông báo - Hệ thống Tiêm chủng</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -20,7 +24,7 @@
                     fontFamily: {
                         "display": ["Manrope"]
                     },
-                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
                 },
             },
         }
@@ -29,147 +33,173 @@
         body {
             font-family: 'Manrope', sans-serif;
         }
+
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
     </style>
 </head>
+
 <body class="bg-background-light dark:bg-background-dark min-h-screen text-[#111813] dark:text-white">
-<div class="flex h-screen overflow-hidden">
-    <!-- Sidebar Navigation - Load based on user role -->
-    <div th:switch="${currentUser != null and currentUser.role != null ? currentUser.role.name() : 'CUSTOMER'}">
-        <div th:case="'ADMIN'" th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
-        <div th:case="'DOCTOR'" th:replace="~{fragments/doctor-sidebar :: sidebar}"></div>
-        <div th:case="'NURSE'" th:replace="~{fragments/nurse-sidebar :: sidebar}"></div>
-        <div th:case="'RECEPTIONIST'" th:replace="~{fragments/receptionist-sidebar :: sidebar}"></div>
-        <div th:case="*" th:replace="~{fragments/customer-sidebar :: sidebar}"></div>
-    </div>
-
-    <!-- Main Content Area -->
-    <main class="flex-1 flex flex-col overflow-hidden relative">
-        <!-- Header -->
-        <header class="bg-white dark:bg-[#1a2e20] border-b border-[#dbe6df] dark:border-[#2a3f31] px-8 py-6 sticky top-0 z-10">
-            <div class="max-w-5xl mx-auto flex items-center gap-4">
-                <a href="/notifications" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                    <span class="material-symbols-outlined">arrow_back</span>
-                </a>
-                <h2 class="text-[#111813] dark:text-white text-2xl font-bold">Chi tiết thông báo</h2>
-            </div>
-        </header>
-
-        <!-- Main Scrollable Content -->
-        <div class="flex-1 overflow-y-auto px-8 py-6">
-            <div class="max-w-4xl mx-auto">
-                <!-- Actions -->
-                <div class="flex justify-end gap-3 mb-6">
-                    <button class="flex items-center gap-2 px-4 py-2 rounded-lg text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-[#1a2e20] border border-transparent hover:border-[#dbe6df] dark:hover:border-[#2a3f31] transition-all">
-                        <span class="material-symbols-outlined text-[20px]">mark_email_read</span>
-                        <span class="text-sm font-semibold">Đánh dấu chưa đọc</span>
-                    </button>
-                    <button class="flex items-center gap-2 px-4 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
-                        <span class="material-symbols-outlined text-[20px]">delete</span>
-                        <span class="text-sm font-semibold">Xóa</span>
-                    </button>
-                </div>
-
-                <!-- Notification Content Card -->
-                <div class="bg-white dark:bg-[#1a2e20] rounded-2xl shadow-sm border border-[#dbe6df] dark:border-[#2a3f31] overflow-hidden">
-                    <div class="p-8 md:p-10">
-                        <!-- Category Tag -->
-                        <div class="mb-5">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-primary/20 text-[#0a2e16] dark:text-primary uppercase tracking-wider">
-                                Nhắc hẹn tiêm chủng
-                            </span>
-                        </div>
-                        
-                        <!-- Headline -->
-                        <h1 class="text-[#111813] dark:text-white text-3xl font-extrabold leading-tight mb-6">
-                            Nhắc lịch tiêm chủng: Mũi 2 Vaccine HPV (Gardasil 9)
-                        </h1>
-                        
-                        <!-- Meta Info -->
-                        <div class="flex flex-wrap items-center gap-6 text-[#61896f] text-sm pb-8 border-b border-[#dbe6df] dark:border-[#2a3f31] mb-8">
-                            <div class="flex items-center gap-2">
-                                <span class="material-symbols-outlined text-[20px]">calendar_today</span>
-                                <span class="font-medium">24/05/2024</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="material-symbols-outlined text-[20px]">schedule</span>
-                                <span class="font-medium">10:30</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="material-symbols-outlined text-[20px]">person</span>
-                                <span class="font-medium">Gửi cho: Nguyễn Văn A</span>
-                            </div>
-                        </div>
-
-                        <!-- Message Body -->
-                        <article class="prose prose-zinc dark:prose-invert max-w-none text-[#111813] dark:text-gray-200">
-                            <p class="text-lg leading-relaxed mb-6">
-                                Chào bạn <strong>Nguyễn Văn A</strong>,
-                            </p>
-                            <p class="text-lg leading-relaxed mb-6">
-                                Hệ thống ghi nhận bạn có lịch tiêm chủng mũi thứ 2 cho vaccine HPV (Gardasil 9) vào ngày <strong>30/05/2024</strong>. Việc tiêm đúng lịch giúp đảm bảo hiệu quả bảo vệ tối ưu nhất cho cơ thể trước các loại virus gây bệnh.
-                            </p>
-                            
-                            <div class="bg-background-light dark:bg-black/20 rounded-xl p-6 mb-6 border-l-4 border-primary">
-                                <h4 class="font-bold text-[#111813] dark:text-white mb-3 flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-primary">info</span>
-                                    Lưu ý quan trọng:
-                                </h4>
-                                <ul class="list-disc ml-5 space-y-2 text-[#4b6a56] dark:text-gray-300">
-                                    <li>Vui lòng mang theo sổ tiêm chủng hoặc ứng dụng di động khi đến trung tâm.</li>
-                                    <li>Nên có mặt sớm 15 phút để làm thủ tục khám sàng lọc.</li>
-                                    <li>Đảm bảo tình trạng sức khỏe tốt, không sốt hoặc mắc các bệnh cấp tính.</li>
-                                </ul>
-                            </div>
-                            
-                            <p class="text-lg leading-relaxed mb-8">
-                                Nếu bạn chưa có lịch hẹn cụ thể hoặc muốn thay đổi khung giờ, vui lòng nhấn nút bên dưới để chọn khung giờ phù hợp với kế hoạch cá nhân của bạn.
-                            </p>
-                        </article>
-
-                        <!-- Action Section -->
-                        <div class="flex flex-col sm:flex-row gap-4 pt-8 border-t border-[#dbe6df] dark:border-[#2a3f31]">
-                            <button class="bg-primary hover:bg-[#0fd650] text-[#0a2e16] px-8 py-3.5 rounded-xl font-bold text-base shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all active:scale-95">
-                                <span class="material-symbols-outlined">event_available</span>
-                                Đặt lịch ngay
-                            </button>
-                            <button class="bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-[#111813] dark:text-white px-8 py-3.5 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all">
-                                <span class="material-symbols-outlined">description</span>
-                                Xem hồ sơ tiêm
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Other Related Notifications -->
-                <div class="mt-12 mb-10">
-                    <h3 class="text-[#111813] dark:text-white font-bold text-xl mb-6">Thông báo liên quan</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="p-4 bg-white dark:bg-[#1a2e20] rounded-xl border border-[#dbe6df] dark:border-[#2a3f31] flex items-start gap-4 hover:border-primary/50 cursor-pointer transition-colors group">
-                            <div class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 p-2.5 rounded-lg">
-                                <span class="material-symbols-outlined">medical_information</span>
-                            </div>
-                            <div>
-                                <p class="text-sm font-bold text-[#111813] dark:text-white group-hover:text-primary transition-colors">Hướng dẫn sau tiêm Vaccine HPV</p>
-                                <p class="text-xs text-[#61896f] mt-1">2 ngày trước • Thông tin sức khỏe</p>
-                            </div>
-                        </div>
-                        <div class="p-4 bg-white dark:bg-[#1a2e20] rounded-xl border border-[#dbe6df] dark:border-[#2a3f31] flex items-start gap-4 hover:border-primary/50 cursor-pointer transition-colors group">
-                            <div class="bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 p-2.5 rounded-lg">
-                                <span class="material-symbols-outlined">campaign</span>
-                            </div>
-                            <div>
-                                <p class="text-sm font-bold text-[#111813] dark:text-white group-hover:text-primary transition-colors">Thông báo bảo trì hệ thống</p>
-                                <p class="text-xs text-[#61896f] mt-1">3 ngày trước • Hệ thống</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar Navigation - Load based on user role -->
+        <div
+            th:switch="${forcedRole != null ? forcedRole : (currentUser != null and currentUser.role != null ? currentUser.role.name() : 'CUSTOMER')}">
+            <div th:case="'ADMIN'" th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+            <div th:case="'DOCTOR'" th:replace="~{fragments/doctor-sidebar :: sidebar}"></div>
+            <div th:case="'NURSE'" th:replace="~{fragments/nurse-sidebar :: sidebar}"></div>
+            <div th:case="'RECEPTIONIST'" th:replace="~{fragments/receptionist-sidebar :: sidebar}"></div>
+            <div th:case="*" th:replace="~{fragments/customer-sidebar :: sidebar}"></div>
         </div>
-    </main>
-</div>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col overflow-hidden relative">
+            <!-- Header -->
+            <header
+                class="bg-white dark:bg-[#1a2e20] border-b border-[#dbe6df] dark:border-[#2a3f31] px-8 py-6 sticky top-0 z-10">
+                <div class="max-w-5xl mx-auto flex items-center gap-4">
+                    <a th:href="${forcedRole != null ? '/notifications?role=' + forcedRole : '/notifications'}"
+                        class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                    </a>
+                    <h2 class="text-[#111813] dark:text-white text-2xl font-bold">Chi tiết thông báo</h2>
+                </div>
+            </header>
+
+            <!-- Main Scrollable Content -->
+            <div class="flex-1 overflow-y-auto px-8 py-6">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Actions -->
+                    <div class="flex justify-end gap-3 mb-6">
+                        <button
+                            class="flex items-center gap-2 px-4 py-2 rounded-lg text-zinc-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-[#1a2e20] border border-transparent hover:border-[#dbe6df] dark:hover:border-[#2a3f31] transition-all">
+                            <span class="material-symbols-outlined text-[20px]">mark_email_read</span>
+                            <span class="text-sm font-semibold">Đánh dấu chưa đọc</span>
+                        </button>
+                        <button
+                            class="flex items-center gap-2 px-4 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
+                            <span class="material-symbols-outlined text-[20px]">delete</span>
+                            <span class="text-sm font-semibold">Xóa</span>
+                        </button>
+                    </div>
+
+                    <!-- Notification Content Card -->
+                    <div
+                        class="bg-white dark:bg-[#1a2e20] rounded-2xl shadow-sm border border-[#dbe6df] dark:border-[#2a3f31] overflow-hidden">
+                        <div class="p-8 md:p-10">
+                            <!-- Category Tag -->
+                            <div class="mb-5">
+                                <span
+                                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-primary/20 text-[#0a2e16] dark:text-primary uppercase tracking-wider">
+                                    Nhắc hẹn tiêm chủng
+                                </span>
+                            </div>
+
+                            <!-- Headline -->
+                            <h1 class="text-[#111813] dark:text-white text-3xl font-extrabold leading-tight mb-6">
+                                Nhắc lịch tiêm chủng: Mũi 2 Vaccine HPV (Gardasil 9)
+                            </h1>
+
+                            <!-- Meta Info -->
+                            <div
+                                class="flex flex-wrap items-center gap-6 text-[#61896f] text-sm pb-8 border-b border-[#dbe6df] dark:border-[#2a3f31] mb-8">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+                                    <span class="font-medium">24/05/2024</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[20px]">schedule</span>
+                                    <span class="font-medium">10:30</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[20px]">person</span>
+                                    <span class="font-medium">Gửi cho: Nguyễn Văn A</span>
+                                </div>
+                            </div>
+
+                            <!-- Message Body -->
+                            <article
+                                class="prose prose-zinc dark:prose-invert max-w-none text-[#111813] dark:text-gray-200">
+                                <p class="text-lg leading-relaxed mb-6">
+                                    Chào bạn <strong>Nguyễn Văn A</strong>,
+                                </p>
+                                <p class="text-lg leading-relaxed mb-6">
+                                    Hệ thống ghi nhận bạn có lịch tiêm chủng mũi thứ 2 cho vaccine HPV (Gardasil 9) vào
+                                    ngày <strong>30/05/2024</strong>. Việc tiêm đúng lịch giúp đảm bảo hiệu quả bảo vệ
+                                    tối ưu nhất cho cơ thể trước các loại virus gây bệnh.
+                                </p>
+
+                                <div
+                                    class="bg-background-light dark:bg-black/20 rounded-xl p-6 mb-6 border-l-4 border-primary">
+                                    <h4 class="font-bold text-[#111813] dark:text-white mb-3 flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary">info</span>
+                                        Lưu ý quan trọng:
+                                    </h4>
+                                    <ul class="list-disc ml-5 space-y-2 text-[#4b6a56] dark:text-gray-300">
+                                        <li>Vui lòng mang theo sổ tiêm chủng hoặc ứng dụng di động khi đến trung tâm.
+                                        </li>
+                                        <li>Nên có mặt sớm 15 phút để làm thủ tục khám sàng lọc.</li>
+                                        <li>Đảm bảo tình trạng sức khỏe tốt, không sốt hoặc mắc các bệnh cấp tính.</li>
+                                    </ul>
+                                </div>
+
+                                <p class="text-lg leading-relaxed mb-8">
+                                    Nếu bạn chưa có lịch hẹn cụ thể hoặc muốn thay đổi khung giờ, vui lòng nhấn nút bên
+                                    dưới để chọn khung giờ phù hợp với kế hoạch cá nhân của bạn.
+                                </p>
+                            </article>
+
+                            <!-- Action Section -->
+                            <div
+                                class="flex flex-col sm:flex-row gap-4 pt-8 border-t border-[#dbe6df] dark:border-[#2a3f31]">
+                                <button
+                                    class="bg-primary hover:bg-[#0fd650] text-[#0a2e16] px-8 py-3.5 rounded-xl font-bold text-base shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all active:scale-95">
+                                    <span class="material-symbols-outlined">event_available</span>
+                                    Đặt lịch ngay
+                                </button>
+                                <button
+                                    class="bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-[#111813] dark:text-white px-8 py-3.5 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all">
+                                    <span class="material-symbols-outlined">description</span>
+                                    Xem hồ sơ tiêm
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Other Related Notifications -->
+                    <div class="mt-12 mb-10">
+                        <h3 class="text-[#111813] dark:text-white font-bold text-xl mb-6">Thông báo liên quan</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div
+                                class="p-4 bg-white dark:bg-[#1a2e20] rounded-xl border border-[#dbe6df] dark:border-[#2a3f31] flex items-start gap-4 hover:border-primary/50 cursor-pointer transition-colors group">
+                                <div class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 p-2.5 rounded-lg">
+                                    <span class="material-symbols-outlined">medical_information</span>
+                                </div>
+                                <div>
+                                    <p
+                                        class="text-sm font-bold text-[#111813] dark:text-white group-hover:text-primary transition-colors">
+                                        Hướng dẫn sau tiêm Vaccine HPV</p>
+                                    <p class="text-xs text-[#61896f] mt-1">2 ngày trước • Thông tin sức khỏe</p>
+                                </div>
+                            </div>
+                            <div
+                                class="p-4 bg-white dark:bg-[#1a2e20] rounded-xl border border-[#dbe6df] dark:border-[#2a3f31] flex items-start gap-4 hover:border-primary/50 cursor-pointer transition-colors group">
+                                <div class="bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 p-2.5 rounded-lg">
+                                    <span class="material-symbols-outlined">campaign</span>
+                                </div>
+                                <div>
+                                    <p
+                                        class="text-sm font-bold text-[#111813] dark:text-white group-hover:text-primary transition-colors">
+                                        Thông báo bảo trì hệ thống</p>
+                                    <p class="text-xs text-[#61896f] mt-1">3 ngày trước • Hệ thống</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
 </body>
+
 </html>

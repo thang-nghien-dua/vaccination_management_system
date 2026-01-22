@@ -78,6 +78,11 @@ public interface VaccinationRecordRepository extends JpaRepository<VaccinationRe
      * Kiểm tra xem đã có VaccinationRecord cho appointment này chưa
      */
     boolean existsByAppointment(ut.edu.vaccinationmanagementsystem.entity.Appointment appointment);
+    
+    /**
+     * Tìm các vaccination records trong một ngày cụ thể cho một trung tâm
+     */
+    List<VaccinationRecord> findByInjectionDateAndAppointmentCenterId(LocalDate injectionDate, Long centerId);
 }
 
 

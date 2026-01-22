@@ -36,6 +36,9 @@ public class AppointmentController {
     @Autowired
     private AppointmentRepository appointmentRepository;
     
+    @Autowired
+    private ut.edu.vaccinationmanagementsystem.repository.StaffInfoRepository staffInfoRepository;
+    
     /**
      * POST /api/appointments/consultation-request
      * Tạo yêu cầu tư vấn (hỗ trợ cả user đã đăng nhập và guest)
@@ -294,6 +297,19 @@ public class AppointmentController {
                     .filter(apt -> finalStatusFilter == null || apt.getStatus() == finalStatusFilter)
                     .collect(Collectors.toList());
             
+            // Lọc theo trung tâm (ngoại trừ ADMIN)
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            User currentUserCheck = getCurrentUserFromAuth(auth);
+            if (currentUserCheck != null && currentUserCheck.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN) {
+                ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = staffInfoRepository.findByUser(currentUserCheck).orElse(null);
+                if (staffInfo != null && staffInfo.getCenter() != null) {
+                    Long centerId = staffInfo.getCenter().getId();
+                    appointments = appointments.stream()
+                            .filter(apt -> apt.getCenter() != null && apt.getCenter().getId().equals(centerId))
+                            .collect(Collectors.toList());
+                }
+            }
+            
             // Convert to Map để tránh circular reference khi serialize JSON
             List<Map<String, Object>> appointmentDTOs = appointments.stream().map(apt -> {
                 Map<String, Object> dto = new HashMap<>();
@@ -430,6 +446,19 @@ public class AppointmentController {
             Appointment appointment = appointmentRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Appointment not found"));
             
+            // Kiểm tra center (ngoại trừ ADMIN)
+            if (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN) {
+                ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = staffInfoRepository.findByUser(currentUser).orElse(null);
+                if (staffInfo != null && staffInfo.getCenter() != null) {
+                    Long userCenterId = staffInfo.getCenter().getId();
+                    if (appointment.getCenter() == null || !appointment.getCenter().getId().equals(userCenterId)) {
+                        Map<String, String> error = new HashMap<>();
+                        error.put("error", "Bạn chỉ có thể xác nhận lịch hẹn của trung tâm mình");
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+                    }
+                }
+            }
+            
             if (appointment.getStatus() != AppointmentStatus.PENDING) {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "Chỉ có thể xác nhận lịch hẹn ở trạng thái PENDING");
@@ -556,6 +585,19 @@ public class AppointmentController {
             Appointment appointment = appointmentRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Appointment not found"));
             
+            // Kiểm tra center (ngoại trừ ADMIN)
+            if (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN) {
+                ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = staffInfoRepository.findByUser(currentUser).orElse(null);
+                if (staffInfo != null && staffInfo.getCenter() != null) {
+                    Long userCenterId = staffInfo.getCenter().getId();
+                    if (appointment.getCenter() == null || !appointment.getCenter().getId().equals(userCenterId)) {
+                        Map<String, String> error = new HashMap<>();
+                        error.put("error", "Bạn chỉ có thể check-in lịch hẹn của trung tâm mình");
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+                    }
+                }
+            }
+            
             if (appointment.getStatus() != AppointmentStatus.CONFIRMED && appointment.getStatus() != AppointmentStatus.PENDING) {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "Chỉ có thể check-in lịch hẹn ở trạng thái PENDING hoặc CONFIRMED");
@@ -629,6 +671,19 @@ public class AppointmentController {
                 appointments = phoneFilteredAppointments.stream()
                         .filter(apt -> apt.getBookingCode() != null && apt.getBookingCode().toUpperCase().contains(codeFilter))
                         .collect(Collectors.toList());
+            }
+            
+            // Lọc theo trung tâm (ngoại trừ ADMIN)
+            Authentication authSearch = SecurityContextHolder.getContext().getAuthentication();
+            User currentUserSearch = getCurrentUserFromAuth(authSearch);
+            if (currentUserSearch != null && currentUserSearch.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN) {
+                ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = staffInfoRepository.findByUser(currentUserSearch).orElse(null);
+                if (staffInfo != null && staffInfo.getCenter() != null) {
+                    Long centerId = staffInfo.getCenter().getId();
+                    appointments = appointments.stream()
+                            .filter(apt -> apt.getCenter() != null && apt.getCenter().getId().equals(centerId))
+                            .collect(Collectors.toList());
+                }
             }
             
             // Convert to Map để tránh circular reference khi serialize JSON
@@ -835,6 +890,32 @@ public class AppointmentController {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Internal server error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    /**
+     * Lấy current user từ Authentication
+     */
+    private User getCurrentUserFromAuth(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() || 
+            authentication.getName().equals("anonymousUser")) {
+            return null;
+        }
+        
+        try {
+            if (authentication.getPrincipal() instanceof CustomOAuth2User) {
+                CustomOAuth2User customOAuth2User = (CustomOAuth2User) authentication.getPrincipal();
+                return customOAuth2User.getUser();
+            } else if (authentication.getPrincipal() instanceof CustomUserDetails) {
+                CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+                return customUserDetails.getUser();
+            } else {
+                String email = authentication.getName();
+                Optional<User> userOpt = userRepository.findByEmail(email);
+                return userOpt.orElse(null);
+            }
+        } catch (Exception e) {
+            return null;
         }
     }
 }

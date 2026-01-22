@@ -19,22 +19,27 @@ public class VaccinationRecord {
     
     @OneToOne
     @JoinColumn(name = "appointment_id", unique = true, nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Appointment appointment; // Lịch hẹn liên kết (One-to-One)
     
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"appointments", "vaccinationRecords", "familyMembers", "password", "verificationCode"})
     private User user; // Người được tiêm
     
     @ManyToOne
     @JoinColumn(name = "vaccine_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"vaccineLots", "centerVaccines", "vaccinationRecords"})
     private Vaccine vaccine; // Vaccine đã tiêm
     
     @ManyToOne
     @JoinColumn(name = "vaccine_lot_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"vaccinationRecords", "vaccine"})
     private VaccineLot vaccineLot; // Lô vaccine đã sử dụng
     
     @ManyToOne
     @JoinColumn(name = "nurse_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"appointments", "vaccinationRecords", "familyMembers", "password", "verificationCode"})
     private User nurse; // Y tá thực hiện tiêm (role = NURSE)
     
     @Column(nullable = false)
@@ -64,8 +69,12 @@ public class VaccinationRecord {
     @Column(nullable = false)
     private LocalDateTime createdAt; // Thời gian tạo hồ sơ
     
+    @Column(nullable = true, columnDefinition = "TEXT")
+    private String notes; // Ghi chú quan sát sau tiêm
+    
     // Relationships
     @OneToMany(mappedBy = "vaccinationRecord")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<AdverseReaction> adverseReactions; // Danh sách phản ứng phụ (nếu có)
     
     // Getters and Setters
@@ -191,6 +200,14 @@ public class VaccinationRecord {
     
     public void setAdverseReactions(List<AdverseReaction> adverseReactions) {
         this.adverseReactions = adverseReactions;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 }
 

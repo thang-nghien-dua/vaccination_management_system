@@ -36,6 +36,9 @@ public class VaccinationRecordService {
     private AppointmentHistoryRepository appointmentHistoryRepository;
     
     @Autowired
+    private StaffInfoRepository staffInfoRepository;
+    
+    @Autowired
     private EmailService emailService;
     
     /**
@@ -138,6 +141,7 @@ public class VaccinationRecordService {
             LocalTime injectionTime,
             String injectionSite,
             Double doseAmount,
+            String notes,
             String certificateNumber) {
         
         // Lấy appointment
@@ -177,6 +181,17 @@ public class VaccinationRecordService {
         User nurse = userRepository.findById(nurseId)
                 .orElseThrow(() -> new RuntimeException("Nurse not found"));
         
+        // Kiểm tra nurse có cùng center với appointment (ngoại trừ ADMIN)
+        if (nurse.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN) {
+            ut.edu.vaccinationmanagementsystem.entity.StaffInfo nurseStaffInfo = staffInfoRepository.findByUser(nurse).orElse(null);
+            if (nurseStaffInfo != null && nurseStaffInfo.getCenter() != null) {
+                Long nurseCenterId = nurseStaffInfo.getCenter().getId();
+                if (!appointment.getCenter().getId().equals(nurseCenterId)) {
+                    throw new RuntimeException("Nurse chỉ có thể tiêm cho bệnh nhân của trung tâm mình");
+                }
+            }
+        }
+        
         // TODO: Kiểm tra nurse có role NURSE không (nếu có enum Role)
         
         // Xác định user được tiêm
@@ -207,11 +222,27 @@ public class VaccinationRecordService {
                 appointment.getVaccine()
         );
         
-        if (centerVaccineOpt.isEmpty()) {
-            throw new RuntimeException("Vaccine not found in center stock");
-        }
+        CenterVaccine centerVaccine;
         
-        CenterVaccine centerVaccine = centerVaccineOpt.get();
+        if (centerVaccineOpt.isEmpty()) {
+            // Nếu chưa có bản ghi center_vaccine, tự động tạo mới
+            // Tính tổng stock từ tất cả các vaccine lots AVAILABLE của vaccine này
+            int totalStock = vaccineLotRepository.findByVaccineId(appointment.getVaccine().getId())
+                .stream()
+                .filter(lot -> lot.getStatus() == ut.edu.vaccinationmanagementsystem.entity.enums.VaccineLotStatus.AVAILABLE)
+                .mapToInt(lot -> lot.getRemainingQuantity() != null ? lot.getRemainingQuantity() : 0)
+                .sum();
+            
+            // Tạo bản ghi center_vaccine mới
+            centerVaccine = new CenterVaccine();
+            centerVaccine.setCenter(appointment.getCenter());
+            centerVaccine.setVaccine(appointment.getVaccine());
+            centerVaccine.setStockQuantity(totalStock);
+            centerVaccine.setLastRestocked(LocalDateTime.now());
+            centerVaccine = centerVaccineRepository.save(centerVaccine);
+        } else {
+            centerVaccine = centerVaccineOpt.get();
+        }
         
         // Kiểm tra stock còn đủ không
         if (centerVaccine.getStockQuantity() == null || centerVaccine.getStockQuantity() <= 0) {
@@ -231,6 +262,7 @@ public class VaccinationRecordService {
         record.setInjectionSite(injectionSite);
         record.setBatchNumber(vaccineLot.getLotNumber());
         record.setDoseAmount(doseAmount);
+        record.setNotes(notes);
         
         // Generate certificateNumber nếu chưa có
         if (certificateNumber == null || certificateNumber.trim().isEmpty()) {

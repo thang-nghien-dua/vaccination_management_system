@@ -574,6 +574,60 @@ public class AdminController {
     }
     
     /**
+     * GET /admin/centers/{id}/staff
+     * Quản lý nhân viên tại trung tâm
+     */
+    @GetMapping("/admin/centers/{id}/staff")
+    public String adminCenterStaff(@org.springframework.web.bind.annotation.PathVariable Long id, Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        
+        try {
+            User currentUser = getCurrentUser(authentication);
+            if (!checkAdminPermission(currentUser)) {
+                return "redirect:/home";
+            }
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+            model.addAttribute("centerId", id);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        
+        return "quan_ly_nhan_vien";
+    }
+    
+    /**
+     * GET /admin/centers/{id}/staff/new
+     * Thêm nhân viên mới vào trung tâm
+     */
+    @GetMapping("/admin/centers/{id}/staff/new")
+    public String adminCenterStaffNew(@org.springframework.web.bind.annotation.PathVariable Long id, Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        
+        try {
+            User currentUser = getCurrentUser(authentication);
+            if (!checkAdminPermission(currentUser)) {
+                return "redirect:/home";
+            }
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+            model.addAttribute("centerId", id);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        
+        return "them_nhan_vien";
+    }
+    
+    /**
      * GET /admin/notifications/templates
      * Quản lý template thông báo
      */

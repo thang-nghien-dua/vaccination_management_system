@@ -46,6 +46,9 @@ public class DoctorRestController {
     @Autowired
     private VaccineRepository vaccineRepository;
     
+    @Autowired
+    private ut.edu.vaccinationmanagementsystem.repository.StaffInfoRepository staffInfoRepository;
+    
     /**
      * Lấy thông tin user hiện tại từ SecurityContext
      */
@@ -87,15 +90,25 @@ public class DoctorRestController {
             User currentUser = getCurrentUser();
             checkDoctorPermission(currentUser);
             
-            // Lấy appointments có status PENDING hoặc CHECKED_IN (đã check-in nhưng chưa khám)
+            // Lấy appointments có status CONFIRMED (đã xác nhận), CHECKED_IN (đã check-in), hoặc SCREENING (đang khám)
+            // Không yêu cầu payment status = PAID vì chức năng QR thanh toán chưa hoạt động
             List<Appointment> appointments = appointmentRepository.findAll().stream()
-                    .filter(apt -> apt.getStatus() == AppointmentStatus.PENDING || 
+                    .filter(apt -> apt.getStatus() == AppointmentStatus.CONFIRMED || 
                                   apt.getStatus() == AppointmentStatus.CHECKED_IN ||
                                   apt.getStatus() == AppointmentStatus.SCREENING)
                     .filter(apt -> apt.getAppointmentDate() != null && 
                                  (apt.getAppointmentDate().equals(LocalDate.now()) || 
                                   apt.getAppointmentDate().isAfter(LocalDate.now())))
                     .collect(Collectors.toList());
+            
+            // Lọc theo trung tâm của bác sĩ
+            ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = staffInfoRepository.findByUser(currentUser).orElse(null);
+            if (staffInfo != null && staffInfo.getCenter() != null) {
+                Long centerId = staffInfo.getCenter().getId();
+                appointments = appointments.stream()
+                        .filter(apt -> apt.getCenter() != null && apt.getCenter().getId().equals(centerId))
+                        .collect(Collectors.toList());
+            }
             
             List<Map<String, Object>> result = appointments.stream().map(apt -> {
                 Map<String, Object> map = new HashMap<>();
@@ -268,6 +281,17 @@ public class DoctorRestController {
             
             Appointment appointment = appointmentOpt.get();
             
+            // Kiểm tra center của bác sĩ phải trùng với center của appointment
+            ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = staffInfoRepository.findByUser(currentUser).orElse(null);
+            if (staffInfo != null && staffInfo.getCenter() != null) {
+                Long userCenterId = staffInfo.getCenter().getId();
+                if (appointment.getCenter() == null || !appointment.getCenter().getId().equals(userCenterId)) {
+                    Map<String, String> error = new HashMap<>();
+                    error.put("error", "Bạn chỉ có thể khám sàng lọc cho bệnh nhân của trung tâm mình");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+                }
+            }
+            
             // Kiểm tra đã có screening chưa
             Optional<Screening> existingScreeningOpt = screeningRepository.findByAppointmentId(appointmentId);
             Screening screening;
@@ -409,15 +433,24 @@ public class DoctorRestController {
                     .filter(s -> s.getScreeningResult() == ScreeningResult.REJECTED)
                     .count();
             
-            // Lấy appointments pending (chưa khám)
+            // Lấy appointments pending (chưa khám) - không yêu cầu payment status
             List<Appointment> pendingAppointments = appointmentRepository.findAll().stream()
-                    .filter(apt -> apt.getStatus() == AppointmentStatus.PENDING || 
+                    .filter(apt -> apt.getStatus() == AppointmentStatus.CONFIRMED || 
                                   apt.getStatus() == AppointmentStatus.CHECKED_IN ||
                                   apt.getStatus() == AppointmentStatus.SCREENING)
                     .filter(apt -> apt.getAppointmentDate() != null && 
                                  (apt.getAppointmentDate().equals(LocalDate.now()) || 
                                   apt.getAppointmentDate().isAfter(LocalDate.now())))
                     .collect(Collectors.toList());
+            
+            // Lọc theo trung tâm của bác sĩ
+            ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = staffInfoRepository.findByUser(currentUser).orElse(null);
+            if (staffInfo != null && staffInfo.getCenter() != null) {
+                Long centerId = staffInfo.getCenter().getId();
+                pendingAppointments = pendingAppointments.stream()
+                        .filter(apt -> apt.getCenter() != null && apt.getCenter().getId().equals(centerId))
+                        .collect(Collectors.toList());
+            }
             
             Map<String, Object> stats = new HashMap<>();
             stats.put("totalAppointments", pendingAppointments.size());
@@ -485,6 +518,8 @@ public class DoctorRestController {
                     appointmentInfo.put("bookingCode", apt.getBookingCode());
                     appointmentInfo.put("appointmentDate", apt.getAppointmentDate());
                     appointmentInfo.put("appointmentTime", apt.getAppointmentTime());
+                    appointmentInfo.put("status", apt.getStatus().name()); // Thêm trạng thái appointment
+                    appointmentInfo.put("hasVaccinationRecord", apt.getVaccinationRecord() != null); // Flag để biết đã tiêm chưa
                     
                     // Thông tin bệnh nhân
                     Map<String, Object> patientInfo = new HashMap<>();
@@ -705,6 +740,7 @@ public class DoctorRestController {
                 vaccinationInfo.put("injectionSite", record.getInjectionSite());
                 vaccinationInfo.put("doseAmount", record.getDoseAmount());
                 vaccinationInfo.put("nextDoseDate", record.getNextDoseDate());
+                vaccinationInfo.put("notes", record.getNotes()); // Ghi chú phản ứng sau tiêm và ghi chú chi tiết khác
                 if (record.getNurse() != null) {
                     vaccinationInfo.put("nurseName", record.getNurse().getFullName());
                     vaccinationInfo.put("nurseId", record.getNurse().getId());

@@ -11,6 +11,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ut.edu.vaccinationmanagementsystem.entity.Appointment;
 import ut.edu.vaccinationmanagementsystem.entity.Payment;
 import ut.edu.vaccinationmanagementsystem.entity.User;
+import ut.edu.vaccinationmanagementsystem.entity.enums.AppointmentStatus;
 import ut.edu.vaccinationmanagementsystem.entity.enums.PaymentStatus;
 import ut.edu.vaccinationmanagementsystem.repository.AppointmentRepository;
 import ut.edu.vaccinationmanagementsystem.repository.PaymentRepository;
@@ -344,10 +345,17 @@ public class PaymentController {
             // Mark as paid
             paymentService.markPaymentAsPaid(payment, "CASH-" + appointmentId);
             
+            // Tự động chuyển status sang CONFIRMED nếu đang ở PENDING để doctor nhận được hồ sơ
+            if (appointment.getStatus() == AppointmentStatus.PENDING) {
+                appointment.setStatus(AppointmentStatus.CONFIRMED);
+                appointmentRepository.save(appointment);
+            }
+            
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Đánh dấu thanh toán thành công");
             response.put("paymentStatus", payment.getPaymentStatus().toString());
             response.put("appointmentId", appointmentId);
+            response.put("appointmentStatus", appointment.getStatus().name());
             
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {

@@ -8,6 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
     <script>
         tailwind.config = {
@@ -66,7 +69,7 @@
                             <span class="material-icons-round text-sm">print</span>
                             <span>In hồ sơ</span>
                         </button>
-                        <button
+                        <button id="editBtn"
                             class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity">
                             <span class="material-icons-round text-sm">edit</span>
                             <span>Chỉnh sửa</span>
@@ -101,29 +104,30 @@
                                     class="w-24 h-24 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
                                     <span class="material-icons-round text-slate-400 text-5xl">account_circle</span>
                                 </div>
-                                <h4 class="text-xl font-bold text-slate-900 dark:text-white">NGUYỄN VĂN A</h4>
-                                <span
-                                    class="text-sm text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full mt-2">BN-908234</span>
+                                <h4 id="patientNameFull" class="text-xl font-bold text-slate-900 dark:text-white">...
+                                </h4>
+                                <span id="patientCode"
+                                    class="text-sm text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full mt-2">...</span>
                             </div>
                             <div class="space-y-4">
                                 <div
                                     class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800">
                                     <span class="text-slate-500 dark:text-slate-400">Ngày sinh</span>
-                                    <span class="font-medium">12/05/1990</span>
+                                    <span id="patientDob" class="font-medium">...</span>
                                 </div>
                                 <div
                                     class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800">
                                     <span class="text-slate-500 dark:text-slate-400">Giới tính</span>
-                                    <span class="font-medium">Nam</span>
+                                    <span id="patientGender" class="font-medium">...</span>
                                 </div>
                                 <div
                                     class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800">
                                     <span class="text-slate-500 dark:text-slate-400">Số điện thoại</span>
-                                    <span class="font-medium">090 123 4567</span>
+                                    <span id="patientPhone" class="font-medium">...</span>
                                 </div>
                                 <div class="flex justify-between items-center py-2">
                                     <span class="text-slate-500 dark:text-slate-400">Địa chỉ</span>
-                                    <span class="font-medium text-right max-w-[150px]">Quận 1, TP. Hồ Chí Minh</span>
+                                    <span id="patientAddress" class="font-medium text-right max-w-[150px]">...</span>
                                 </div>
                             </div>
                         </div>
@@ -158,30 +162,29 @@
                                 <div class="space-y-1">
                                     <label class="text-xs font-bold text-slate-400 uppercase">Nhiệt độ</label>
                                     <div class="flex items-baseline gap-1">
-                                        <span class="text-2xl font-bold">36.5</span>
+                                        <span id="tempValue" class="text-2xl font-bold">...</span>
                                         <span class="text-slate-500">°C</span>
                                     </div>
                                 </div>
                                 <div class="space-y-1">
                                     <label class="text-xs font-bold text-slate-400 uppercase">Huyết áp</label>
                                     <div class="flex items-baseline gap-1">
-                                        <span class="text-2xl font-bold">120/80</span>
+                                        <span id="bpValue" class="text-2xl font-bold">...</span>
                                         <span class="text-slate-500">mmHg</span>
                                     </div>
                                 </div>
                                 <div class="space-y-1">
                                     <label class="text-xs font-bold text-slate-400 uppercase">Nhịp tim</label>
                                     <div class="flex items-baseline gap-1">
-                                        <span class="text-2xl font-bold">75</span>
+                                        <span id="hrValue" class="text-2xl font-bold">...</span>
                                         <span class="text-slate-500">lần/phút</span>
                                     </div>
                                 </div>
                                 <div class="md:col-span-3 space-y-2 mt-2">
                                     <label class="text-xs font-bold text-slate-400 uppercase">Ghi chú khám</label>
-                                    <div
+                                    <div id="screeningNotesText"
                                         class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl text-slate-700 dark:text-slate-300 italic">
-                                        "Bệnh nhân không có tiền sử dị ứng với các thành phần của vaccine. Sức khỏe hiện
-                                        tại tốt, không sốt, không có triệu chứng viêm đường hô hấp."
+                                        Đang tải ghi chú...
                                     </div>
                                 </div>
                                 <div
@@ -190,13 +193,13 @@
                                         <img alt="Bác sĩ" class="w-10 h-10 rounded-full object-cover grayscale"
                                             src="https://lh3.googleusercontent.com/aida-public/AB6AXuDa8UvmlCPAogx1xk4WKnsrS3acOVlRtGypIk5uuF2W2vp6SvvIHBiXWAz3Ja5WQNtZL5_8WIS2vR_GLehsL5Ptd3wrhV5Fc2okPfyLzJP180OIqjte4flghvXaWQ4VClN30_raAaM-aVpRIThga0xOFdlNmGEd7vXXy4qpjK4SRfc9yyg8Ocjll9IUX5wOjDWgc8L4pJQH_0Bsn8DBrszlRnU3NUJCOuBDubGTk1AMqDYhSr8U5T7KLzJn7zu6eNisHEbuljRsRZEl" />
                                         <div>
-                                            <p class="text-sm font-bold">BS. Lê Minh Quang</p>
+                                            <p id="doctorNameFull" class="text-sm font-bold">...</p>
                                             <p class="text-xs text-slate-500">Khoa Khám bệnh</p>
                                         </div>
                                     </div>
                                     <div class="text-right">
                                         <p class="text-xs text-slate-400">Ngày khám</p>
-                                        <p class="text-sm font-medium">15/10/2023 - 08:30</p>
+                                        <p id="screenedAtTime" class="text-sm font-medium">...</p>
                                     </div>
                                 </div>
                             </div>
@@ -218,36 +221,45 @@
                                         <div>
                                             <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Tên
                                                 Vaccine</label>
-                                            <div class="flex items-center gap-2 text-lg font-bold text-primary">
+                                            <div id="vaccineNameDisplay"
+                                                class="flex items-center gap-2 text-lg font-bold text-primary">
                                                 <span class="material-icons-round text-xl">inventory_2</span>
-                                                Vero Cell (Sinopharm)
+                                                ...
                                             </div>
                                         </div>
                                         <div>
                                             <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Số lô
                                                 (Batch No.)</label>
-                                            <p class="font-semibold text-slate-700 dark:text-slate-300">202108B1249</p>
+                                            <p id="lotNumberDisplay"
+                                                class="font-semibold text-slate-700 dark:text-slate-300">...</p>
                                         </div>
                                         <div>
                                             <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Vị trí
                                                 tiêm</label>
-                                            <p class="font-semibold text-slate-700 dark:text-slate-300">Bắp tay trái</p>
+                                            <p id="injectionSiteDisplay"
+                                                class="font-semibold text-slate-700 dark:text-slate-300">...</p>
                                         </div>
                                     </div>
                                     <div class="space-y-4">
                                         <div>
                                             <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Mũi
                                                 tiêm thứ</label>
-                                            <div
+                                            <div id="doseNumberDisplay"
                                                 class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold">
-                                                2
+                                                ...
                                             </div>
                                         </div>
                                         <div>
                                             <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Ghi chú
+                                                chi tiết khác</label>
+                                            <p id="otherNotesDisplay"
+                                                class="text-slate-700 dark:text-slate-300 italic mb-3">...</p>
+
+                                            <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Ghi chú
                                                 phản ứng sau tiêm</label>
-                                            <p class="text-slate-700 dark:text-slate-300">Không có phản ứng bất thường.
-                                                Bệnh nhân được theo dõi 30p tại chỗ.</p>
+                                            <p id="reactionNotesDisplay"
+                                                class="text-slate-700 dark:text-slate-300 font-medium p-2 bg-primary/5 rounded border border-primary/10">
+                                                ...</p>
                                         </div>
                                     </div>
                                 </div>
@@ -259,62 +271,13 @@
                                             <span class="material-icons-round">person_outline</span>
                                         </div>
                                         <div>
-                                            <p class="text-sm font-bold">Điều dưỡng. Nguyễn Thu Hà</p>
-                                            <p class="text-xs text-slate-500">Phòng tiêm số 04</p>
+                                            <p id="nurseNameDisplay" class="text-sm font-bold">...</p>
+                                            <p id="nurseInfoDisplay" class="text-xs text-slate-500">Phòng tiêm</p>
                                         </div>
                                     </div>
                                     <div class="text-right">
                                         <p class="text-xs text-slate-400">Thời gian tiêm</p>
-                                        <p class="text-sm font-medium">15/10/2023 - 09:15</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-                        <section
-                            class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
-                            <h3 class="text-lg font-semibold mb-4">Lộ trình quy trình</h3>
-                            <div class="flex items-center gap-2 overflow-x-auto pb-2">
-                                <div class="flex items-center shrink-0">
-                                    <div
-                                        class="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500 text-white">
-                                        <span class="material-icons-round text-sm">check</span>
-                                    </div>
-                                    <div class="ml-2 mr-4">
-                                        <p class="text-xs font-bold">Đăng ký</p>
-                                        <p class="text-[10px] text-slate-500">08:05</p>
-                                    </div>
-                                </div>
-                                <div class="h-px w-8 bg-emerald-500"></div>
-                                <div class="flex items-center shrink-0">
-                                    <div
-                                        class="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500 text-white">
-                                        <span class="material-icons-round text-sm">check</span>
-                                    </div>
-                                    <div class="ml-2 mr-4">
-                                        <p class="text-xs font-bold">Khám sàng lọc</p>
-                                        <p class="text-[10px] text-slate-500">08:30</p>
-                                    </div>
-                                </div>
-                                <div class="h-px w-8 bg-emerald-500"></div>
-                                <div class="flex items-center shrink-0">
-                                    <div
-                                        class="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500 text-white">
-                                        <span class="material-icons-round text-sm">check</span>
-                                    </div>
-                                    <div class="ml-2 mr-4">
-                                        <p class="text-xs font-bold">Thực hiện tiêm</p>
-                                        <p class="text-[10px] text-slate-500">09:15</p>
-                                    </div>
-                                </div>
-                                <div class="h-px w-8 bg-emerald-500"></div>
-                                <div class="flex items-center shrink-0">
-                                    <div
-                                        class="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500 text-white">
-                                        <span class="material-icons-round text-sm">check</span>
-                                    </div>
-                                    <div class="ml-2">
-                                        <p class="text-xs font-bold">Theo dõi &amp; Hoàn tất</p>
-                                        <p class="text-[10px] text-slate-500">09:45</p>
+                                        <p id="injectionTimeDisplay" class="text-sm font-medium">...</p>
                                     </div>
                                 </div>
                             </div>
@@ -360,124 +323,112 @@
                     const record = await response.json();
                     console.log('Record data:', record);
 
-                    // Update patient name from record
-                    const patientNameEl = document.querySelector('h4.text-xl.font-bold');
-                    if (patientNameEl && record.patientName) {
-                        patientNameEl.textContent = record.patientName.toUpperCase();
-                    }
+                    // 1. Update Patient Info
+                    const patientNameEl = document.getElementById('patientNameFull');
+                    if (patientNameEl) patientNameEl.textContent = (record.patientName || 'N/A').toUpperCase();
 
-                    // Load appointment detail for patient info
-                    if (record.appointmentId) {
-                        try {
-                            const appointmentResponse = await fetch(`/api/appointments/${record.appointmentId}/detail`, {
-                                credentials: 'include'
-                            });
+                    const patientCodeEl = document.getElementById('patientCode');
+                    if (patientCodeEl) patientCodeEl.textContent = record.bookingCode || 'BN-' + (record.appointmentId || '000');
 
-                            if (appointmentResponse.ok) {
-                                const appointment = await appointmentResponse.json();
-                                console.log('Appointment data:', appointment);
-                                const patientInfo = appointment.patientInfo || {};
+                    const dobEl = document.getElementById('patientDob');
+                    if (dobEl) dobEl.textContent = record.patientDob ? new Date(record.patientDob).toLocaleDateString('vi-VN') : 'N/A';
 
-                                // Update patient info
-                                if (patientInfo.fullName && patientNameEl) {
-                                    patientNameEl.textContent = patientInfo.fullName.toUpperCase();
-                                }
+                    const genderEl = document.getElementById('patientGender');
+                    if (genderEl) genderEl.textContent = record.patientGender === 'MALE' ? 'Nam' : (record.patientGender === 'FEMALE' ? 'Nữ' : 'Khác');
 
-                                const patientInfoSpans = document.querySelectorAll('.space-y-4 .flex.justify-between span.font-medium');
-                                if (patientInfoSpans.length >= 4) {
-                                    if (patientInfo.dateOfBirth) patientInfoSpans[0].textContent = patientInfo.dateOfBirth;
-                                    if (patientInfo.gender) {
-                                        patientInfoSpans[1].textContent = patientInfo.gender === 'MALE' ? 'Nam' : patientInfo.gender === 'FEMALE' ? 'Nữ' : 'Khác';
-                                    }
-                                    if (patientInfo.phoneNumber) patientInfoSpans[2].textContent = patientInfo.phoneNumber;
-                                    if (patientInfo.address) patientInfoSpans[3].textContent = patientInfo.address;
-                                }
-                            }
-                        } catch (appointmentError) {
-                            console.warn('Could not load appointment detail:', appointmentError);
-                            // Continue with record data only
-                        }
-                    }
+                    const phoneEl = document.getElementById('patientPhone');
+                    if (phoneEl) phoneEl.textContent = record.patientPhone || 'N/A';
 
-                    // Update vaccination info - vaccine name
-                    const vaccineNameContainer = document.querySelector('.flex.items-center.gap-2.text-lg.font-bold.text-primary');
-                    if (vaccineNameContainer && record.vaccineName) {
-                        const icon = vaccineNameContainer.querySelector('.material-icons-round');
-                        if (icon) {
-                            // Keep icon, update text
-                            const textNodes = Array.from(vaccineNameContainer.childNodes).filter(n => n.nodeType === 3);
-                            textNodes.forEach(n => n.remove());
-                            vaccineNameContainer.appendChild(document.createTextNode(' ' + record.vaccineName));
-                        } else {
-                            vaccineNameContainer.textContent = record.vaccineName;
-                        }
-                    }
+                    const addressEl = document.getElementById('patientAddress');
+                    if (addressEl) addressEl.textContent = record.patientAddress || 'N/A';
 
-                    // Update lot number - find the paragraph after "Số lô (Batch No.)" label
-                    const lotLabel = Array.from(document.querySelectorAll('label')).find(el => el.textContent.includes('Số lô'));
-                    if (lotLabel && record.lotNumber) {
-                        const lotParagraph = lotLabel.nextElementSibling;
-                        if (lotParagraph && lotParagraph.tagName === 'P') {
-                            lotParagraph.textContent = record.lotNumber;
-                        }
-                    }
-
-                    // Update injection site - find the paragraph after "Vị trí tiêm" label
-                    const siteLabel = Array.from(document.querySelectorAll('label')).find(el => el.textContent.includes('Vị trí tiêm'));
-                    if (siteLabel && record.injectionSite) {
-                        const siteParagraph = siteLabel.nextElementSibling;
-                        if (siteParagraph && siteParagraph.tagName === 'P') {
-                            siteParagraph.textContent = getInjectionSiteName(record.injectionSite);
-                        }
-                    }
-
-                    // Update dose number - find the div with class "w-8 h-8 rounded-full bg-slate-900"
-                    const doseNumberEl = document.querySelector('.w-8.h-8.rounded-full.bg-slate-900');
-                    if (doseNumberEl && record.doseNumber) {
-                        doseNumberEl.textContent = record.doseNumber;
-                    }
-
-                    // Update dates
-                    if (record.injectionDate) {
-                        const date = new Date(record.injectionDate + 'T00:00:00');
-                        const dateStr = date.toLocaleDateString('vi-VN');
-                        const timeStr = record.injectionTime ? record.injectionTime.substring(0, 5) : '';
-                        const timeEls = document.querySelectorAll('.text-right .text-sm.font-medium');
-                        if (timeEls.length > 0) {
-                            timeEls[timeEls.length - 1].textContent = `${dateStr} - ${timeStr}`;
-                        }
-                    }
-
-                    // Update nurse name - find the paragraph with "Điều dưỡng" text
-                    if (record.nurseName) {
-                        const nurseSection = document.querySelector('.flex.items-center.justify-between.pt-6');
-                        if (nurseSection) {
-                            const nurseNameEl = nurseSection.querySelector('.text-sm.font-bold');
-                            if (nurseNameEl) {
-                                nurseNameEl.textContent = record.nurseName;
-                            }
-                        }
-                    }
-
-                    // Update record ID
+                    // 2. Update Vaccination Header
                     const recordIdEl = document.getElementById('recordIdDisplay');
                     if (recordIdEl) {
-                        if (record.certificateNumber) {
-                            recordIdEl.textContent = `Mã hồ sơ: ${record.certificateNumber}`;
-                        } else if (record.bookingCode) {
-                            recordIdEl.textContent = `Mã hẹn: ${record.bookingCode}`;
-                        } else {
-                            recordIdEl.textContent = `Mã hồ sơ: #${record.id}`;
+                        recordIdEl.textContent = `Mã hồ sơ: ${record.certificateNumber || record.bookingCode || '#' + record.id}`;
+                    }
+
+                    // 3. Update Screening Info
+                    if (record.screening) {
+                        const s = record.screening;
+                        const tempEl = document.getElementById('tempValue');
+                        if (tempEl) tempEl.textContent = s.bodyTemperature || '---';
+
+                        const bpEl = document.getElementById('bpValue');
+                        if (bpEl) bpEl.textContent = s.bloodPressure || '---';
+
+                        const hrEl = document.getElementById('hrValue');
+                        if (hrEl) hrEl.textContent = s.heartRate || '---';
+
+                        const screeningNotesEl = document.getElementById('screeningNotesText');
+                        if (screeningNotesEl) screeningNotesEl.textContent = s.notes ? `"${s.notes}"` : '"Không có ghi chú khám sàng lọc"';
+
+                        const doctorNameEl = document.getElementById('doctorNameFull');
+                        if (doctorNameEl) doctorNameEl.textContent = s.doctorName ? 'BS. ' + s.doctorName : 'Chưa cập nhật';
+
+                        const screenedAtEl = document.getElementById('screenedAtTime');
+                        if (screenedAtEl && s.screenedAt) {
+                            const d = new Date(s.screenedAt);
+                            screenedAtEl.textContent = d.toLocaleDateString('vi-VN') + ' - ' + d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
                         }
+                    }
+
+                    // 4. Update Injection Info
+                    const vaccineNameEl = document.getElementById('vaccineNameDisplay');
+                    if (vaccineNameEl && record.vaccineName) {
+                        vaccineNameEl.innerHTML = `<span class="material-icons-round text-xl">inventory_2</span> ${record.vaccineName}`;
+                    }
+
+                    const lotEl = document.getElementById('lotNumberDisplay');
+                    if (lotEl) lotEl.textContent = record.lotNumber || record.batchNumber || 'N/A';
+
+                    const siteEl = document.getElementById('injectionSiteDisplay');
+                    if (siteEl) siteEl.textContent = getInjectionSiteName(record.injectionSite);
+
+                    const doseEl = document.getElementById('doseNumberDisplay');
+                    if (doseEl) doseEl.textContent = record.doseNumber || '1';
+
+                    // Split notes
+                    let rawNotes = record.notes || '';
+                    let otherNotes = 'Không có ghi chú chi tiết.';
+                    let reactionNotes = 'Trạng thái ổn định. Không có phản ứng bất thường.';
+
+                    if (rawNotes.includes(' | Phản ứng: ')) {
+                        const parts = rawNotes.split(' | Phản ứng: ');
+                        otherNotes = parts[0] || otherNotes;
+                        reactionNotes = parts[1] || reactionNotes;
+                    } else if (rawNotes) {
+                        otherNotes = rawNotes;
+                    }
+
+                    const otherNotesEl = document.getElementById('otherNotesDisplay');
+                    if (otherNotesEl) otherNotesEl.textContent = otherNotes;
+
+                    const reactionNotesEl = document.getElementById('reactionNotesDisplay');
+                    if (reactionNotesEl) reactionNotesEl.textContent = reactionNotes;
+
+                    const nurseNameEl = document.getElementById('nurseNameDisplay');
+                    if (nurseNameEl) nurseNameEl.textContent = record.nurseName ? 'ĐD. ' + record.nurseName : 'Chưa cập nhật';
+
+                    const injectionTimeEl = document.getElementById('injectionTimeDisplay');
+                    if (injectionTimeEl && record.injectionDate) {
+                        const d = new Date(record.injectionDate + 'T00:00:00');
+                        injectionTimeEl.textContent = d.toLocaleDateString('vi-VN') + (record.injectionTime ? ' - ' + record.injectionTime.substring(0, 5) : '');
+                    }
+
+                    // Edit button action
+                    const editBtn = document.getElementById('editBtn');
+                    if (editBtn && record.appointmentId) {
+                        editBtn.onclick = () => {
+                            window.location.href = `/nurse/inject/${record.appointmentId}`;
+                        };
                     }
 
                     console.log('Record detail loaded successfully');
 
                 } catch (error) {
                     console.error('Error loading record detail:', error);
-                    const errorMessage = error.message || 'Có lỗi xảy ra khi tải chi tiết hồ sơ';
-                    alert(errorMessage + '\n\nVui lòng kiểm tra console để xem chi tiết lỗi.');
-                    // Don't redirect immediately, let user see the error
+                    alert('Lỗi: ' + error.message);
                 }
             }
 

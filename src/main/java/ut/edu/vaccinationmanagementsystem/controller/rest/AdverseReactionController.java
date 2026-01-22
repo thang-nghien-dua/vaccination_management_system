@@ -37,6 +37,9 @@ public class AdverseReactionController {
     @Autowired
     private UserRepository userRepository;
     
+    @Autowired
+    private ut.edu.vaccinationmanagementsystem.repository.StaffInfoRepository staffInfoRepository;
+    
     /**
      * GET /api/adverse-reactions
      * Lấy danh sách tất cả phản ứng phụ (cho Admin, Doctor, Nurse)
@@ -62,6 +65,20 @@ public class AdverseReactionController {
             }
             
             List<AdverseReaction> reactions = adverseReactionRepository.findAll();
+            
+            // Lọc theo trung tâm (ngoại trừ ADMIN)
+            if (currentUser.getRole() != Role.ADMIN) {
+                ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = staffInfoRepository.findByUser(currentUser).orElse(null);
+                if (staffInfo != null && staffInfo.getCenter() != null) {
+                    Long centerId = staffInfo.getCenter().getId();
+                    reactions = reactions.stream()
+                        .filter(ar -> ar.getVaccinationRecord() != null && 
+                                     ar.getVaccinationRecord().getAppointment() != null && 
+                                     ar.getVaccinationRecord().getAppointment().getCenter() != null && 
+                                     ar.getVaccinationRecord().getAppointment().getCenter().getId().equals(centerId))
+                        .collect(Collectors.toList());
+                }
+            }
             
             // Filter by resolved status
             if (resolved != null) {

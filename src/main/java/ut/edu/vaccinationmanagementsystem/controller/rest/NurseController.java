@@ -46,6 +46,9 @@ public class NurseController {
     @Autowired
     private VaccineLotRepository vaccineLotRepository;
     
+    @Autowired
+    private ut.edu.vaccinationmanagementsystem.repository.StaffInfoRepository staffInfoRepository;
+    
     /**
      * GET /api/nurse/statistics
      * Lấy thống kê tổng quan cho nurse dashboard
@@ -62,14 +65,28 @@ public class NurseController {
             
             LocalDate today = LocalDate.now();
             
+            // Lấy thông tin trung tâm của y tá
+            ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = staffInfoRepository.findByUser(currentUser).orElse(null);
+            Long userCenterId = (staffInfo != null && staffInfo.getCenter() != null) ? staffInfo.getCenter().getId() : null;
+            
             // 1. Số lượng mũi tiêm hôm nay (của nurse này)
             long injectionsToday = vaccinationRecordRepository.countByNurseIdAndInjectionDate(currentUser.getId(), today);
             
             // 2. Số lượng đang chờ (appointments APPROVED)
-            long pendingCount = appointmentRepository.countByStatus(AppointmentStatus.APPROVED);
+            long pendingCount;
+            if (userCenterId != null) {
+                pendingCount = appointmentRepository.countByStatusAndCenterId(AppointmentStatus.APPROVED, userCenterId);
+            } else {
+                pendingCount = appointmentRepository.countByStatus(AppointmentStatus.APPROVED);
+            }
             
             // 3. Vaccine đã sử dụng hôm nay (danh sách vaccine và số lượng)
-            List<VaccinationRecord> todayRecords = vaccinationRecordRepository.findByInjectionDate(today);
+            List<VaccinationRecord> todayRecords;
+            if (userCenterId != null) {
+                todayRecords = vaccinationRecordRepository.findByInjectionDateAndAppointmentCenterId(today, userCenterId);
+            } else {
+                todayRecords = vaccinationRecordRepository.findByInjectionDate(today);
+            }
             Map<Long, Map<String, Object>> vaccinesUsed = new HashMap<>();
             for (VaccinationRecord record : todayRecords) {
                 if (record.getVaccine() != null) {
@@ -87,7 +104,12 @@ public class NurseController {
             }
             
             // 4. Danh sách bệnh nhân chờ tiêm (appointments APPROVED)
-            List<Appointment> pendingAppointments = appointmentRepository.findByStatus(AppointmentStatus.APPROVED);
+            List<Appointment> pendingAppointments;
+            if (userCenterId != null) {
+                pendingAppointments = appointmentRepository.findByStatusAndCenterId(AppointmentStatus.APPROVED, userCenterId);
+            } else {
+                pendingAppointments = appointmentRepository.findByStatus(AppointmentStatus.APPROVED);
+            }
             List<Map<String, Object>> waitingPatients = pendingAppointments.stream()
                     .limit(10) // Giới hạn 10 bệnh nhân đầu tiên
                     .map(apt -> {
@@ -407,6 +429,17 @@ public class NurseController {
             Appointment appointment = appointmentRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Appointment not found"));
             
+            // Kiểm tra center của y tá phải trùng với center của appointment
+            ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = staffInfoRepository.findByUser(currentUser).orElse(null);
+            if (staffInfo != null && staffInfo.getCenter() != null) {
+                Long userCenterId = staffInfo.getCenter().getId();
+                if (appointment.getCenter() == null || !appointment.getCenter().getId().equals(userCenterId)) {
+                    Map<String, String> error = new HashMap<>();
+                    error.put("error", "Bạn chỉ có thể tiêm cho bệnh nhân của trung tâm mình");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+                }
+            }
+            
             // Kiểm tra status phải là APPROVED hoặc INJECTING
             if (appointment.getStatus() != AppointmentStatus.APPROVED && 
                 appointment.getStatus() != AppointmentStatus.INJECTING) {
@@ -482,7 +515,7 @@ public class NurseController {
                 Screening screening = screeningOpt.get();
                 Map<String, Object> screeningInfo = new HashMap<>();
                 screeningInfo.put("id", screening.getId());
-                screeningInfo.put("temperature", screening.getBodyTemperature());
+                screeningInfo.put("temperature", screening   .getBodyTemperature());
                 screeningInfo.put("bloodPressure", screening.getBloodPressure());
                 screeningInfo.put("heartRate", screening.getHeartRate());
                 screeningInfo.put("screeningResult", screening.getScreeningResult() != null ? screening.getScreeningResult().name() : null);
@@ -495,35 +528,25 @@ public class NurseController {
                 result.put("screening", screeningInfo);
             }
             
-            // Thông tin vaccine lots có sẵn tại trung tâm
-            if (appointment.getCenter() != null && appointment.getVaccine() != null) {
-                Optional<CenterVaccine> centerVaccineOpt = centerVaccineRepository.findByCenterAndVaccine(
-                    appointment.getCenter(), 
-                    appointment.getVaccine()
-                );
-                if (centerVaccineOpt.isPresent()) {
-                    // Lấy tất cả vaccine lots của vaccine này và filter theo remainingQuantity > 0
-                    List<VaccineLot> allLots = vaccineLotRepository.findByVaccineId(appointment.getVaccine().getId());
-                    List<VaccineLot> availableLots = allLots.stream()
-                        .filter(lot -> lot.getRemainingQuantity() != null && lot.getRemainingQuantity() > 0)
-                        .filter(lot -> lot.getStatus() == ut.edu.vaccinationmanagementsystem.entity.enums.VaccineLotStatus.AVAILABLE)
-                        .filter(lot -> lot.getExpiryDate() == null || lot.getExpiryDate().isAfter(java.time.LocalDate.now()))
-                        .collect(Collectors.toList());
-                    
-                    List<Map<String, Object>> lotsInfo = availableLots.stream()
-                        .map(lot -> {
-                            Map<String, Object> lotInfo = new HashMap<>();
-                            lotInfo.put("id", lot.getId());
-                            lotInfo.put("lotNumber", lot.getLotNumber());
-                            lotInfo.put("remainingQuantity", lot.getRemainingQuantity());
-                            lotInfo.put("expiryDate", lot.getExpiryDate());
-                            return lotInfo;
-                        })
-                        .collect(Collectors.toList());
-                    result.put("availableVaccineLots", lotsInfo);
-                } else {
-                    result.put("availableVaccineLots", new ArrayList<>());
-                }
+            // Thông tin vaccine lots có sẵn
+            if (appointment.getVaccine() != null) {
+                // Lấy tất cả vaccine lots của vaccine này (không filter expiry date ở đây để nurse vẫn chọn được trong khi dev/test)
+                List<VaccineLot> allLots = vaccineLotRepository.findByVaccineId(appointment.getVaccine().getId());
+                LocalDate today = LocalDate.now();
+                
+                List<Map<String, Object>> lotsInfo = allLots.stream()
+                    .filter(lot -> lot.getStatus() == ut.edu.vaccinationmanagementsystem.entity.enums.VaccineLotStatus.AVAILABLE)
+                    .map(lot -> {
+                        Map<String, Object> lotInfo = new HashMap<>();
+                        lotInfo.put("id", lot.getId());
+                        lotInfo.put("lotNumber", lot.getLotNumber());
+                        lotInfo.put("remainingQuantity", lot.getRemainingQuantity() != null ? lot.getRemainingQuantity() : 0);
+                        lotInfo.put("expiryDate", lot.getExpiryDate());
+                        lotInfo.put("isExpired", lot.getExpiryDate() != null && lot.getExpiryDate().isBefore(today));
+                        return lotInfo;
+                    })
+                    .collect(Collectors.toList());
+                result.put("availableVaccineLots", lotsInfo);
             } else {
                 result.put("availableVaccineLots", new ArrayList<>());
             }

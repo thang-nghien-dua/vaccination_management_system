@@ -31,6 +31,12 @@
                 <span class="text-sm">Dashboard</span>
             </a>
             <a class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors"
+                th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/nurse/appointments') ? 'active-nav text-primary font-bold' : ''}"
+                th:href="@{/nurse/appointments}">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">vaccines</span>
+                <span class="text-sm">Lịch hẹn</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors"
                 th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/nurse/vaccines') ? 'active-nav text-primary font-bold' : ''}"
                 th:href="@{/nurse/vaccines}">
                 <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">inventory</span>
@@ -46,7 +52,7 @@
                 th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/nurse/lich-su-tiem-y-ta') ? 'active-nav text-primary font-bold' : ''}"
                 th:href="@{/nurse/lich-su-tiem-y-ta}">
                 <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">history</span>
-                <span class="text-sm">Lịch sử</span>
+                <span class="text-sm">Lịch sử tiêm</span>
             </a>
             <a class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors"
                 th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/trace') ? 'active-nav text-primary font-bold' : ''}"
@@ -82,9 +88,9 @@
 
     <style>
         .active-nav {
-            background-color: rgba(15, 118, 110, 0.1) !important;
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.15) 0%, rgba(15, 118, 110, 0.05) 100%);
             border-left: 4px solid #0f766e;
-            color: #0f766e !important;
+            /* primary color */
         }
 
         .active-nav .material-symbols-outlined {

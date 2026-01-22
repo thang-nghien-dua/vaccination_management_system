@@ -103,15 +103,19 @@ public class Appointment {
     
     // Relationships
     @OneToOne(mappedBy = "appointment", cascade = CascadeType.ALL)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private MedicalDeclaration medicalDeclaration; // Khai báo y tế
     
     @OneToOne(mappedBy = "appointment", cascade = CascadeType.ALL)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Payment payment; // Thông tin thanh toán
     
     @OneToOne(mappedBy = "appointment", cascade = CascadeType.ALL)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Screening screening; // Kết quả khám sàng lọc
     
     @OneToOne(mappedBy = "appointment", cascade = CascadeType.ALL)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private VaccinationRecord vaccinationRecord; // Hồ sơ tiêm chủng
     
     @OneToMany(mappedBy = "appointment")

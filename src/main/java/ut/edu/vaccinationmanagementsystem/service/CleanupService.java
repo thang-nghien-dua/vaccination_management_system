@@ -25,6 +25,9 @@ public class CleanupService {
     @Autowired
     private EmailVerificationTokenRepository emailVerificationTokenRepository;
     
+    @Autowired
+    private UserService userService;
+    
     /**
      * Xóa user INACTIVE sau 30 ngày không xác thực
      * Chạy mỗi ngày lúc 2 giờ sáng
@@ -43,8 +46,8 @@ public class CleanupService {
                 // Xóa token xác thực email
                 emailVerificationTokenRepository.findByUser(user).ifPresent(emailVerificationTokenRepository::delete);
                 
-                // Xóa user
-                userRepository.delete(user);
+                // Xóa user (sử dụng deleteUserByAdmin để xử lý foreign key constraints)
+                userService.deleteUserByAdmin(user.getId());
                 deletedCount++;
             } catch (Exception e) {
                 System.err.println("Failed to delete user " + user.getEmail() + ": " + e.getMessage());
