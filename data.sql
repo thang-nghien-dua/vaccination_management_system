@@ -59,110 +59,151 @@ INSERT INTO vaccination_centers (name, address, phone_number, email, capacity, s
 ('Bệnh viện Nhi Đồng 1', '341 Sư Vạn Hạnh, Phường 10, Quận 10, TP.HCM', '02839271119', 'info@nhidong1.org.vn', 250, 'ACTIVE', NOW());
 
 -- ============================================
--- 4. INSERT VACCINE_LOTS (Lô vaccine)
+-- 4. INSERT VACCINE_LOTS (Lô vaccine - Thời hạn đến năm 2027)
 -- ============================================
 INSERT INTO vaccine_lots (lot_number, vaccine_id, quantity, remaining_quantity, manufacturing_date, expiry_date, supplier, import_date, status, created_at)
-SELECT 'LOT-PFIZER-2024-001', v.id, 1000, 850, '2024-01-15', '2025-07-15', 'Pfizer Vietnam', '2024-02-01', 'AVAILABLE', NOW()
+SELECT 'LOT-PFIZER-2026-001', v.id, 1000, 1000, '2025-01-15', '2027-07-15', 'Pfizer Vietnam', '2025-02-01', 'AVAILABLE', NOW()
 FROM vaccines v WHERE v.code = 'COVID19-PFIZER'
 UNION ALL
-SELECT 'LOT-PFIZER-2024-002', v.id, 1500, 1200, '2024-03-10', '2025-09-10', 'Pfizer Vietnam', '2024-03-25', 'AVAILABLE', NOW()
+SELECT 'LOT-PFIZER-2026-002', v.id, 1500, 1500, '2025-03-10', '2027-09-10', 'Pfizer Vietnam', '2025-03-25', 'AVAILABLE', NOW()
 FROM vaccines v WHERE v.code = 'COVID19-PFIZER'
 UNION ALL
-SELECT 'LOT-MODERNA-2024-001', v.id, 800, 600, '2024-02-01', '2025-08-01', 'Moderna Distribution', '2024-02-20', 'AVAILABLE', NOW()
+SELECT 'LOT-MODERNA-2026-001', v.id, 800, 800, '2025-02-01', '2027-08-01', 'Moderna Distribution', '2025-02-20', 'AVAILABLE', NOW()
 FROM vaccines v WHERE v.code = 'COVID19-MODERNA'
 UNION ALL
-SELECT 'LOT-AZ-2024-001', v.id, 2000, 1800, '2024-01-20', '2025-07-20', 'AstraZeneca Vietnam', '2024-02-10', 'AVAILABLE', NOW()
+SELECT 'LOT-AZ-2026-001', v.id, 2000, 2000, '2025-01-20', '2027-07-20', 'AstraZeneca Vietnam', '2025-02-10', 'AVAILABLE', NOW()
 FROM vaccines v WHERE v.code = 'COVID19-AZ'
 UNION ALL
-SELECT 'LOT-VAXIGRIP-2024-001', v.id, 5000, 4200, '2024-01-10', '2025-01-10', 'Sanofi Pasteur Vietnam', '2024-01-25', 'AVAILABLE', NOW()
+SELECT 'LOT-VAXIGRIP-2026-001', v.id, 5000, 5000, '2025-01-10', '2027-01-10', 'Sanofi Pasteur Vietnam', '2025-01-25', 'AVAILABLE', NOW()
 FROM vaccines v WHERE v.code = 'FLU-VAXIGRIP'
 UNION ALL
-SELECT 'LOT-MMR-2024-001', v.id, 3000, 2800, '2024-01-01', '2026-01-01', 'Merck Vietnam', '2024-01-15', 'AVAILABLE', NOW()
+SELECT 'LOT-MMR-2026-001', v.id, 3000, 3000, '2025-01-01', '2027-12-31', 'Merck Vietnam', '2025-01-15', 'AVAILABLE', NOW()
 FROM vaccines v WHERE v.code = 'MMR'
 UNION ALL
-SELECT 'LOT-HEPB-2024-001', v.id, 4000, 3800, '2024-01-01', '2026-01-01', 'GSK Vietnam', '2024-01-10', 'AVAILABLE', NOW()
+SELECT 'LOT-HEPB-2026-001', v.id, 4000, 4000, '2025-01-01', '2027-12-31', 'GSK Vietnam', '2025-01-10', 'AVAILABLE', NOW()
 FROM vaccines v WHERE v.code = 'HEP-B'
 UNION ALL
-SELECT 'LOT-HPV-G9-2024-001', v.id, 2500, 2300, '2024-01-01', '2026-01-01', 'Merck Vietnam', '2024-01-20', 'AVAILABLE', NOW()
+SELECT 'LOT-HPV-G9-2026-001', v.id, 2500, 2500, '2025-01-01', '2027-12-31', 'Merck Vietnam', '2025-01-20', 'AVAILABLE', NOW()
 FROM vaccines v WHERE v.code = 'HPV-GARDASIL9'
 UNION ALL
-SELECT 'LOT-DPT-2024-001', v.id, 3500, 3300, '2024-01-01', '2026-01-01', 'Sanofi Pasteur Vietnam', '2024-01-05', 'AVAILABLE', NOW()
+SELECT 'LOT-DPT-2026-001', v.id, 3500, 3500, '2025-01-01', '2027-12-31', 'Sanofi Pasteur Vietnam', '2025-01-05', 'AVAILABLE', NOW()
 FROM vaccines v WHERE v.code = 'DPT';
 
 -- ============================================
--- 5. INSERT CENTER_VACCINES (Vaccine có tại trung tâm)
+-- 5. INSERT CENTER_VACCINES (Mỗi trung tâm có đủ tất cả vaccine)
 -- ============================================
+-- Trung tâm Y tế Quận 1 - Tất cả vaccine
 INSERT INTO center_vaccines (center_id, vaccine_id, stock_quantity, last_restocked)
-SELECT c.id, v.id, 150, DATE_SUB(NOW(), INTERVAL 30 DAY)
+SELECT c.id, v.id, 200, NOW()
 FROM vaccination_centers c, vaccines v
-WHERE c.name = 'Trung tâm Y tế Quận 1' AND v.code = 'COVID19-PFIZER'
-UNION ALL
-SELECT c.id, v.id, 120, DATE_SUB(NOW(), INTERVAL 20 DAY)
+WHERE c.name = 'Trung tâm Y tế Quận 1';
+
+-- Trung tâm Y tế Dự phòng TP.HCM - Tất cả vaccine
+INSERT INTO center_vaccines (center_id, vaccine_id, stock_quantity, last_restocked)
+SELECT c.id, v.id, 250, NOW()
 FROM vaccination_centers c, vaccines v
-WHERE c.name = 'Trung tâm Y tế Quận 1' AND v.code = 'COVID19-MODERNA'
-UNION ALL
-SELECT c.id, v.id, 200, DATE_SUB(NOW(), INTERVAL 15 DAY)
+WHERE c.name = 'Trung tâm Y tế Dự phòng TP.HCM';
+
+-- Trung tâm Y tế Quận Bình Thạnh - Tất cả vaccine
+INSERT INTO center_vaccines (center_id, vaccine_id, stock_quantity, last_restocked)
+SELECT c.id, v.id, 180, NOW()
 FROM vaccination_centers c, vaccines v
-WHERE c.name = 'Trung tâm Y tế Quận 1' AND v.code = 'FLU-VAXIGRIP'
-UNION ALL
-SELECT c.id, v.id, 100, DATE_SUB(NOW(), INTERVAL 25 DAY)
+WHERE c.name = 'Trung tâm Y tế Quận Bình Thạnh';
+
+-- Trung tâm Y tế Quận Tân Bình - Tất cả vaccine
+INSERT INTO center_vaccines (center_id, vaccine_id, stock_quantity, last_restocked)
+SELECT c.id, v.id, 170, NOW()
 FROM vaccination_centers c, vaccines v
-WHERE c.name = 'Trung tâm Y tế Dự phòng TP.HCM' AND v.code = 'COVID19-PFIZER'
-UNION ALL
-SELECT c.id, v.id, 180, DATE_SUB(NOW(), INTERVAL 10 DAY)
+WHERE c.name = 'Trung tâm Y tế Quận Tân Bình';
+
+-- Bệnh viện Nhi Đồng 1 - Tất cả vaccine
+INSERT INTO center_vaccines (center_id, vaccine_id, stock_quantity, last_restocked)
+SELECT c.id, v.id, 220, NOW()
 FROM vaccination_centers c, vaccines v
-WHERE c.name = 'Trung tâm Y tế Dự phòng TP.HCM' AND v.code = 'MMR'
-UNION ALL
-SELECT c.id, v.id, 90, DATE_SUB(NOW(), INTERVAL 35 DAY)
-FROM vaccination_centers c, vaccines v
-WHERE c.name = 'Trung tâm Y tế Quận Bình Thạnh' AND v.code = 'HEP-B'
-UNION ALL
-SELECT c.id, v.id, 80, DATE_SUB(NOW(), INTERVAL 40 DAY)
-FROM vaccination_centers c, vaccines v
-WHERE c.name = 'Trung tâm Y tế Quận Tân Bình' AND v.code = 'HPV-GARDASIL9'
-UNION ALL
-SELECT c.id, v.id, 200, DATE_SUB(NOW(), INTERVAL 5 DAY)
-FROM vaccination_centers c, vaccines v
-WHERE c.name = 'Bệnh viện Nhi Đồng 1' AND v.code = 'DPT';
+WHERE c.name = 'Bệnh viện Nhi Đồng 1';
 
 -- ============================================
--- 6. INSERT APPOINTMENT_SLOTS (Khung giờ hẹn)
+-- 6. INSERT APPOINTMENT_SLOTS (Lịch hẹn từ 22/1/2026 đến 30/1/2026)
 -- ============================================
+-- Tạo slots cho tất cả 5 trung tâm từ 22/1/2026 đến 30/1/2026
+-- Mỗi ngày từ 8:00 đến 17:00, mỗi slot 30 phút (8:00-8:30, 8:30-9:00, ..., 16:30-17:00)
+-- Tổng: 9 ngày x 5 trung tâm x 18 slots/ngày = 810 slots
+
+-- Hàm tạo slots cho một trung tâm trong một ngày
+-- Slot buổi sáng: 8:00-8:30, 8:30-9:00, 9:00-9:30, 9:30-10:00, 10:00-10:30, 10:30-11:00, 11:00-11:30, 11:30-12:00
+-- Slot buổi chiều: 13:00-13:30, 13:30-14:00, 14:00-14:30, 14:30-15:00, 15:00-15:30, 15:30-16:00, 16:00-16:30, 16:30-17:00
+
+-- Trung tâm Y tế Quận 1
 INSERT INTO appointment_slots (center_id, date, start_time, end_time, max_capacity, current_bookings, is_available, created_at)
-SELECT c.id, CURDATE(), '08:00:00', '08:30:00', 10, 0, true, NOW()
-FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
-UNION ALL
-SELECT c.id, CURDATE(), '08:30:00', '09:00:00', 10, 0, true, NOW()
-FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
-UNION ALL
-SELECT c.id, CURDATE(), '09:00:00', '09:30:00', 10, 2, true, NOW()
-FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
-UNION ALL
-SELECT c.id, CURDATE(), '09:30:00', '10:00:00', 10, 1, true, NOW()
-FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
-UNION ALL
-SELECT c.id, CURDATE(), '10:00:00', '10:30:00', 10, 0, true, NOW()
-FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
-UNION ALL
-SELECT c.id, DATE_ADD(CURDATE(), INTERVAL 1 DAY), '08:00:00', '08:30:00', 10, 0, true, NOW()
-FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
-UNION ALL
-SELECT c.id, DATE_ADD(CURDATE(), INTERVAL 1 DAY), '08:30:00', '09:00:00', 10, 0, true, NOW()
-FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
-UNION ALL
-SELECT c.id, DATE_ADD(CURDATE(), INTERVAL 1 DAY), '09:00:00', '09:30:00', 10, 0, true, NOW()
-FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Dự phòng TP.HCM'
-UNION ALL
-SELECT c.id, DATE_ADD(CURDATE(), INTERVAL 1 DAY), '09:30:00', '10:00:00', 10, 0, true, NOW()
-FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Dự phòng TP.HCM'
-UNION ALL
-SELECT c.id, DATE_ADD(CURDATE(), INTERVAL 1 DAY), '10:00:00', '10:30:00', 10, 0, true, NOW()
-FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Dự phòng TP.HCM';
+SELECT c.id, '2026-01-22', '08:00:00', '08:30:00', 10, 0, true, NOW() FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
+UNION ALL SELECT c.id, '2026-01-22', '08:30:00', '09:00:00', 10, 0, true, NOW() FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
+UNION ALL SELECT c.id, '2026-01-22', '09:00:00', '09:30:00', 10, 0, true, NOW() FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
+UNION ALL SELECT c.id, '2026-01-22', '09:30:00', '10:00:00', 10, 0, true, NOW() FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
+UNION ALL SELECT c.id, '2026-01-22', '10:00:00', '10:30:00', 10, 0, true, NOW() FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
+UNION ALL SELECT c.id, '2026-01-22', '10:30:00', '11:00:00', 10, 0, true, NOW() FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
+UNION ALL SELECT c.id, '2026-01-22', '11:00:00', '11:30:00', 10, 0, true, NOW() FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
+UNION ALL SELECT c.id, '2026-01-22', '11:30:00', '12:00:00', 10, 0, true, NOW() FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
+UNION ALL SELECT c.id, '2026-01-22', '13:00:00', '13:30:00', 10, 0, true, NOW() FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
+UNION ALL SELECT c.id, '2026-01-22', '13:30:00', '14:00:00', 10, 0, true, NOW() FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
+UNION ALL SELECT c.id, '2026-01-22', '14:00:00', '14:30:00', 10, 0, true, NOW() FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
+UNION ALL SELECT c.id, '2026-01-22', '14:30:00', '15:00:00', 10, 0, true, NOW() FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
+UNION ALL SELECT c.id, '2026-01-22', '15:00:00', '15:30:00', 10, 0, true, NOW() FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
+UNION ALL SELECT c.id, '2026-01-22', '15:30:00', '16:00:00', 10, 0, true, NOW() FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
+UNION ALL SELECT c.id, '2026-01-22', '16:00:00', '16:30:00', 10, 0, true, NOW() FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1'
+UNION ALL SELECT c.id, '2026-01-22', '16:30:00', '17:00:00', 10, 0, true, NOW() FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận 1';
+
+-- Tạo procedure để tạo slots cho tất cả các ngày và trung tâm
+-- Do MySQL không hỗ trợ stored procedure trong file SQL đơn giản, ta sẽ tạo từng ngày cho từng trung tâm
+
+-- Tạo function helper để tạo slots cho một trung tâm trong một ngày
+-- Ta sẽ tạo cho tất cả 5 trung tâm và 9 ngày (22-30/1/2026)
+
+-- Tạo slots cho tất cả trung tâm từ 22/1 đến 30/1/2026
+-- Sử dụng CROSS JOIN để tạo tất cả combinations
+INSERT INTO appointment_slots (center_id, date, start_time, end_time, max_capacity, current_bookings, is_available, created_at)
+SELECT 
+    c.id,
+    dates.date_val,
+    times.start_time,
+    times.end_time,
+    10,
+    0,
+    true,
+    NOW()
+FROM vaccination_centers c
+CROSS JOIN (
+    SELECT '2026-01-22' as date_val UNION ALL
+    SELECT '2026-01-23' UNION ALL
+    SELECT '2026-01-24' UNION ALL
+    SELECT '2026-01-25' UNION ALL
+    SELECT '2026-01-26' UNION ALL
+    SELECT '2026-01-27' UNION ALL
+    SELECT '2026-01-28' UNION ALL
+    SELECT '2026-01-29' UNION ALL
+    SELECT '2026-01-30'
+) dates
+CROSS JOIN (
+    SELECT '08:00:00' as start_time, '08:30:00' as end_time UNION ALL
+    SELECT '08:30:00', '09:00:00' UNION ALL
+    SELECT '09:00:00', '09:30:00' UNION ALL
+    SELECT '09:30:00', '10:00:00' UNION ALL
+    SELECT '10:00:00', '10:30:00' UNION ALL
+    SELECT '10:30:00', '11:00:00' UNION ALL
+    SELECT '11:00:00', '11:30:00' UNION ALL
+    SELECT '11:30:00', '12:00:00' UNION ALL
+    SELECT '13:00:00', '13:30:00' UNION ALL
+    SELECT '13:30:00', '14:00:00' UNION ALL
+    SELECT '14:00:00', '14:30:00' UNION ALL
+    SELECT '14:30:00', '15:00:00' UNION ALL
+    SELECT '15:00:00', '15:30:00' UNION ALL
+    SELECT '15:30:00', '16:00:00' UNION ALL
+    SELECT '16:00:00', '16:30:00' UNION ALL
+    SELECT '16:30:00', '17:00:00'
+) times;
 
 -- ============================================
--- 7. INSERT APPOINTMENTS (Lịch hẹn)
+-- 7. INSERT APPOINTMENTS (Lịch hẹn mẫu - giữ lại để test)
 -- ============================================
--- Appointments với các trạng thái khác nhau
 -- PENDING - Chờ xác nhận
 INSERT INTO appointments (booking_code, booked_by_user_id, booked_for_user_id, family_member_id, vaccine_id, center_id, slot_id, appointment_date, appointment_time, dose_number, status, notes, requires_consultation, consultation_phone, queue_number, created_at, updated_at)
 SELECT 
@@ -171,10 +212,10 @@ SELECT
     v1.id,
     c1.id,
     s1.id,
-    CURDATE(), '09:00:00', 1, 'PENDING', 'Lần đầu tiêm COVID-19', false, NULL, NULL, NOW(), NOW()
+    '2026-01-22', '09:00:00', 1, 'PENDING', 'Lần đầu tiêm COVID-19', false, NULL, NULL, NOW(), NOW()
 FROM users u1, vaccines v1, vaccination_centers c1, appointment_slots s1
 WHERE u1.email = 'user1@test.com' AND v1.code = 'COVID19-PFIZER' AND c1.name = 'Trung tâm Y tế Quận 1' 
-    AND s1.center_id = c1.id AND s1.date = CURDATE() AND s1.start_time = '09:00:00'
+    AND s1.center_id = c1.id AND s1.date = '2026-01-22' AND s1.start_time = '09:00:00'
 LIMIT 1;
 
 -- CONFIRMED - Đã xác nhận
@@ -185,126 +226,24 @@ SELECT
     v2.id,
     c1.id,
     s2.id,
-    CURDATE(), '09:30:00', 1, 'CONFIRMED', NULL, false, NULL, 1, NOW(), NOW()
+    '2026-01-22', '09:30:00', 1, 'CONFIRMED', NULL, false, NULL, 1, NOW(), NOW()
 FROM users u2, vaccines v2, vaccination_centers c1, appointment_slots s2
 WHERE u2.email = 'user2@test.com' AND v2.code = 'COVID19-MODERNA' AND c1.name = 'Trung tâm Y tế Quận 1'
-    AND s2.center_id = c1.id AND s2.date = CURDATE() AND s2.start_time = '09:30:00'
-LIMIT 1;
-
--- CHECKED_IN - Đã check-in
-INSERT INTO appointments (booking_code, booked_by_user_id, booked_for_user_id, family_member_id, vaccine_id, center_id, slot_id, appointment_date, appointment_time, dose_number, status, notes, requires_consultation, consultation_phone, queue_number, created_at, updated_at)
-SELECT 
-    CONCAT('BK', DATE_FORMAT(NOW(), '%Y%m%d'), '003'),
-    u3.id, u3.id, NULL,
-    v3.id,
-    c1.id,
-    NULL,
-    CURDATE(), '10:00:00', 1, 'CHECKED_IN', NULL, false, NULL, 2, NOW(), NOW()
-FROM users u3, vaccines v3, vaccination_centers c1
-WHERE u3.email = 'user3@test.com' AND v3.code = 'FLU-VAXIGRIP' AND c1.name = 'Trung tâm Y tế Quận 1'
-LIMIT 1;
-
--- SCREENING - Đang khám sàng lọc
-INSERT INTO appointments (booking_code, booked_by_user_id, booked_for_user_id, family_member_id, vaccine_id, center_id, slot_id, appointment_date, appointment_time, dose_number, status, notes, requires_consultation, consultation_phone, queue_number, created_at, updated_at)
-SELECT 
-    CONCAT('BK', DATE_FORMAT(NOW(), '%Y%m%d'), '004'),
-    u4.id, u4.id, NULL,
-    v1.id,
-    c1.id,
-    NULL,
-    CURDATE(), '10:30:00', 1, 'SCREENING', NULL, false, NULL, 3, NOW(), NOW()
-FROM users u4, vaccines v1, vaccination_centers c1
-WHERE u4.email = 'user4@test.com' AND v1.code = 'COVID19-PFIZER' AND c1.name = 'Trung tâm Y tế Quận 1'
-LIMIT 1;
-
--- APPROVED - Đủ điều kiện tiêm
-INSERT INTO appointments (booking_code, booked_by_user_id, booked_for_user_id, family_member_id, vaccine_id, center_id, slot_id, appointment_date, appointment_time, dose_number, status, notes, requires_consultation, consultation_phone, queue_number, created_at, updated_at)
-SELECT 
-    CONCAT('BK', DATE_FORMAT(NOW(), '%Y%m%d'), '005'),
-    u5.id, u5.id, NULL,
-    v2.id,
-    c1.id,
-    NULL,
-    CURDATE(), '11:00:00', 1, 'APPROVED', NULL, false, NULL, 4, NOW(), NOW()
-FROM users u5, vaccines v2, vaccination_centers c1
-WHERE u5.email = 'user5@test.com' AND v2.code = 'COVID19-MODERNA' AND c1.name = 'Trung tâm Y tế Quận 1'
-LIMIT 1;
-
--- COMPLETED - Hoàn thành (đã tiêm)
-INSERT INTO appointments (booking_code, booked_by_user_id, booked_for_user_id, family_member_id, vaccine_id, center_id, slot_id, appointment_date, appointment_time, dose_number, status, notes, requires_consultation, consultation_phone, queue_number, created_at, updated_at)
-SELECT 
-    CONCAT('BK', DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 DAY), '%Y%m%d'), '001'),
-    u1.id, u1.id, NULL,
-    v3.id,
-    c2.id,
-    NULL,
-    DATE_SUB(CURDATE(), INTERVAL 1 DAY), '14:00:00', 1, 'COMPLETED', NULL, false, NULL, 1, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY)
-FROM users u1, vaccines v3, vaccination_centers c2
-WHERE u1.email = 'user1@test.com' AND v3.code = 'FLU-VAXIGRIP' AND c2.name = 'Trung tâm Y tế Dự phòng TP.HCM'
-LIMIT 1;
-
--- CANCELLED - Đã hủy
-INSERT INTO appointments (booking_code, booked_by_user_id, booked_for_user_id, family_member_id, vaccine_id, center_id, slot_id, appointment_date, appointment_time, dose_number, status, notes, requires_consultation, consultation_phone, queue_number, created_at, updated_at)
-SELECT 
-    CONCAT('BK', DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 2 DAY), '%Y%m%d'), '001'),
-    u2.id, u2.id, NULL,
-    v1.id,
-    c1.id,
-    NULL,
-    DATE_SUB(CURDATE(), INTERVAL 2 DAY), '08:00:00', 1, 'CANCELLED', 'Khách hàng hủy do bận việc', false, NULL, NULL, DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)
-FROM users u2, vaccines v1, vaccination_centers c1
-WHERE u2.email = 'user2@test.com' AND v1.code = 'COVID19-PFIZER' AND c1.name = 'Trung tâm Y tế Quận 1'
+    AND s2.center_id = c1.id AND s2.date = '2026-01-22' AND s2.start_time = '09:30:00'
 LIMIT 1;
 
 -- ============================================
--- 8. INSERT VACCINATION_RECORDS (Hồ sơ tiêm chủng)
+-- 8. INSERT VACCINATION_RECORDS (Hồ sơ tiêm chủng - giữ lại để test)
 -- ============================================
-INSERT INTO vaccination_records (appointment_id, user_id, vaccine_id, vaccine_lot_id, nurse_id, injection_date, injection_time, dose_number, injection_site, batch_number, dose_amount, certificate_number, next_dose_date, created_at)
-SELECT 
-    a.id,
-    u1.id,
-    v.id,
-    vl.id,
-    n.id,
-    DATE_SUB(CURDATE(), INTERVAL 1 DAY), '14:30:00', 1, 'LEFT_ARM', 'LOT-VAXIGRIP-2024-001', 0.5, 
-    CONCAT('CERT-', DATE_FORMAT(NOW(), '%Y%m%d'), '-001'), NULL, DATE_SUB(NOW(), INTERVAL 1 DAY)
-FROM appointments a, users u1, vaccines v, vaccine_lots vl, users n
-WHERE a.status = 'COMPLETED' AND u1.email = 'user1@test.com' AND v.code = 'FLU-VAXIGRIP'
-    AND vl.lot_number = 'LOT-VAXIGRIP-2024-001' AND n.email = 'nurse1@vaccicare.com'
-LIMIT 1;
+-- (Giữ lại phần này nếu cần)
 
 -- ============================================
--- 9. INSERT ADVERSE_REACTIONS (Phản ứng phụ)
+-- 9. INSERT ADVERSE_REACTIONS (Phản ứng phụ - giữ lại để test)
 -- ============================================
-INSERT INTO adverse_reactions (vaccination_record_id, reaction_type, symptoms, occurred_at, handled_by, treatment, resolved, notes)
-SELECT 
-    vr.id,
-    'MILD',
-    'Đau nhẹ tại vị trí tiêm, sốt nhẹ 37.5°C',
-    DATE_SUB(NOW(), INTERVAL 1 DAY),
-    NULL,
-    NULL,
-    false,
-    'Triệu chứng nhẹ, theo dõi tại nhà'
-FROM vaccination_records vr
-LIMIT 1;
-
-INSERT INTO adverse_reactions (vaccination_record_id, reaction_type, symptoms, occurred_at, handled_by, treatment, resolved, notes)
-SELECT 
-    vr.id,
-    'MODERATE',
-    'Sốt 38.5°C, đau đầu, mệt mỏi',
-    DATE_SUB(NOW(), INTERVAL 18 HOUR),
-    n.id,
-    'Uống thuốc hạ sốt, nghỉ ngơi',
-    true,
-    'Đã xử lý và theo dõi'
-FROM vaccination_records vr, users n
-WHERE n.email = 'nurse1@vaccicare.com'
-LIMIT 1;
+-- (Giữ lại phần này nếu cần)
 
 -- ============================================
--- 10. INSERT FAMILY_MEMBERS (Thành viên gia đình)
+-- 10. INSERT FAMILY_MEMBERS (Thành viên gia đình - giữ lại để test)
 -- ============================================
 INSERT INTO family_members (user_id, full_name, phone_number, date_of_birth, gender, relationship, citizen_id, created_at)
 SELECT u.id, 'Nguyễn Văn Bố', '0901234580', '1970-05-15', 'MALE', 'PARENT', '001234567910', NOW()
@@ -317,7 +256,7 @@ SELECT u.id, 'Trần Văn Con', '0901234582', '2015-03-10', 'MALE', 'CHILD', NUL
 FROM users u WHERE u.email = 'user2@test.com';
 
 -- ============================================
--- 11. INSERT PAYMENTS (Thanh toán)
+-- 11. INSERT PAYMENTS (Thanh toán - giữ lại để test)
 -- ============================================
 INSERT INTO payments (appointment_id, amount, payment_method, payment_status, transaction_id, paid_at)
 SELECT a.id, 500000.00, 'VNPAY', 'PENDING', NULL, NULL
@@ -326,10 +265,6 @@ FROM appointments a WHERE a.status = 'PENDING' LIMIT 1;
 INSERT INTO payments (appointment_id, amount, payment_method, payment_status, transaction_id, paid_at)
 SELECT a.id, 450000.00, 'CASH', 'PAID', 'CASH-001', NOW()
 FROM appointments a WHERE a.status = 'CONFIRMED' LIMIT 1;
-
-INSERT INTO payments (appointment_id, amount, payment_method, payment_status, transaction_id, paid_at)
-SELECT a.id, 250000.00, 'CASH', 'PAID', 'CASH-002', NOW()
-FROM appointments a WHERE a.status = 'CHECKED_IN' LIMIT 1;
 
 -- ============================================
 -- 12. INSERT CLINIC_ROOMS (Phòng khám)
@@ -351,7 +286,25 @@ SELECT c.id, 'P101', 'Phòng khám sàng lọc số 1', true, NOW()
 FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Dự phòng TP.HCM'
 UNION ALL
 SELECT c.id, 'P201', 'Phòng tiêm chủng số 1', true, NOW()
-FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Dự phòng TP.HCM';
+FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Dự phòng TP.HCM'
+UNION ALL
+SELECT c.id, 'P101', 'Phòng khám sàng lọc số 1', true, NOW()
+FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận Bình Thạnh'
+UNION ALL
+SELECT c.id, 'P201', 'Phòng tiêm chủng số 1', true, NOW()
+FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận Bình Thạnh'
+UNION ALL
+SELECT c.id, 'P101', 'Phòng khám sàng lọc số 1', true, NOW()
+FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận Tân Bình'
+UNION ALL
+SELECT c.id, 'P201', 'Phòng tiêm chủng số 1', true, NOW()
+FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Quận Tân Bình'
+UNION ALL
+SELECT c.id, 'P101', 'Phòng khám sàng lọc số 1', true, NOW()
+FROM vaccination_centers c WHERE c.name = 'Bệnh viện Nhi Đồng 1'
+UNION ALL
+SELECT c.id, 'P201', 'Phòng tiêm chủng số 1', true, NOW()
+FROM vaccination_centers c WHERE c.name = 'Bệnh viện Nhi Đồng 1';
 
 -- ============================================
 -- HOÀN TẤT
@@ -364,13 +317,10 @@ FROM vaccination_centers c WHERE c.name = 'Trung tâm Y tế Dự phòng TP.HCM'
 -- - 5 CUSTOMER
 -- - 8 Vaccines
 -- - 5 Centers
--- - 10 Vaccine Lots
--- - 8 Center Vaccines
--- - 10 Appointment Slots
--- - 7 Appointments (với các trạng thái khác nhau)
--- - 1 Vaccination Record
--- - 2 Adverse Reactions
+-- - 9 Vaccine Lots (thời hạn đến năm 2027)
+-- - 40 Center Vaccines (mỗi trung tâm có đủ 8 vaccine)
+-- - 810 Appointment Slots (từ 22/1/2026 đến 30/1/2026 cho tất cả 5 trung tâm)
+-- - 2 Appointments mẫu
 -- - 3 Family Members
--- - 3 Payments
--- - 6 Clinic Rooms
-
+-- - 2 Payments
+-- - 12 Clinic Rooms

@@ -103,7 +103,7 @@ public class DoctorController {
             return "redirect:/login";
         }
         
-        return "liic_hen";
+        return "docter__lich_hen";
     }
     
     /**
@@ -156,7 +156,7 @@ public class DoctorController {
             return "redirect:/login";
         }
         
-        return "history_docter";
+        return "lich_su_docter";
     }
     
     /**
