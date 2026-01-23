@@ -788,6 +788,192 @@ public class AppointmentController {
     }
     
     /**
+     * POST /api/appointments/walk-in
+     * Đăng ký walk-in (không đặt trước) - cho Receptionist
+     */
+    @PostMapping("/walk-in")
+    public ResponseEntity<?> createWalkInAppointment(@RequestBody Map<String, Object> requestBody) {
+        try {
+            // Validate required fields
+            String fullName = (String) requestBody.get("fullName");
+            String phoneNumber = (String) requestBody.get("phoneNumber");
+            String email = (String) requestBody.get("email");
+            String dayOfBirthStr = (String) requestBody.get("dayOfBirth");
+            String gender = (String) requestBody.get("gender");
+            Object vaccineIdObj = requestBody.get("vaccineId");
+            Object centerIdObj = requestBody.get("centerId");
+            Object slotIdObj = requestBody.get("slotId");
+            String appointmentDateStr = (String) requestBody.get("appointmentDate");
+            String appointmentTimeStr = (String) requestBody.get("appointmentTime");
+            Object doseNumberObj = requestBody.get("doseNumber");
+            String paymentMethod = (String) requestBody.get("paymentMethod");
+            String notes = (String) requestBody.get("notes");
+            
+            if (fullName == null || fullName.trim().isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Họ tên là bắt buộc");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Số điện thoại là bắt buộc");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            if (vaccineIdObj == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Vaccine ID là bắt buộc");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            if (centerIdObj == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Center ID là bắt buộc");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            if (slotIdObj == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Slot ID là bắt buộc");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            if (appointmentDateStr == null || appointmentDateStr.trim().isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Ngày hẹn là bắt buộc");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            if (appointmentTimeStr == null || appointmentTimeStr.trim().isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Giờ hẹn là bắt buộc");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            
+            // Parse values
+            Long vaccineId = null;
+            Long centerId = null;
+            Long slotId = null;
+            Integer doseNumber = 1;
+            
+            try {
+                if (vaccineIdObj instanceof Number) {
+                    vaccineId = ((Number) vaccineIdObj).longValue();
+                } else if (vaccineIdObj instanceof String) {
+                    vaccineId = Long.parseLong((String) vaccineIdObj);
+                }
+            } catch (Exception e) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Vaccine ID không hợp lệ");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            
+            try {
+                if (centerIdObj instanceof Number) {
+                    centerId = ((Number) centerIdObj).longValue();
+                } else if (centerIdObj instanceof String) {
+                    centerId = Long.parseLong((String) centerIdObj);
+                }
+            } catch (Exception e) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Center ID không hợp lệ");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            
+            try {
+                if (slotIdObj instanceof Number) {
+                    slotId = ((Number) slotIdObj).longValue();
+                } else if (slotIdObj instanceof String) {
+                    slotId = Long.parseLong((String) slotIdObj);
+                }
+            } catch (Exception e) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Slot ID không hợp lệ");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            
+            if (doseNumberObj != null) {
+                try {
+                    if (doseNumberObj instanceof Number) {
+                        doseNumber = ((Number) doseNumberObj).intValue();
+                    } else if (doseNumberObj instanceof String) {
+                        doseNumber = Integer.parseInt((String) doseNumberObj);
+                    }
+                } catch (Exception e) {
+                    doseNumber = 1; // Default to 1
+                }
+            }
+            
+            // Parse dates
+            java.time.LocalDate dayOfBirth = null;
+            if (dayOfBirthStr != null && !dayOfBirthStr.trim().isEmpty()) {
+                try {
+                    dayOfBirth = java.time.LocalDate.parse(dayOfBirthStr);
+                } catch (Exception e) {
+                    // Invalid date format, will be null
+                }
+            }
+            
+            java.time.LocalDate appointmentDate = null;
+            try {
+                appointmentDate = java.time.LocalDate.parse(appointmentDateStr);
+            } catch (Exception e) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Ngày hẹn không hợp lệ. Sử dụng định dạng YYYY-MM-DD");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            
+            java.time.LocalTime appointmentTime = null;
+            try {
+                // Try parsing with different formats
+                if (appointmentTimeStr.length() == 5) {
+                    // Format: HH:mm
+                    appointmentTime = java.time.LocalTime.parse(appointmentTimeStr, java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+                } else {
+                    // Format: HH:mm:ss or HH:mm:ss.SSS
+                    appointmentTime = java.time.LocalTime.parse(appointmentTimeStr);
+                }
+            } catch (Exception e) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Giờ hẹn không hợp lệ. Sử dụng định dạng HH:mm hoặc HH:mm:ss");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            
+            // Create walk-in appointment
+            Appointment appointment = appointmentService.createWalkInAppointment(
+                    fullName,
+                    phoneNumber,
+                    email,
+                    dayOfBirth,
+                    gender,
+                    vaccineId,
+                    centerId,
+                    slotId,
+                    appointmentDate,
+                    appointmentTime,
+                    doseNumber,
+                    paymentMethod,
+                    notes
+            );
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Đăng ký walk-in thành công");
+            response.put("bookingCode", appointment.getBookingCode());
+            response.put("appointmentId", appointment.getId());
+            response.put("appointmentDate", appointment.getAppointmentDate());
+            response.put("appointmentTime", appointment.getAppointmentTime());
+            response.put("centerName", appointment.getCenter().getName());
+            response.put("vaccineName", appointment.getVaccine().getName());
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
      * GET /api/appointments/{id}/detail
      * Lấy chi tiết appointment (cho Receptionist)
      */

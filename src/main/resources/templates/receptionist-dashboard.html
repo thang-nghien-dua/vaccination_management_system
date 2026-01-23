@@ -94,6 +94,15 @@
         #appointmentDetailModal:not(.hidden) {
             pointer-events: auto;
         }
+        /* Ensure form elements in modal are interactive */
+        #walkInModal:not(.hidden) #walkInModalContentWrapper,
+        #walkInModal:not(.hidden) #walkInModalContent,
+        #walkInModal:not(.hidden) input,
+        #walkInModal:not(.hidden) select,
+        #walkInModal:not(.hidden) textarea,
+        #walkInModal:not(.hidden) button {
+            pointer-events: auto !important;
+        }
         /* Ensure sidebar overlay doesn't block when hidden */
         #sidebarOverlay.hidden {
             opacity: 0 !important;
@@ -104,7 +113,7 @@
 <body class="bg-background-light dark:bg-background-dark min-h-screen text-[#111813] dark:text-white font-display">
 <div class="flex min-h-screen">
     <!-- Sidebar Overlay (mobile) -->
-    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden"></div>
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
 
     <!-- Sidebar -->
     <aside id="sidebar" class="w-72 bg-white dark:bg-[#1a2e21] border-r border-[#f0f4f2] dark:border-[#2d3f33] fixed h-screen z-50 transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out flex flex-col overflow-hidden shadow-xl lg:shadow-none">
@@ -898,10 +907,15 @@
         const pending = allAppointments.filter(apt => apt.status === 'PENDING').length;
         const completed = allAppointments.filter(apt => apt.status === 'COMPLETED').length;
         
-        document.getElementById('statTotal').textContent = total;
-        document.getElementById('statCheckedIn').textContent = checkedIn;
-        document.getElementById('statPending').textContent = pending;
-        document.getElementById('statCompleted').textContent = completed;
+        const statTotal = document.getElementById('statTotal');
+        const statCheckedIn = document.getElementById('statCheckedIn');
+        const statPending = document.getElementById('statPending');
+        const statCompleted = document.getElementById('statCompleted');
+        
+        if (statTotal) statTotal.textContent = total;
+        if (statCheckedIn) statCheckedIn.textContent = checkedIn;
+        if (statPending) statPending.textContent = pending;
+        if (statCompleted) statCompleted.textContent = completed;
     }
 
     // Check-in appointment
@@ -1059,9 +1073,18 @@
                 renderAppointmentDetail(result);
                 const modal = document.getElementById('appointmentDetailModal');
                 const wrapper = document.getElementById('appointmentDetailModalWrapper');
-                modal.classList.remove('hidden');
+                if (modal) {
+                    // Re-enable modal interactions (it is disabled on page load)
+                    modal.style.display = 'flex';
+                    modal.style.pointerEvents = 'auto';
+                    modal.style.visibility = 'visible';
+                    modal.classList.remove('hidden');
+                }
                 setTimeout(() => {
                     if (wrapper) {
+                        wrapper.style.pointerEvents = 'auto';
+                        // Prevent clicks inside wrapper from closing the modal
+                        wrapper.addEventListener('click', (e) => e.stopPropagation(), { once: true });
                         wrapper.classList.remove('scale-95', 'opacity-0');
                         wrapper.classList.add('scale-100', 'opacity-100');
                     }
@@ -1394,12 +1417,59 @@
         content.innerHTML = '<div class="text-center py-12"><span class="material-symbols-outlined animate-spin text-4xl text-primary mb-4 block">refresh</span><p class="text-[#61896f]">Đang tải dữ liệu...</p></div>';
         const modal = document.getElementById('walkInModal');
         const wrapper = document.getElementById('walkInModalContentWrapper');
+
+        console.log('Modal elements:', { modal, wrapper });
+
+        // Force show modal immediately
+        modal.style.display = 'flex';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.zIndex = '9999';
+        modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+        modal.style.pointerEvents = 'auto'; // Enable interactions
+        modal.style.visibility = 'visible'; // Make visible
         modal.classList.remove('hidden');
+
+        console.log('Modal forced visible');
+
         setTimeout(() => {
             if (wrapper) {
+                wrapper.style.transform = 'scale(1)';
+                wrapper.style.opacity = '1';
+                wrapper.style.display = 'block';
+                wrapper.style.position = 'relative';
+                wrapper.style.zIndex = '10000';
+                wrapper.style.background = 'white';
+                wrapper.style.borderRadius = '1rem';
+                wrapper.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.25)';
+                wrapper.style.maxWidth = '800px';
+                wrapper.style.width = '100%';
+                wrapper.style.maxHeight = '90vh';
+                wrapper.style.overflowY = 'auto';
+                wrapper.style.pointerEvents = 'auto'; // Enable interactions on wrapper
+                
+                // Prevent clicks on wrapper from closing modal
+                wrapper.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+
                 wrapper.classList.remove('scale-95', 'opacity-0');
                 wrapper.classList.add('scale-100', 'opacity-100');
             }
+            
+            // Ensure content is interactive
+            if (content) {
+                content.style.pointerEvents = 'auto';
+                content.style.position = 'relative';
+                content.style.zIndex = '10001';
+            }
+
+            console.log('Modal animation applied');
         }, 10);
         
         await loadWalkInData();
@@ -1485,6 +1555,25 @@
             </div>
         `;
         
+        // Ensure content and wrapper are interactive after setting innerHTML
+        if (content) {
+            content.style.pointerEvents = 'auto';
+            content.style.position = 'relative';
+            content.style.zIndex = '10001';
+        }
+        if (wrapper) {
+            wrapper.style.pointerEvents = 'auto';
+        }
+        
+        // Ensure all form elements are interactive
+        setTimeout(() => {
+            const formElements = content.querySelectorAll('input, select, textarea, button');
+            formElements.forEach(el => {
+                el.style.pointerEvents = 'auto';
+                el.style.cursor = el.tagName === 'BUTTON' ? 'pointer' : 'text';
+            });
+        }, 50);
+        
         // Setup event listeners for center and date
         setTimeout(() => {
             const centerSelect = document.getElementById('walkInCenter');
@@ -1505,7 +1594,23 @@
         }, 100);
     }
 
+    function closeWalkInModal() {
+        const modal = document.getElementById('walkInModal');
+        const wrapper = document.getElementById('walkInModalContentWrapper');
+        if (wrapper) {
+            wrapper.classList.remove('scale-100', 'opacity-100');
+            wrapper.classList.add('scale-95', 'opacity-0');
+        }
+        setTimeout(() => {
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }, 300);
+    }
+
     async function confirmWalkIn() {
+        console.log('confirmWalkIn called');
+
         const fullName = document.getElementById('walkInFullName').value.trim();
         const phone = document.getElementById('walkInPhone').value.trim();
         const email = document.getElementById('walkInEmail').value.trim();
@@ -1520,10 +1625,17 @@
         const payment = document.getElementById('walkInPayment').value;
         const notes = document.getElementById('walkInNotes').value.trim();
 
+        console.log('Form values:', {
+            fullName, phone, email, dob, gender, vaccineId, centerId, date, slotId, dose, payment, notes
+        });
+
         if (!fullName || !phone || !vaccineId || !centerId || !date || !slotId || !payment) {
+            console.log('Validation failed - missing required fields');
             showMessage('Vui lòng điền đầy đủ thông tin bắt buộc', 'error');
             return;
         }
+
+        console.log('Validation passed, proceeding...');
         
         // Validate phone
         const phoneValidation = validatePhone(phone);
@@ -1542,7 +1654,20 @@
         }
         
         const selectedOption = slotSelect.options[slotSelect.selectedIndex];
-        const startTime = selectedOption.dataset.startTime;
+        const startTime = selectedOption ? selectedOption.dataset.startTime : null;
+
+        console.log('Slot selection:', {
+            slotSelect,
+            selectedIndex: slotSelect.selectedIndex,
+            selectedOption,
+            startTime
+        });
+
+        if (!startTime) {
+            console.log('No startTime found for selected slot');
+            showMessage('Không tìm thấy thông tin khung giờ. Vui lòng chọn lại khung giờ.', 'error');
+            return;
+        }
 
         const btn = document.getElementById('confirmWalkInBtn');
         const btnText = document.getElementById('confirmWalkInBtnText');
@@ -1552,48 +1677,48 @@
         btnText.textContent = 'Đang tạo...';
         btnSpinner.classList.remove('hidden');
 
+        const requestData = {
+            fullName,
+            phoneNumber: phoneValidation.cleaned || phone,
+            email: email || null,
+            dayOfBirth: dob || null,
+            gender: gender || null,
+            vaccineId: parseInt(vaccineId),
+            centerId: parseInt(centerId),
+            slotId: parseInt(slotId),
+            appointmentDate: date,
+            appointmentTime: startTime,
+            doseNumber: parseInt(dose),
+            paymentMethod: payment,
+            notes: notes || null
+        };
+
+        console.log('Sending API request:', requestData);
+
         try {
             const response = await fetch('/api/appointments/walk-in', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({
-                    fullName,
-                    phoneNumber: phoneValidation.cleaned || phone,
-                    email: email || null,
-                    dayOfBirth: dob || null,
-                    gender: gender || null,
-                    vaccineId: parseInt(vaccineId),
-                    centerId: parseInt(centerId),
-                    slotId: parseInt(slotId),
-                    appointmentDate: date,
-                    appointmentTime: startTime,
-                    doseNumber: parseInt(dose),
-                    paymentMethod: payment,
-                    notes: notes || null
-                })
+                body: JSON.stringify(requestData)
             });
 
+            console.log('API response status:', response.status, response.statusText);
+
             const result = await response.json();
+            console.log('API response data:', result);
 
             if (response.ok) {
+                console.log('API call successful, closing modal');
                 showMessage('Tạo lịch hẹn walk-in thành công', 'success');
-                const modal = document.getElementById('walkInModal');
-                const wrapper = document.getElementById('walkInModalContentWrapper');
-                if (wrapper) {
-                    wrapper.classList.remove('scale-100', 'opacity-100');
-                    wrapper.classList.add('scale-95', 'opacity-0');
-                }
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                }, 300);
-                // Reset form
-                document.getElementById('walkInModalContent').innerHTML = '';
+                // Close modal and reset form
+                closeWalkInModal();
                 // Wait a bit to ensure data is saved, then reload appointments list
                 setTimeout(async () => {
                     await loadAppointmentsByDate(currentDate, currentStatusFilter || null);
                 }, 500);
             } else {
+                console.log('API call failed:', result.error || 'Unknown error');
                 showMessage(result.error || 'Có lỗi xảy ra khi tạo lịch hẹn', 'error');
             }
         } catch (error) {
@@ -1800,7 +1925,10 @@
         }
 
         // Search button
-        document.getElementById('searchBtn').addEventListener('click', searchAppointments);
+        const searchBtn = document.getElementById('searchBtn');
+        if (searchBtn) {
+            searchBtn.addEventListener('click', searchAppointments);
+        }
         
         // Clear search button
         const clearSearchBtn = document.getElementById('clearSearchBtn');
@@ -1813,9 +1941,12 @@
         }
 
         // Refresh button
-        document.getElementById('refreshBtn').addEventListener('click', () => {
-            loadAppointmentsByDate(currentDate, currentStatusFilter || null);
-        });
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                loadAppointmentsByDate(currentDate, currentStatusFilter || null);
+            });
+        }
         
         // Sort appointments dropdown
         const sortSelect = document.getElementById('sortAppointments');
@@ -1826,30 +1957,35 @@
         }
 
         // Walk-in modal
-        document.getElementById('createWalkInBtn').addEventListener('click', openWalkInModal);
-        document.getElementById('closeWalkInModalBtn').addEventListener('click', () => {
-            const modal = document.getElementById('walkInModal');
-            const wrapper = document.getElementById('walkInModalContentWrapper');
-            if (wrapper) {
-                wrapper.classList.remove('scale-100', 'opacity-100');
-                wrapper.classList.add('scale-95', 'opacity-0');
-            }
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-        });
-        document.getElementById('cancelWalkInBtn').addEventListener('click', () => {
-            const modal = document.getElementById('walkInModal');
-            const wrapper = document.getElementById('walkInModalContentWrapper');
-            if (wrapper) {
-                wrapper.classList.remove('scale-100', 'opacity-100');
-                wrapper.classList.add('scale-95', 'opacity-0');
-            }
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-        });
-        document.getElementById('confirmWalkInBtn').addEventListener('click', confirmWalkIn);
+        const createWalkInBtn = document.getElementById('createWalkInBtn');
+        const closeWalkInModalBtn = document.getElementById('closeWalkInModalBtn');
+        const cancelWalkInBtn = document.getElementById('cancelWalkInBtn');
+        const confirmWalkInBtn = document.getElementById('confirmWalkInBtn');
+        
+        if (createWalkInBtn) createWalkInBtn.addEventListener('click', openWalkInModal);
+        if (closeWalkInModalBtn) closeWalkInModalBtn.addEventListener('click', closeWalkInModal);
+        if (cancelWalkInBtn) cancelWalkInBtn.addEventListener('click', closeWalkInModal);
+        if (confirmWalkInBtn) confirmWalkInBtn.addEventListener('click', confirmWalkIn);
+
+        // Add debug function to check form elements
+        window.debugWalkInForm = function() {
+            console.log('Debug: Checking walk-in form elements');
+            const elements = [
+                'walkInFullName', 'walkInPhone', 'walkInEmail', 'walkInDob', 'walkInGender',
+                'walkInVaccine', 'walkInCenter', 'walkInDate', 'walkInSlot', 'walkInDose',
+                'walkInPayment', 'walkInNotes', 'confirmWalkInBtn'
+            ];
+
+            elements.forEach(id => {
+                const el = document.getElementById(id);
+                console.log(`${id}:`, {
+                    exists: !!el,
+                    value: el ? el.value : 'N/A',
+                    disabled: el ? el.disabled : 'N/A',
+                    type: el ? el.type : 'N/A'
+                });
+            });
+        };
 
         // Detail modal
         const closeDetailModal = () => {
@@ -1860,52 +1996,58 @@
                 wrapper.classList.add('scale-95', 'opacity-0');
             }
             setTimeout(() => {
-                modal.classList.add('hidden');
+                if (modal) {
+                    modal.classList.add('hidden');
+                    modal.style.display = 'none';
+                    modal.style.pointerEvents = 'none';
+                    modal.style.visibility = 'hidden';
+                }
             }, 300);
         };
-        document.getElementById('closeDetailModalBtn').addEventListener('click', closeDetailModal);
-        document.getElementById('closeDetailModalBtn2').addEventListener('click', closeDetailModal);
-        document.getElementById('printInvoiceBtn').addEventListener('click', printInvoice);
+        const closeDetailModalBtn = document.getElementById('closeDetailModalBtn');
+        const closeDetailModalBtn2 = document.getElementById('closeDetailModalBtn2');
+        const printInvoiceBtn = document.getElementById('printInvoiceBtn');
+        
+        if (closeDetailModalBtn) closeDetailModalBtn.addEventListener('click', closeDetailModal);
+        if (closeDetailModalBtn2) closeDetailModalBtn2.addEventListener('click', closeDetailModal);
+        if (printInvoiceBtn) printInvoiceBtn.addEventListener('click', printInvoice);
 
         // Message toast close
-        document.getElementById('closeMessageBtn').addEventListener('click', () => {
-            document.getElementById('messageToast').classList.add('hidden');
-        });
+        const closeMessageBtn = document.getElementById('closeMessageBtn');
+        if (closeMessageBtn) {
+            closeMessageBtn.addEventListener('click', () => {
+                const messageToast = document.getElementById('messageToast');
+                if (messageToast) messageToast.classList.add('hidden');
+            });
+        }
 
-        // Ensure modals and overlays are closed on page load
-        document.getElementById('walkInModal').classList.add('hidden');
-        document.getElementById('appointmentDetailModal').classList.add('hidden');
-        document.getElementById('messageToast').classList.add('hidden');
-        document.getElementById('sidebarOverlay').classList.add('hidden');
-        
         // Close modals when clicking on overlay
-        document.getElementById('walkInModal').addEventListener('click', (e) => {
-            if (e.target.id === 'walkInModal') {
-                const modal = document.getElementById('walkInModal');
-                const wrapper = document.getElementById('walkInModalContentWrapper');
-                if (wrapper) {
-                    wrapper.classList.remove('scale-100', 'opacity-100');
-                    wrapper.classList.add('scale-95', 'opacity-0');
+        // Note: walkInModal, appointmentDetailModal, messageToast, sidebarOverlay already declared above
+        const walkInModalForOverlay = walkInModal;
+        if (walkInModalForOverlay) {
+            walkInModalForOverlay.addEventListener('click', (e) => {
+                if (e.target.id === 'walkInModal') {
+                    closeWalkInModal();
                 }
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                }, 300);
-            }
-        });
+            });
+        }
         
-        document.getElementById('appointmentDetailModal').addEventListener('click', (e) => {
-            if (e.target.id === 'appointmentDetailModal') {
-                const modal = document.getElementById('appointmentDetailModal');
-                const wrapper = document.getElementById('appointmentDetailModalWrapper');
-                if (wrapper) {
-                    wrapper.classList.remove('scale-100', 'opacity-100');
-                    wrapper.classList.add('scale-95', 'opacity-0');
+        const appointmentDetailModalForOverlay = appointmentDetailModal;
+        if (appointmentDetailModalForOverlay) {
+            appointmentDetailModalForOverlay.addEventListener('click', (e) => {
+                if (e.target.id === 'appointmentDetailModal') {
+                    const modal = document.getElementById('appointmentDetailModal');
+                    const wrapper = document.getElementById('appointmentDetailModalWrapper');
+                    if (wrapper) {
+                        wrapper.classList.remove('scale-100', 'opacity-100');
+                        wrapper.classList.add('scale-95', 'opacity-0');
+                    }
+                    setTimeout(() => {
+                        if (modal) modal.classList.add('hidden');
+                    }, 300);
                 }
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                }, 300);
-            }
-        });
+            });
+        }
 
         // Load initial data
         loadAppointmentsByDate(currentDate, currentStatusFilter || null);
