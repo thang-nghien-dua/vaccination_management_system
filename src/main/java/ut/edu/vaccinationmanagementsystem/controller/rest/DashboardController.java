@@ -141,28 +141,47 @@ public class DashboardController {
                     .forEach(allUserAppointments::add);
             // Appointments đặt cho user (bookedForUser = currentUser)
             allUserAppointments.addAll(appointmentRepository.findByBookedForUserId(currentUser.getId()));
-            
+
+            // Debug: Log số lượng appointments trước khi filter
+            System.out.println("Total appointments found: " + allUserAppointments.size());
+
             List<Appointment> upcomingAppointments = allUserAppointments.stream()
                     .filter(apt -> {
                         AppointmentStatus status = apt.getStatus();
                         // Bao gồm các status chưa hoàn thành
-                        return status == AppointmentStatus.PENDING ||
+                        boolean validStatus = status == AppointmentStatus.PENDING ||
                                status == AppointmentStatus.CONFIRMED ||
                                status == AppointmentStatus.CHECKED_IN ||
                                status == AppointmentStatus.SCREENING ||
                                status == AppointmentStatus.APPROVED ||
                                status == AppointmentStatus.INJECTING ||
                                status == AppointmentStatus.MONITORING;
+
+                        if (!validStatus) {
+                            System.out.println("Appointment " + apt.getBookingCode() + " filtered out due to status: " + status);
+                        }
+                        return validStatus;
                     })
                     .filter(apt -> {
                         // Chấp nhận appointments có ngày >= hôm nay (tương lai hoặc hôm nay)
-                        return apt.getAppointmentDate() != null && 
+                        boolean validDate = apt.getAppointmentDate() != null &&
                             (apt.getAppointmentDate().isAfter(LocalDate.now()) || 
                              apt.getAppointmentDate().equals(LocalDate.now()));
+
+                        if (!validDate && apt.getAppointmentDate() != null) {
+                            System.out.println("Appointment " + apt.getBookingCode() + " filtered out due to date: " + apt.getAppointmentDate() + " (today: " + LocalDate.now() + ")");
+                        } else if (apt.getAppointmentDate() == null) {
+                            System.out.println("Appointment " + apt.getBookingCode() + " filtered out due to null date");
+                        } else {
+                            System.out.println("Appointment " + apt.getBookingCode() + " passed date filter: " + apt.getAppointmentDate());
+                        }
+                        return validDate;
                     })
                     .sorted(Comparator.comparing(Appointment::getAppointmentDate)
                             .thenComparing(Appointment::getAppointmentTime))
                     .collect(Collectors.toList());
+
+            System.out.println("Upcoming appointments after filtering: " + upcomingAppointments.size());
 
             if (upcomingAppointments.isEmpty()) {
                 return ResponseEntity.ok(Map.of("hasAppointment", false, "appointments", List.of()));

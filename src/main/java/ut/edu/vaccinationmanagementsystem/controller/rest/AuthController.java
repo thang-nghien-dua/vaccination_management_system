@@ -174,7 +174,7 @@ public class AuthController {
             loginResponse.put("userId", user.getId());
             loginResponse.put("email", user.getEmail());
             loginResponse.put("fullName", user.getFullName());
-            loginResponse.put("role", user.getRole() != null ? user.getRole().name() : null);
+            loginResponse.put("role", user.getRole().name());
             
             return ResponseEntity.ok(loginResponse);
         } catch (org.springframework.security.core.AuthenticationException e) {

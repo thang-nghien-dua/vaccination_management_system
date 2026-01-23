@@ -73,19 +73,13 @@ function setupSidebar() {
         
         // Hide text elements with fade animation
         const textElements = sidebar.querySelectorAll('[id^="navText"], [id^="sidebar"]');
-        textElements.forEach((el, index) => {
-            setTimeout(() => {
-                if (el.id && el.id.startsWith('navText')) {
-                    el.style.transition = 'opacity 0.2s ease-out';
-                    el.style.opacity = '0';
-                    setTimeout(() => el.classList.add('lg:hidden'), 200);
-                }
-                if (el.id === 'sidebarLogoText' || el.id === 'sidebarUserName' || el.id === 'sidebarUserRole') {
-                    el.style.transition = 'opacity 0.2s ease-out';
-                    el.style.opacity = '0';
-                    setTimeout(() => el.classList.add('lg:hidden'), 200);
-                }
-            }, index * 20);
+        textElements.forEach(el => {
+            if (el.id && el.id.startsWith('navText')) {
+                el.classList.add('lg:hidden');
+            }
+            if (el.id === 'sidebarLogoText' || el.id === 'sidebarUserName' || el.id === 'sidebarUserRole') {
+                el.classList.add('lg:hidden');
+            }
         });
         
         // Hide user profile section when collapsed
