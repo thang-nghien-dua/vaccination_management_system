@@ -392,18 +392,20 @@
             }
 
             try {
-                const response = await fetch(`/api/admin/appointments/${appointmentId}/status`, {
+                const response = await fetch(`/api/nurse/appointments/${appointmentId}/cancel-injection`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({ status: 'CANCELLED' })
+                    credentials: 'include'
                 });
 
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Failed to cancel injection');
+                    let errorMsg = `HTTP error! status: ${response.status}`;
+                    try {
+                        const error = await response.json();
+                        errorMsg = error.error || errorMsg;
+                    } catch (e) {
+                        // ignore parse error
+                    }
+                    throw new Error(errorMsg);
                 }
 
                 alert('Đã hủy tiêm thành công!');

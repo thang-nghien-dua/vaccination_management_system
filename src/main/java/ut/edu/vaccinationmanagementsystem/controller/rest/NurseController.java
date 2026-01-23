@@ -563,5 +563,61 @@ public class NurseController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
+
+    /**
+     * PUT /api/nurse/appointments/{id}/cancel-injection
+     * Nurse hủy tiêm (chuyển trạng thái appointment sang CANCELLED)
+     */
+    @PutMapping("/appointments/{id}/cancel-injection")
+    public ResponseEntity<?> cancelInjection(@PathVariable Long id) {
+        try {
+            User currentUser = getCurrentUser();
+            if (currentUser == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Unauthorized");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+
+            Appointment appointment = appointmentRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+            // Nurse chỉ được thao tác trên appointment thuộc trung tâm của mình
+            ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = staffInfoRepository.findByUser(currentUser).orElse(null);
+            if (staffInfo != null && staffInfo.getCenter() != null) {
+                Long userCenterId = staffInfo.getCenter().getId();
+                if (appointment.getCenter() == null || !appointment.getCenter().getId().equals(userCenterId)) {
+                    Map<String, String> error = new HashMap<>();
+                    error.put("error", "Bạn chỉ có thể thao tác trên bệnh nhân của trung tâm mình");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+                }
+            }
+
+            // Chỉ cho phép hủy tiêm khi đang chờ tiêm / đang tiêm
+            if (appointment.getStatus() != AppointmentStatus.APPROVED &&
+                appointment.getStatus() != AppointmentStatus.INJECTING) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Không thể hủy tiêm với trạng thái hiện tại: " + appointment.getStatus());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+
+            appointment.setStatus(AppointmentStatus.CANCELLED);
+            appointmentRepository.save(appointment);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Đã hủy tiêm thành công");
+            response.put("appointmentId", appointment.getId());
+            response.put("status", appointment.getStatus().name());
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
 }
 
