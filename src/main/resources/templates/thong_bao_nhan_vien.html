@@ -61,16 +61,18 @@
 <body class="bg-background-light dark:bg-background-dark min-h-screen text-[#111813] dark:text-white">
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar Navigation - Load based on user role -->
-        <div
-            th:switch="${forcedRole != null ? forcedRole : (currentUser != null and currentUser.role != null ? currentUser.role.name() : 'CUSTOMER')}">
-            <div th:case="'ADMIN'" th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
-            <div th:case="'DOCTOR'" th:replace="~{fragments/doctor-sidebar :: sidebar}"></div>
-            <div th:case="'NURSE'" th:replace="~{fragments/nurse-sidebar :: sidebar}"></div>
-            <div th:case="'RECEPTIONIST'" th:replace="~{fragments/receptionist-sidebar :: sidebar}"></div>
-            <div th:case="*" th:replace="~{fragments/customer-sidebar :: sidebar}"></div>
-        </div>
+        <th:block
+            th:with="roleName=${forcedRole != null ? forcedRole : (currentUser != null and currentUser.role != null ? currentUser.role.name() : 'CUSTOMER')}">
+            <div th:if="${roleName == 'ADMIN'}" th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+            <div th:if="${roleName == 'DOCTOR'}" th:replace="~{fragments/doctor-sidebar :: sidebar}"></div>
+            <div th:if="${roleName == 'NURSE'}" th:replace="~{fragments/nurse-sidebar :: sidebar}"></div>
+            <div th:if="${roleName == 'RECEPTIONIST'}" th:replace="~{fragments/receptionist-sidebar :: sidebar}"></div>
+            <div th:if="${roleName == 'CUSTOMER' or (roleName != 'ADMIN' and roleName != 'DOCTOR' and roleName != 'NURSE' and roleName != 'RECEPTIONIST')}"
+                th:replace="~{fragments/customer-sidebar :: sidebar}"></div>
+        </th:block>
+
         <!-- Main Content Area -->
-        <main class="flex-1 flex flex-col overflow-hidden">
+        <main class="flex-1 lg:ml-72 flex flex-col overflow-hidden">
             <!-- Page Heading -->
             <header class="bg-white dark:bg-[#1a2e20] border-b border-[#dbe6df] dark:border-[#2a3f31] px-8 py-6">
                 <div class="max-w-5xl mx-auto flex flex-wrap justify-between items-center gap-4">

@@ -1,12 +1,17 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Quản lý Nhân viên Y tế - Hệ thống Quản lý Tiêm chủng</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
+<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Quản lý Nhân viên Y tế - Hệ thống Quản lý Tiêm chủng</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
@@ -19,12 +24,12 @@
                     fontFamily: {
                         "display": ["Manrope", "sans-serif"]
                     },
-                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
                 },
             },
         }
     </script>
-<style type="text/tailwindcss">
+    <style type="text/tailwindcss">
         body {
             font-family: 'Manrope', sans-serif;
         }
@@ -42,214 +47,244 @@
         }
     </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white antialiased">
-<div class="flex h-screen overflow-hidden">
-<div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
-<main class="flex-1 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
-<header class="sticky top-0 z-10 flex items-center justify-between bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
-<div class="flex flex-1 items-center gap-4">
-<h2 class="text-xl font-bold text-[#111813] dark:text-white">Quản lý Nhân viên Y tế</h2>
-</div>
-<div class="flex items-center gap-4 pl-4">
-<button class="relative p-2 rounded-lg bg-[#f0f4f2] dark:bg-white/5 text-[#111813] dark:text-white">
-<span class="material-symbols-outlined text-[20px]">notifications</span>
-<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-background-dark"></span>
-</button>
-<div class="h-6 w-px bg-[#f0f4f2] dark:bg-white/10"></div>
-<p class="text-sm font-medium text-[#61896f] uppercase tracking-widest">Hôm nay: 24/05/2024</p>
-</div>
-</header>
-<section class="p-8 space-y-6">
-<div class="flex flex-col lg:flex-row gap-4 items-center justify-between bg-white dark:bg-white/5 p-4 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
-<div class="flex flex-1 flex-wrap gap-3 w-full lg:w-auto">
-<div class="relative flex-1 min-w-[240px]">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#61896f] text-xl">search</span>
-<input id="searchInput" class="w-full pl-10 pr-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all" placeholder="Tìm tên, email nhân viên..." type="text"/>
-</div>
-<select class="px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-medium text-[#61896f] focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer">
-<option value="">Tất cả Vai trò</option>
-<option value="doctor">Bác sĩ</option>
-<option value="nurse">Y tá</option>
-<option value="receptionist">Tiếp tân</option>
-</select>
-<select class="px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-medium text-[#61896f] focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer">
-<option value="">Tất cả Trung tâm</option>
-<option value="center1">Trung tâm Quận 1</option>
-<option value="center2">Trung tâm Quận 7</option>
-<option value="center3">Trung tâm Thủ Đức</option>
-</select>
-<select class="px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-medium text-[#61896f] focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer">
-<option value="">Trạng thái</option>
-<option value="active">Đang làm việc</option>
-<option value="on_leave">Nghỉ phép</option>
-<option value="locked">Tạm khóa</option>
-</select>
-</div>
-<button class="w-full lg:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-primary text-[#111813] font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
-<span class="material-symbols-outlined">person_add</span>
-                    Thêm nhân viên
-                </button>
-</div>
-<div class="bg-white dark:bg-white/5 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm overflow-hidden">
-<div class="overflow-x-auto">
-<table class="w-full text-left border-collapse">
-<thead>
-<tr class="bg-gray-50 dark:bg-white/5 border-b border-[#f0f4f2] dark:border-white/10">
-<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Nhân viên</th>
-<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Vai trò</th>
-<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Trung tâm</th>
-<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Hiệu suất (Ca/tháng)</th>
-<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Trạng thái</th>
-<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f] text-right">Hành động</th>
-</tr>
-</thead>
-<tbody id="staffTableBody" class="divide-y divide-[#f0f4f2] dark:divide-white/10">
-<!-- Dữ liệu sẽ được load từ API -->
-</tbody>
-</table>
-</div>
-<div class="px-6 py-4 bg-gray-50 dark:bg-white/5 border-t border-[#f0f4f2] dark:border-white/10 flex items-center justify-between">
-<p id="staffPaginationText" class="text-[11px] font-bold text-[#61896f] uppercase tracking-wider">Đang tải...</p>
-<div class="flex gap-2">
-<button class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors disabled:opacity-50" disabled="">
-<span class="material-symbols-outlined text-sm">chevron_left</span>
-</button>
-<button class="p-2 rounded-lg bg-primary text-[#111813] font-bold text-xs px-4">1</button>
-<button class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors text-xs px-4">2</button>
-<button class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors">
-<span class="material-symbols-outlined text-sm">chevron_right</span>
-</button>
-</div>
-</div>
-</div>
-</section>
-</main>
-</div>
 
-<script th:inline="javascript">
-/*<![CDATA[*/
-(function() {
-    let allStaff = [];
-    
-    // Hàm loại bỏ dấu tiếng Việt
-    function removeVietnameseTones(str) {
-        if (!str) return '';
-        str = str.toLowerCase();
-        str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');
-        str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, 'e');
-        str = str.replace(/ì|í|ị|ỉ|ĩ/g, 'i');
-        str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, 'o');
-        str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u');
-        str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y');
-        str = str.replace(/đ/g, 'd');
-        return str;
-    }
-    
-    // Load staff from API
-    async function loadStaff() {
-        try {
-            const roleFilter = document.querySelector('select:nth-of-type(1)')?.value || '';
-            let url = '/api/admin/staff';
-            if (roleFilter) {
-                url += `?role=${encodeURIComponent(roleFilter)}`;
-            }
-            
-            const response = await fetch(url, {
-                credentials: 'include'
-            });
-            if (!response.ok) throw new Error('Failed to load staff');
-            allStaff = await response.json();
-            filterStaff();
-        } catch (error) {
-            console.error('Error loading staff:', error);
-            const tbody = document.getElementById('staffTableBody');
-            if (tbody) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">Lỗi khi tải dữ liệu</td></tr>';
-            }
-        }
-    }
-    
-    // Filter staff based on search and filters
-    function filterStaff() {
-        const searchInput = document.getElementById('searchInput')?.value || '';
-        const search = removeVietnameseTones(searchInput);
-        const roleFilter = document.querySelector('select:nth-of-type(1)')?.value || '';
-        const statusFilter = document.querySelector('select:nth-of-type(3)')?.value || '';
-        
-        let filtered = allStaff;
-        
-        // Filter by search (không phân biệt dấu)
-        if (search) {
-            filtered = filtered.filter(s => {
-                const nameNoTone = removeVietnameseTones(s.fullName || '');
-                const emailNoTone = removeVietnameseTones(s.email || '');
-                
-                return nameNoTone.includes(search) ||
-                       emailNoTone.includes(search);
-            });
-        }
-        
-        // Filter by role (already filtered by API, but double check)
-        if (roleFilter) {
-            const roleMap = {
-                'doctor': 'DOCTOR',
-                'nurse': 'NURSE',
-                'receptionist': 'RECEPTIONIST'
-            };
-            const targetRole = roleMap[roleFilter];
-            if (targetRole) {
-                filtered = filtered.filter(s => s.role === targetRole);
-            }
-        }
-        
-        // Filter by status
-        if (statusFilter) {
-            const statusMap = {
-                'active': 'ACTIVE',
-                'on_leave': 'INACTIVE',
-                'locked': 'LOCKED'
-            };
-            const targetStatus = statusMap[statusFilter];
-            if (targetStatus) {
-                filtered = filtered.filter(s => s.status === targetStatus);
-            }
-        }
-        
-        renderStaff(filtered);
-        updatePagination(filtered.length);
-    }
-    
-    // Render staff table
-    function renderStaff(staff) {
-        const tbody = document.getElementById('staffTableBody');
-        if (!tbody) return;
-        
-        if (staff.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-[#61896f]">Không có dữ liệu</td></tr>';
-            return;
-        }
-        
-        tbody.innerHTML = staff.map(user => {
-            const initials = user.fullName ? user.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U';
-            const roleColors = {
-                'DOCTOR': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-                'NURSE': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-                'RECEPTIONIST': 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-400'
-            };
-            const statusColors = {
-                'ACTIVE': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-                'INACTIVE': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-                'LOCKED': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-            };
-            const roleColor = roleColors[user.role] || 'bg-gray-100 text-gray-700';
-            const statusColor = statusColors[user.status] || 'bg-gray-100 text-gray-700';
-            const roleText = {
-                'DOCTOR': 'Doctor',
-                'NURSE': 'Nurse',
-                'RECEPTIONIST': 'Receptionist'
-            }[user.role] || user.role;
-            
-            return `
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white antialiased">
+    <div class="flex h-screen overflow-hidden">
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <main class="flex-1 lg:ml-72 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
+            <header
+                class="sticky top-0 z-10 flex items-center justify-between bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
+                <div class="flex flex-1 items-center gap-4">
+                    <h2 class="text-xl font-bold text-[#111813] dark:text-white">Quản lý Nhân viên Y tế</h2>
+                </div>
+                <div class="flex items-center gap-4 pl-4">
+                    <button class="relative p-2 rounded-lg bg-[#f0f4f2] dark:bg-white/5 text-[#111813] dark:text-white">
+                        <span class="material-symbols-outlined text-[20px]">notifications</span>
+                        <span
+                            class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-background-dark"></span>
+                    </button>
+                    <div class="h-6 w-px bg-[#f0f4f2] dark:bg-white/10"></div>
+                    <p class="text-sm font-medium text-[#61896f] uppercase tracking-widest">Hôm nay: 24/05/2024</p>
+                </div>
+            </header>
+            <section class="p-8 space-y-6">
+                <div
+                    class="flex flex-col lg:flex-row gap-4 items-center justify-between bg-white dark:bg-white/5 p-4 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
+                    <div class="flex flex-1 flex-wrap gap-3 w-full lg:w-auto">
+                        <div class="relative flex-1 min-w-[240px]">
+                            <span
+                                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#61896f] text-xl">search</span>
+                            <input id="searchInput"
+                                class="w-full pl-10 pr-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all"
+                                placeholder="Tìm tên, email nhân viên..." type="text" />
+                        </div>
+                        <select
+                            class="px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-medium text-[#61896f] focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer">
+                            <option value="">Tất cả Vai trò</option>
+                            <option value="doctor">Bác sĩ</option>
+                            <option value="nurse">Y tá</option>
+                            <option value="receptionist">Tiếp tân</option>
+                        </select>
+                        <select
+                            class="px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-medium text-[#61896f] focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer">
+                            <option value="">Tất cả Trung tâm</option>
+                            <option value="center1">Trung tâm Quận 1</option>
+                            <option value="center2">Trung tâm Quận 7</option>
+                            <option value="center3">Trung tâm Thủ Đức</option>
+                        </select>
+                        <select
+                            class="px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-medium text-[#61896f] focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer">
+                            <option value="">Trạng thái</option>
+                            <option value="active">Đang làm việc</option>
+                            <option value="on_leave">Nghỉ phép</option>
+                            <option value="locked">Tạm khóa</option>
+                        </select>
+                    </div>
+                    <button
+                        class="w-full lg:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-primary text-[#111813] font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
+                        <span class="material-symbols-outlined">person_add</span>
+                        Thêm nhân viên
+                    </button>
+                </div>
+                <div
+                    class="bg-white dark:bg-white/5 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 dark:bg-white/5 border-b border-[#f0f4f2] dark:border-white/10">
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Nhân viên</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Vai trò</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Trung tâm</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Hiệu suất (Ca/tháng)</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Trạng thái</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f] text-right">
+                                        Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="staffTableBody" class="divide-y divide-[#f0f4f2] dark:divide-white/10">
+                                <!-- Dữ liệu sẽ được load từ API -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div
+                        class="px-6 py-4 bg-gray-50 dark:bg-white/5 border-t border-[#f0f4f2] dark:border-white/10 flex items-center justify-between">
+                        <p id="staffPaginationText"
+                            class="text-[11px] font-bold text-[#61896f] uppercase tracking-wider">Đang tải...</p>
+                        <div class="flex gap-2">
+                            <button
+                                class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                disabled="">
+                                <span class="material-symbols-outlined text-sm">chevron_left</span>
+                            </button>
+                            <button class="p-2 rounded-lg bg-primary text-[#111813] font-bold text-xs px-4">1</button>
+                            <button
+                                class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors text-xs px-4">2</button>
+                            <button
+                                class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors">
+                                <span class="material-symbols-outlined text-sm">chevron_right</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+            /*<![CDATA[*/
+            (function () {
+                let allStaff = [];
+
+                // Hàm loại bỏ dấu tiếng Việt
+                function removeVietnameseTones(str) {
+                    if (!str) return '';
+                    str = str.toLowerCase();
+                    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');
+                    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, 'e');
+                    str = str.replace(/ì|í|ị|ỉ|ĩ/g, 'i');
+                    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, 'o');
+                    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u');
+                    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y');
+                    str = str.replace(/đ/g, 'd');
+                    return str;
+                }
+
+                // Load staff from API
+                async function loadStaff() {
+                    try {
+                        const roleFilter = document.querySelector('select:nth-of-type(1)')?.value || '';
+                        let url = '/api/admin/staff';
+                        if (roleFilter) {
+                            url += `?role=${encodeURIComponent(roleFilter)}`;
+                        }
+
+                        const response = await fetch(url, {
+                            credentials: 'include'
+                        });
+                        if (!response.ok) throw new Error('Failed to load staff');
+                        allStaff = await response.json();
+                        filterStaff();
+                    } catch (error) {
+                        console.error('Error loading staff:', error);
+                        const tbody = document.getElementById('staffTableBody');
+                        if (tbody) {
+                            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">Lỗi khi tải dữ liệu</td></tr>';
+                        }
+                    }
+                }
+
+                // Filter staff based on search and filters
+                function filterStaff() {
+                    const searchInput = document.getElementById('searchInput')?.value || '';
+                    const search = removeVietnameseTones(searchInput);
+                    const roleFilter = document.querySelector('select:nth-of-type(1)')?.value || '';
+                    const statusFilter = document.querySelector('select:nth-of-type(3)')?.value || '';
+
+                    let filtered = allStaff;
+
+                    // Filter by search (không phân biệt dấu)
+                    if (search) {
+                        filtered = filtered.filter(s => {
+                            const nameNoTone = removeVietnameseTones(s.fullName || '');
+                            const emailNoTone = removeVietnameseTones(s.email || '');
+
+                            return nameNoTone.includes(search) ||
+                                emailNoTone.includes(search);
+                        });
+                    }
+
+                    // Filter by role (already filtered by API, but double check)
+                    if (roleFilter) {
+                        const roleMap = {
+                            'doctor': 'DOCTOR',
+                            'nurse': 'NURSE',
+                            'receptionist': 'RECEPTIONIST'
+                        };
+                        const targetRole = roleMap[roleFilter];
+                        if (targetRole) {
+                            filtered = filtered.filter(s => s.role === targetRole);
+                        }
+                    }
+
+                    // Filter by status
+                    if (statusFilter) {
+                        const statusMap = {
+                            'active': 'ACTIVE',
+                            'on_leave': 'INACTIVE',
+                            'locked': 'LOCKED'
+                        };
+                        const targetStatus = statusMap[statusFilter];
+                        if (targetStatus) {
+                            filtered = filtered.filter(s => s.status === targetStatus);
+                        }
+                    }
+
+                    renderStaff(filtered);
+                    updatePagination(filtered.length);
+                }
+
+                // Render staff table
+                function renderStaff(staff) {
+                    const tbody = document.getElementById('staffTableBody');
+                    if (!tbody) return;
+
+                    if (staff.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-[#61896f]">Không có dữ liệu</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = staff.map(user => {
+                        const initials = user.fullName ? user.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U';
+                        const roleColors = {
+                            'DOCTOR': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+                            'NURSE': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+                            'RECEPTIONIST': 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-400'
+                        };
+                        const statusColors = {
+                            'ACTIVE': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+                            'INACTIVE': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+                            'LOCKED': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                        };
+                        const roleColor = roleColors[user.role] || 'bg-gray-100 text-gray-700';
+                        const statusColor = statusColors[user.status] || 'bg-gray-100 text-gray-700';
+                        const roleText = {
+                            'DOCTOR': 'Doctor',
+                            'NURSE': 'Nurse',
+                            'RECEPTIONIST': 'Receptionist'
+                        }[user.role] || user.role;
+
+                        return `
                 <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
@@ -297,55 +332,57 @@
                     </td>
                 </tr>
             `;
-        }).join('');
-    }
-    
-    // Update pagination
-    function updatePagination(total) {
-        const paginationText = document.getElementById('staffPaginationText');
-        if (paginationText) {
-            const end = Math.min(10, total);
-            paginationText.textContent = `Hiển thị 1-${end} của ${total} nhân viên`;
-        }
-    }
-    
-    // Placeholder functions
-    window.viewStaffPerformance = function(staffId) {
-        console.log('View staff performance:', staffId);
-        // TODO: Implement view staff performance
-    };
-    
-    window.editStaff = function(staffId) {
-        console.log('Edit staff:', staffId);
-        // TODO: Implement edit staff modal
-    };
-    
-    window.toggleStaffStatus = function(staffId, currentStatus) {
-        console.log('Toggle staff status:', staffId, currentStatus);
-        // TODO: Implement toggle staff status
-    };
-    
-    // Event listeners for search and filters
-    document.getElementById('searchInput')?.addEventListener('input', function() {
-        filterStaff();
-    });
-    
-    document.querySelectorAll('select').forEach(select => {
-        select.addEventListener('change', function() {
-            if (select === document.querySelector('select:nth-of-type(1)')) {
-                // Role filter - reload from API
-                loadStaff();
-            } else {
-                // Other filters - filter client-side
-                filterStaff();
-            }
-        });
-    });
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        loadStaff();
-    });
-})();
-/*]]>*/
-</script>
-</body></html>
+                    }).join('');
+                }
+
+                // Update pagination
+                function updatePagination(total) {
+                    const paginationText = document.getElementById('staffPaginationText');
+                    if (paginationText) {
+                        const end = Math.min(10, total);
+                        paginationText.textContent = `Hiển thị 1-${end} của ${total} nhân viên`;
+                    }
+                }
+
+                // Placeholder functions
+                window.viewStaffPerformance = function (staffId) {
+                    console.log('View staff performance:', staffId);
+                    // TODO: Implement view staff performance
+                };
+
+                window.editStaff = function (staffId) {
+                    console.log('Edit staff:', staffId);
+                    // TODO: Implement edit staff modal
+                };
+
+                window.toggleStaffStatus = function (staffId, currentStatus) {
+                    console.log('Toggle staff status:', staffId, currentStatus);
+                    // TODO: Implement toggle staff status
+                };
+
+                // Event listeners for search and filters
+                document.getElementById('searchInput')?.addEventListener('input', function () {
+                    filterStaff();
+                });
+
+                document.querySelectorAll('select').forEach(select => {
+                    select.addEventListener('change', function () {
+                        if (select === document.querySelector('select:nth-of-type(1)')) {
+                            // Role filter - reload from API
+                            loadStaff();
+                        } else {
+                            // Other filters - filter client-side
+                            filterStaff();
+                        }
+                    });
+                });
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    loadStaff();
+                });
+            })();
+        /*]]>*/
+    </script>
+</body>
+
+</html>

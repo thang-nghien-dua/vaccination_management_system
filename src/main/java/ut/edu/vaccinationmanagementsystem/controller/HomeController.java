@@ -343,6 +343,15 @@ public class HomeController {
             if (role != null) {
                 model.addAttribute("forcedRole", role);
             }
+            
+            // Nếu là staff/admin, trả về trang thông báo cho nhân viên
+            if (currentUser.getRole() != null) {
+                String currentRole = currentUser.getRole().name();
+                if (currentRole.equals("ADMIN") || currentRole.equals("DOCTOR") || 
+                    currentRole.equals("NURSE") || currentRole.equals("RECEPTIONIST")) {
+                    return "thong_bao_nhan_vien";
+                }
+            }
         } catch (Exception e) {
             return "redirect:/login";
         }

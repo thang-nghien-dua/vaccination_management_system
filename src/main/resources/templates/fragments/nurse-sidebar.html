@@ -6,6 +6,7 @@
     <aside th:fragment="sidebar"
         class="w-72 bg-white dark:bg-[#1a2e21] border-r border-[#f0f4f2] dark:border-[#2d3f33] fixed h-screen z-50 flex flex-col overflow-hidden">
         <div class="p-6 flex items-center gap-3 flex-shrink-0">
+            <span class="material-symbols-outlined text-[#111813] dark:text-white">menu</span>
             <h1 class="text-xl font-bold tracking-tight flex-1">VacciCare</h1>
         </div>
         <div class="px-4 mb-6 flex-shrink-0" th:if="${isAuthenticated}">
@@ -55,12 +56,6 @@
                 <span class="text-sm">Lịch sử tiêm</span>
             </a>
             <a class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors"
-                th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/trace') ? 'active-nav text-primary font-bold' : ''}"
-                th:href="@{/trace}">
-                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">search</span>
-                <span class="text-sm">Truy vết</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors"
                 th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/nurse/profile') ? 'active-nav text-primary font-bold' : ''}"
                 th:href="@{/nurse/profile}">
                 <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">person</span>
@@ -68,7 +63,7 @@
             </a>
             <a class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors relative"
                 th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/notifications') ? 'active-nav text-primary font-bold' : ''}"
-                th:href="@{/notifications}">
+                th:href="@{/notifications(role='NURSE')}">
                 <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">notifications</span>
                 <span class="text-sm">Thông báo</span>
                 <span id="notificationBadge"
@@ -88,13 +83,13 @@
 
     <style>
         .active-nav {
-            background: linear-gradient(135deg, rgba(15, 118, 110, 0.15) 0%, rgba(15, 118, 110, 0.05) 100%);
-            border-left: 4px solid #0f766e;
-            /* primary color */
+            background-color: rgba(19, 236, 91, 0.1) !important;
+            border-left: 4px solid #13ec5b;
+            color: #13ec5b !important;
         }
 
         .active-nav .material-symbols-outlined {
-            color: #0f766e !important;
+            color: #13ec5b !important;
         }
     </style>
 </body>

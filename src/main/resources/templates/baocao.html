@@ -1,12 +1,17 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Báo cáo &amp; Thống kê Hệ thống - Hệ thống Quản lý Tiêm chủng</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
+<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Báo cáo &amp; Thống kê Hệ thống - Hệ thống Quản lý Tiêm chủng</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
@@ -19,12 +24,12 @@
                     fontFamily: {
                         "display": ["Manrope", "sans-serif"]
                     },
-                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
                 },
             },
         }
     </script>
-<style type="text/tailwindcss">
+    <style type="text/tailwindcss">
         body {
             font-family: 'Manrope', sans-serif;
         }
@@ -40,268 +45,329 @@
         }
     </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white antialiased">
-<div class="flex h-screen overflow-hidden">
-<div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
-<main class="flex-1 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
-<header class="sticky top-0 z-10 flex items-center justify-between bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
-<div class="flex flex-1 items-center gap-4">
-<h2 class="text-xl font-bold text-[#111813] dark:text-white">Báo cáo &amp; Thống kê Hệ thống</h2>
-</div>
-<div class="flex items-center gap-4">
-<div class="group relative">
-<button class="flex items-center gap-2 px-6 py-2.5 bg-primary text-[#111813] font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
-<span class="material-symbols-outlined">file_download</span>
-                        Xuất báo cáo
-                        <span class="material-symbols-outlined">keyboard_arrow_down</span>
-</button>
-<div class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-background-dark border border-[#f0f4f2] dark:border-white/10 rounded-xl shadow-xl hidden group-hover:block z-50 overflow-hidden">
-<button class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 font-medium">
-<span class="material-symbols-outlined text-green-600">table_view</span> Excel (.xlsx)
-                        </button>
-<button class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 font-medium">
-<span class="material-symbols-outlined text-red-600">picture_as_pdf</span> PDF Document
-                        </button>
-<button class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 font-medium">
-<span class="material-symbols-outlined text-blue-600">mail</span> Gửi qua Email
-                        </button>
-</div>
-</div>
-</div>
-</header>
-<section class="p-8 space-y-8">
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white dark:bg-white/5 p-4 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
-<div class="flex flex-col gap-1.5">
-<label class="text-[10px] font-bold uppercase text-[#61896f] px-1">Loại báo cáo</label>
-<select class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-semibold text-[#111813] dark:text-white focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer">
-<option value="tiem-chung">Thống kê Tiêm chủng</option>
-<option value="vaccine">Báo cáo Vaccine &amp; Kho</option>
-<option value="khach-hang">Phân tích Khách hàng</option>
-<option value="doanh-thu">Báo cáo Doanh thu</option>
-</select>
-</div>
-<div class="flex flex-col gap-1.5">
-<label class="text-[10px] font-bold uppercase text-[#61896f] px-1">Khoảng thời gian</label>
-<select class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-semibold text-[#111813] dark:text-white focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer">
-<option value="7days">7 ngày qua</option>
-<option selected="" value="30days">30 ngày qua</option>
-<option value="this-month">Tháng này</option>
-<option value="custom">Tùy chỉnh khoảng ngày</option>
-</select>
-</div>
-<div class="flex flex-col gap-1.5">
-<label class="text-[10px] font-bold uppercase text-[#61896f] px-1">Từ ngày</label>
-<input class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-semibold text-[#111813] dark:text-white focus:ring-2 focus:ring-primary/50" type="date" value="2024-04-24"/>
-</div>
-<div class="flex flex-col gap-1.5">
-<label class="text-[10px] font-bold uppercase text-[#61896f] px-1">Đến ngày</label>
-<input class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-semibold text-[#111813] dark:text-white focus:ring-2 focus:ring-primary/50" type="date" value="2024-05-24"/>
-</div>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-<div class="bg-white dark:bg-white/5 p-6 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
-<div class="flex justify-between items-start mb-4">
-<div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
-<span class="material-symbols-outlined">person_pin</span>
-</div>
-<span class="text-xs font-bold text-green-500 flex items-center gap-1">+12.5% <span class="material-symbols-outlined text-[14px]">trending_up</span></span>
-</div>
-<p class="text-xs font-bold text-[#61896f] uppercase tracking-wider">Tổng lượt tiêm</p>
-<h3 class="text-2xl font-black mt-1">8,245</h3>
-</div>
-<div class="bg-white dark:bg-white/5 p-6 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
-<div class="flex justify-between items-start mb-4">
-<div class="p-2 bg-primary/20 text-[#111813] rounded-lg">
-<span class="material-symbols-outlined">payments</span>
-</div>
-<span class="text-xs font-bold text-green-500 flex items-center gap-1">+8.2% <span class="material-symbols-outlined text-[14px]">trending_up</span></span>
-</div>
-<p class="text-xs font-bold text-[#61896f] uppercase tracking-wider">Doanh thu dự kiến</p>
-<h3 class="text-2xl font-black mt-1">2.450M</h3>
-</div>
-<div class="bg-white dark:bg-white/5 p-6 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
-<div class="flex justify-between items-start mb-4">
-<div class="p-2 bg-purple-50 text-purple-600 rounded-lg">
-<span class="material-symbols-outlined">group_add</span>
-</div>
-<span class="text-xs font-bold text-green-500 flex items-center gap-1">+24% <span class="material-symbols-outlined text-[14px]">trending_up</span></span>
-</div>
-<p class="text-xs font-bold text-[#61896f] uppercase tracking-wider">Khách hàng mới</p>
-<h3 class="text-2xl font-black mt-1">1,120</h3>
-</div>
-<div class="bg-white dark:bg-white/5 p-6 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
-<div class="flex justify-between items-start mb-4">
-<div class="p-2 bg-amber-50 text-amber-600 rounded-lg">
-<span class="material-symbols-outlined">inventory_2</span>
-</div>
-<span class="text-xs font-bold text-red-500 flex items-center gap-1">-2.4% <span class="material-symbols-outlined text-[14px]">trending_down</span></span>
-</div>
-<p class="text-xs font-bold text-[#61896f] uppercase tracking-wider">Tỉ lệ hủy hẹn</p>
-<h3 class="text-2xl font-black mt-1">3.1%</h3>
-</div>
-</div>
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-<div class="bg-white dark:bg-white/5 p-8 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
-<div class="flex justify-between items-center mb-10">
-<div>
-<h4 class="text-base font-bold">Số lượng tiêm theo tuần</h4>
-<p class="text-xs text-[#61896f]">Thống kê 4 tuần gần nhất</p>
-</div>
-<button class="p-2 hover:bg-gray-50 rounded-lg"><span class="material-symbols-outlined text-gray-400">more_vert</span></button>
-</div>
-<div class="h-64 flex items-end justify-between gap-4 px-4">
-<div class="flex-1 flex flex-col items-center gap-4 group">
-<div class="w-full bar-gradient rounded-t-lg relative" style="height: 60%">
-<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#111813] text-white text-[10px] px-2 py-1 rounded hidden group-hover:block">1,240</div>
-</div>
-<span class="text-[10px] font-bold text-[#61896f] uppercase">Tuần 1</span>
-</div>
-<div class="flex-1 flex flex-col items-center gap-4 group">
-<div class="w-full bar-gradient rounded-t-lg relative" style="height: 75%">
-<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#111813] text-white text-[10px] px-2 py-1 rounded hidden group-hover:block">1,520</div>
-</div>
-<span class="text-[10px] font-bold text-[#61896f] uppercase">Tuần 2</span>
-</div>
-<div class="flex-1 flex flex-col items-center gap-4 group">
-<div class="w-full bar-gradient rounded-t-lg relative" style="height: 45%">
-<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#111813] text-white text-[10px] px-2 py-1 rounded hidden group-hover:block">980</div>
-</div>
-<span class="text-[10px] font-bold text-[#61896f] uppercase">Tuần 3</span>
-</div>
-<div class="flex-1 flex flex-col items-center gap-4 group">
-<div class="w-full bar-gradient rounded-t-lg relative h-full">
-<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#111813] text-white text-[10px] px-2 py-1 rounded hidden group-hover:block">1,850</div>
-</div>
-<span class="text-[10px] font-bold text-[#61896f] uppercase font-black text-[#111813]">Tuần 4</span>
-</div>
-</div>
-</div>
-<div class="bg-white dark:bg-white/5 p-8 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm relative overflow-hidden">
-<div class="flex justify-between items-center mb-10">
-<div>
-<h4 class="text-base font-bold">Xu hướng doanh thu &amp; Tăng trưởng</h4>
-<p class="text-xs text-[#61896f]">Dữ liệu 6 tháng đầu năm 2024</p>
-</div>
-<div class="flex gap-2">
-<span class="flex items-center gap-1 text-[10px] font-bold text-primary"><span class="w-2 h-2 rounded-full bg-primary"></span> Thực tế</span>
-<span class="flex items-center gap-1 text-[10px] font-bold text-gray-300"><span class="w-2 h-2 rounded-full bg-gray-300"></span> Dự báo</span>
-</div>
-</div>
-<div class="relative h-64 flex items-end">
-<svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
-<path d="M0 80 Q 20 60, 40 70 T 80 30 T 100 20" fill="none" stroke="#13ec5b" stroke-width="2"></path>
-<path d="M0 90 Q 20 80, 40 85 T 80 60 T 100 50" fill="none" stroke="#e2e8f0" stroke-dasharray="4" stroke-width="1"></path>
-<line stroke="#f0f4f2" stroke-width="0.5" x1="20" x2="20" y1="0" y2="100"></line>
-<line stroke="#f0f4f2" stroke-width="0.5" x1="40" x2="40" y1="0" y2="100"></line>
-<line stroke="#f0f4f2" stroke-width="0.5" x1="60" x2="60" y1="0" y2="100"></line>
-<line stroke="#f0f4f2" stroke-width="0.5" x1="80" x2="80" y1="0" y2="100"></line>
-</svg>
-<div class="absolute bottom-0 left-0 w-full flex justify-between px-2 pb-[-10px]">
-<span class="text-[9px] font-bold text-[#61896f]">T1</span>
-<span class="text-[9px] font-bold text-[#61896f]">T2</span>
-<span class="text-[9px] font-bold text-[#61896f]">T3</span>
-<span class="text-[9px] font-bold text-[#61896f]">T4</span>
-<span class="text-[9px] font-bold text-[#61896f]">T5</span>
-<span class="text-[9px] font-bold text-[#61896f]">T6</span>
-</div>
-</div>
-</div>
-</div>
-<div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-<div class="bg-white dark:bg-white/5 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm overflow-hidden">
-<div class="p-6 border-b border-[#f0f4f2] dark:border-white/10 flex justify-between items-center">
-<h4 class="text-sm font-bold uppercase tracking-wider">Top Vaccine được sử dụng</h4>
-<button class="text-xs font-bold text-primary hover:underline">Xem tất cả</button>
-</div>
-<table class="w-full text-left">
-<thead>
-<tr class="bg-gray-50 dark:bg-white/5">
-<th class="px-6 py-3 text-[10px] font-black uppercase text-[#61896f]">Tên Vaccine</th>
-<th class="px-6 py-3 text-[10px] font-black uppercase text-[#61896f]">Số mũi tiêm</th>
-<th class="px-6 py-3 text-[10px] font-black uppercase text-[#61896f]">Tỉ lệ</th>
-</tr>
-</thead>
-<tbody class="divide-y divide-[#f0f4f2] dark:divide-white/10">
-<tr>
-<td class="px-6 py-4 flex items-center gap-3">
-<div class="w-8 h-8 rounded bg-blue-50 flex items-center justify-center text-blue-600"><span class="material-symbols-outlined text-sm">vaccines</span></div>
-<span class="text-xs font-bold">Vaxigrip Tetra</span>
-</td>
-<td class="px-6 py-4 text-xs font-semibold">1,452</td>
-<td class="px-6 py-4">
-<div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-<div class="bg-primary h-full" style="width: 85%"></div>
-</div>
-</td>
-</tr>
-<tr>
-<td class="px-6 py-4 flex items-center gap-3">
-<div class="w-8 h-8 rounded bg-purple-50 flex items-center justify-center text-purple-600"><span class="material-symbols-outlined text-sm">vaccines</span></div>
-<span class="text-xs font-bold">Gardasil 9</span>
-</td>
-<td class="px-6 py-4 text-xs font-semibold">920</td>
-<td class="px-6 py-4">
-<div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-<div class="bg-primary h-full" style="width: 65%"></div>
-</div>
-</td>
-</tr>
-<tr>
-<td class="px-6 py-4 flex items-center gap-3">
-<div class="w-8 h-8 rounded bg-teal-50 flex items-center justify-center text-teal-600"><span class="material-symbols-outlined text-sm">vaccines</span></div>
-<span class="text-xs font-bold">Engerix-B</span>
-</td>
-<td class="px-6 py-4 text-xs font-semibold">740</td>
-<td class="px-6 py-4">
-<div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-<div class="bg-primary h-full" style="width: 50%"></div>
-</div>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="bg-white dark:bg-white/5 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm overflow-hidden">
-<div class="p-6 border-b border-[#f0f4f2] dark:border-white/10 flex justify-between items-center">
-<h4 class="text-sm font-bold uppercase tracking-wider">Thống kê theo Trung tâm</h4>
-<button class="text-xs font-bold text-primary hover:underline">Phân tích vùng</button>
-</div>
-<table class="w-full text-left">
-<thead>
-<tr class="bg-gray-50 dark:bg-white/5">
-<th class="px-6 py-3 text-[10px] font-black uppercase text-[#61896f]">Trung tâm</th>
-<th class="px-6 py-3 text-[10px] font-black uppercase text-[#61896f]">Lượt khách</th>
-<th class="px-6 py-3 text-[10px] font-black uppercase text-[#61896f]">Trạng thái kho</th>
-</tr>
-</thead>
-<tbody class="divide-y divide-[#f0f4f2] dark:divide-white/10">
-<tr>
-<td class="px-6 py-4 text-xs font-bold">VNVC Hoàng Văn Thụ</td>
-<td class="px-6 py-4 text-xs font-semibold">3,240</td>
-<td class="px-6 py-4">
-<span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[9px] font-bold uppercase">Ổn định</span>
-</td>
-</tr>
-<tr>
-<td class="px-6 py-4 text-xs font-bold">VNVC Lê Đại Hành</td>
-<td class="px-6 py-4 text-xs font-semibold">2,150</td>
-<td class="px-6 py-4">
-<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[9px] font-bold uppercase">Sắp hết hàng</span>
-</td>
-</tr>
-<tr>
-<td class="px-6 py-4 text-xs font-bold">VNVC Trường Chinh</td>
-<td class="px-6 py-4 text-xs font-semibold">1,890</td>
-<td class="px-6 py-4">
-<span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[9px] font-bold uppercase">Ổn định</span>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</section>
-</main>
-</div>
 
-</body></html>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white antialiased">
+    <div class="flex h-screen overflow-hidden">
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <main class="flex-1 lg:ml-72 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
+            <header
+                class="sticky top-0 z-10 flex items-center justify-between bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
+                <div class="flex flex-1 items-center gap-4">
+                    <h2 class="text-xl font-bold text-[#111813] dark:text-white">Báo cáo &amp; Thống kê Hệ thống</h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="group relative">
+                        <button
+                            class="flex items-center gap-2 px-6 py-2.5 bg-primary text-[#111813] font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
+                            <span class="material-symbols-outlined">file_download</span>
+                            Xuất báo cáo
+                            <span class="material-symbols-outlined">keyboard_arrow_down</span>
+                        </button>
+                        <div
+                            class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-background-dark border border-[#f0f4f2] dark:border-white/10 rounded-xl shadow-xl hidden group-hover:block z-50 overflow-hidden">
+                            <button
+                                class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 font-medium">
+                                <span class="material-symbols-outlined text-green-600">table_view</span> Excel (.xlsx)
+                            </button>
+                            <button
+                                class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 font-medium">
+                                <span class="material-symbols-outlined text-red-600">picture_as_pdf</span> PDF Document
+                            </button>
+                            <button
+                                class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 font-medium">
+                                <span class="material-symbols-outlined text-blue-600">mail</span> Gửi qua Email
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <section class="p-8 space-y-8">
+                <div
+                    class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white dark:bg-white/5 p-4 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[10px] font-bold uppercase text-[#61896f] px-1">Loại báo cáo</label>
+                        <select
+                            class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-semibold text-[#111813] dark:text-white focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer">
+                            <option value="tiem-chung">Thống kê Tiêm chủng</option>
+                            <option value="vaccine">Báo cáo Vaccine &amp; Kho</option>
+                            <option value="khach-hang">Phân tích Khách hàng</option>
+                            <option value="doanh-thu">Báo cáo Doanh thu</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[10px] font-bold uppercase text-[#61896f] px-1">Khoảng thời gian</label>
+                        <select
+                            class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-semibold text-[#111813] dark:text-white focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer">
+                            <option value="7days">7 ngày qua</option>
+                            <option selected="" value="30days">30 ngày qua</option>
+                            <option value="this-month">Tháng này</option>
+                            <option value="custom">Tùy chỉnh khoảng ngày</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[10px] font-bold uppercase text-[#61896f] px-1">Từ ngày</label>
+                        <input
+                            class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-semibold text-[#111813] dark:text-white focus:ring-2 focus:ring-primary/50"
+                            type="date" value="2024-04-24" />
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[10px] font-bold uppercase text-[#61896f] px-1">Đến ngày</label>
+                        <input
+                            class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-semibold text-[#111813] dark:text-white focus:ring-2 focus:ring-primary/50"
+                            type="date" value="2024-05-24" />
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div
+                        class="bg-white dark:bg-white/5 p-6 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                                <span class="material-symbols-outlined">person_pin</span>
+                            </div>
+                            <span class="text-xs font-bold text-green-500 flex items-center gap-1">+12.5% <span
+                                    class="material-symbols-outlined text-[14px]">trending_up</span></span>
+                        </div>
+                        <p class="text-xs font-bold text-[#61896f] uppercase tracking-wider">Tổng lượt tiêm</p>
+                        <h3 class="text-2xl font-black mt-1">8,245</h3>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-white/5 p-6 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-2 bg-primary/20 text-[#111813] rounded-lg">
+                                <span class="material-symbols-outlined">payments</span>
+                            </div>
+                            <span class="text-xs font-bold text-green-500 flex items-center gap-1">+8.2% <span
+                                    class="material-symbols-outlined text-[14px]">trending_up</span></span>
+                        </div>
+                        <p class="text-xs font-bold text-[#61896f] uppercase tracking-wider">Doanh thu dự kiến</p>
+                        <h3 class="text-2xl font-black mt-1">2.450M</h3>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-white/5 p-6 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-2 bg-purple-50 text-purple-600 rounded-lg">
+                                <span class="material-symbols-outlined">group_add</span>
+                            </div>
+                            <span class="text-xs font-bold text-green-500 flex items-center gap-1">+24% <span
+                                    class="material-symbols-outlined text-[14px]">trending_up</span></span>
+                        </div>
+                        <p class="text-xs font-bold text-[#61896f] uppercase tracking-wider">Khách hàng mới</p>
+                        <h3 class="text-2xl font-black mt-1">1,120</h3>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-white/5 p-6 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-2 bg-amber-50 text-amber-600 rounded-lg">
+                                <span class="material-symbols-outlined">inventory_2</span>
+                            </div>
+                            <span class="text-xs font-bold text-red-500 flex items-center gap-1">-2.4% <span
+                                    class="material-symbols-outlined text-[14px]">trending_down</span></span>
+                        </div>
+                        <p class="text-xs font-bold text-[#61896f] uppercase tracking-wider">Tỉ lệ hủy hẹn</p>
+                        <h3 class="text-2xl font-black mt-1">3.1%</h3>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div
+                        class="bg-white dark:bg-white/5 p-8 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
+                        <div class="flex justify-between items-center mb-10">
+                            <div>
+                                <h4 class="text-base font-bold">Số lượng tiêm theo tuần</h4>
+                                <p class="text-xs text-[#61896f]">Thống kê 4 tuần gần nhất</p>
+                            </div>
+                            <button class="p-2 hover:bg-gray-50 rounded-lg"><span
+                                    class="material-symbols-outlined text-gray-400">more_vert</span></button>
+                        </div>
+                        <div class="h-64 flex items-end justify-between gap-4 px-4">
+                            <div class="flex-1 flex flex-col items-center gap-4 group">
+                                <div class="w-full bar-gradient rounded-t-lg relative" style="height: 60%">
+                                    <div
+                                        class="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#111813] text-white text-[10px] px-2 py-1 rounded hidden group-hover:block">
+                                        1,240</div>
+                                </div>
+                                <span class="text-[10px] font-bold text-[#61896f] uppercase">Tuần 1</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-4 group">
+                                <div class="w-full bar-gradient rounded-t-lg relative" style="height: 75%">
+                                    <div
+                                        class="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#111813] text-white text-[10px] px-2 py-1 rounded hidden group-hover:block">
+                                        1,520</div>
+                                </div>
+                                <span class="text-[10px] font-bold text-[#61896f] uppercase">Tuần 2</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-4 group">
+                                <div class="w-full bar-gradient rounded-t-lg relative" style="height: 45%">
+                                    <div
+                                        class="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#111813] text-white text-[10px] px-2 py-1 rounded hidden group-hover:block">
+                                        980</div>
+                                </div>
+                                <span class="text-[10px] font-bold text-[#61896f] uppercase">Tuần 3</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-4 group">
+                                <div class="w-full bar-gradient rounded-t-lg relative h-full">
+                                    <div
+                                        class="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#111813] text-white text-[10px] px-2 py-1 rounded hidden group-hover:block">
+                                        1,850</div>
+                                </div>
+                                <span
+                                    class="text-[10px] font-bold text-[#61896f] uppercase font-black text-[#111813]">Tuần
+                                    4</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-white/5 p-8 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm relative overflow-hidden">
+                        <div class="flex justify-between items-center mb-10">
+                            <div>
+                                <h4 class="text-base font-bold">Xu hướng doanh thu &amp; Tăng trưởng</h4>
+                                <p class="text-xs text-[#61896f]">Dữ liệu 6 tháng đầu năm 2024</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="flex items-center gap-1 text-[10px] font-bold text-primary"><span
+                                        class="w-2 h-2 rounded-full bg-primary"></span> Thực tế</span>
+                                <span class="flex items-center gap-1 text-[10px] font-bold text-gray-300"><span
+                                        class="w-2 h-2 rounded-full bg-gray-300"></span> Dự báo</span>
+                            </div>
+                        </div>
+                        <div class="relative h-64 flex items-end">
+                            <svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+                                <path d="M0 80 Q 20 60, 40 70 T 80 30 T 100 20" fill="none" stroke="#13ec5b"
+                                    stroke-width="2"></path>
+                                <path d="M0 90 Q 20 80, 40 85 T 80 60 T 100 50" fill="none" stroke="#e2e8f0"
+                                    stroke-dasharray="4" stroke-width="1"></path>
+                                <line stroke="#f0f4f2" stroke-width="0.5" x1="20" x2="20" y1="0" y2="100"></line>
+                                <line stroke="#f0f4f2" stroke-width="0.5" x1="40" x2="40" y1="0" y2="100"></line>
+                                <line stroke="#f0f4f2" stroke-width="0.5" x1="60" x2="60" y1="0" y2="100"></line>
+                                <line stroke="#f0f4f2" stroke-width="0.5" x1="80" x2="80" y1="0" y2="100"></line>
+                            </svg>
+                            <div class="absolute bottom-0 left-0 w-full flex justify-between px-2 pb-[-10px]">
+                                <span class="text-[9px] font-bold text-[#61896f]">T1</span>
+                                <span class="text-[9px] font-bold text-[#61896f]">T2</span>
+                                <span class="text-[9px] font-bold text-[#61896f]">T3</span>
+                                <span class="text-[9px] font-bold text-[#61896f]">T4</span>
+                                <span class="text-[9px] font-bold text-[#61896f]">T5</span>
+                                <span class="text-[9px] font-bold text-[#61896f]">T6</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                    <div
+                        class="bg-white dark:bg-white/5 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm overflow-hidden">
+                        <div
+                            class="p-6 border-b border-[#f0f4f2] dark:border-white/10 flex justify-between items-center">
+                            <h4 class="text-sm font-bold uppercase tracking-wider">Top Vaccine được sử dụng</h4>
+                            <button class="text-xs font-bold text-primary hover:underline">Xem tất cả</button>
+                        </div>
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="bg-gray-50 dark:bg-white/5">
+                                    <th class="px-6 py-3 text-[10px] font-black uppercase text-[#61896f]">Tên Vaccine
+                                    </th>
+                                    <th class="px-6 py-3 text-[10px] font-black uppercase text-[#61896f]">Số mũi tiêm
+                                    </th>
+                                    <th class="px-6 py-3 text-[10px] font-black uppercase text-[#61896f]">Tỉ lệ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[#f0f4f2] dark:divide-white/10">
+                                <tr>
+                                    <td class="px-6 py-4 flex items-center gap-3">
+                                        <div
+                                            class="w-8 h-8 rounded bg-blue-50 flex items-center justify-center text-blue-600">
+                                            <span class="material-symbols-outlined text-sm">vaccines</span></div>
+                                        <span class="text-xs font-bold">Vaxigrip Tetra</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-xs font-semibold">1,452</td>
+                                    <td class="px-6 py-4">
+                                        <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                            <div class="bg-primary h-full" style="width: 85%"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 flex items-center gap-3">
+                                        <div
+                                            class="w-8 h-8 rounded bg-purple-50 flex items-center justify-center text-purple-600">
+                                            <span class="material-symbols-outlined text-sm">vaccines</span></div>
+                                        <span class="text-xs font-bold">Gardasil 9</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-xs font-semibold">920</td>
+                                    <td class="px-6 py-4">
+                                        <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                            <div class="bg-primary h-full" style="width: 65%"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 flex items-center gap-3">
+                                        <div
+                                            class="w-8 h-8 rounded bg-teal-50 flex items-center justify-center text-teal-600">
+                                            <span class="material-symbols-outlined text-sm">vaccines</span></div>
+                                        <span class="text-xs font-bold">Engerix-B</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-xs font-semibold">740</td>
+                                    <td class="px-6 py-4">
+                                        <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                            <div class="bg-primary h-full" style="width: 50%"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-white/5 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm overflow-hidden">
+                        <div
+                            class="p-6 border-b border-[#f0f4f2] dark:border-white/10 flex justify-between items-center">
+                            <h4 class="text-sm font-bold uppercase tracking-wider">Thống kê theo Trung tâm</h4>
+                            <button class="text-xs font-bold text-primary hover:underline">Phân tích vùng</button>
+                        </div>
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="bg-gray-50 dark:bg-white/5">
+                                    <th class="px-6 py-3 text-[10px] font-black uppercase text-[#61896f]">Trung tâm</th>
+                                    <th class="px-6 py-3 text-[10px] font-black uppercase text-[#61896f]">Lượt khách
+                                    </th>
+                                    <th class="px-6 py-3 text-[10px] font-black uppercase text-[#61896f]">Trạng thái kho
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[#f0f4f2] dark:divide-white/10">
+                                <tr>
+                                    <td class="px-6 py-4 text-xs font-bold">VNVC Hoàng Văn Thụ</td>
+                                    <td class="px-6 py-4 text-xs font-semibold">3,240</td>
+                                    <td class="px-6 py-4">
+                                        <span
+                                            class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[9px] font-bold uppercase">Ổn
+                                            định</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 text-xs font-bold">VNVC Lê Đại Hành</td>
+                                    <td class="px-6 py-4 text-xs font-semibold">2,150</td>
+                                    <td class="px-6 py-4">
+                                        <span
+                                            class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[9px] font-bold uppercase">Sắp
+                                            hết hàng</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 text-xs font-bold">VNVC Trường Chinh</td>
+                                    <td class="px-6 py-4 text-xs font-semibold">1,890</td>
+                                    <td class="px-6 py-4">
+                                        <span
+                                            class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[9px] font-bold uppercase">Ổn
+                                            định</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+</body>
+
+</html>

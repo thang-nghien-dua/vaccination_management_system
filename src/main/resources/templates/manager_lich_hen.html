@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi">
+
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Quản lý Lịch hẹn - Hệ thống Quản lý Tiêm chủng</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -20,7 +23,7 @@
                     fontFamily: {
                         "display": ["Manrope", "sans-serif"]
                     },
-                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
                 },
             },
         }
@@ -37,238 +40,275 @@
         }
     </style>
 </head>
+
 <body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white antialiased">
-<div class="flex h-screen overflow-hidden">
-<div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
-<main class="flex-1 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
-<header class="sticky top-0 z-10 flex items-center justify-between bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
-<div class="flex flex-1 items-center gap-4">
-<h2 class="text-xl font-bold text-[#111813] dark:text-white">Quản lý Lịch hẹn</h2>
-</div>
-<div class="flex items-center gap-4 pl-4">
-<button class="relative p-2 rounded-lg bg-[#f0f4f2] dark:bg-white/5 text-[#111813] dark:text-white">
-<span class="material-symbols-outlined text-[20px]">notifications</span>
-<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-background-dark"></span>
-</button>
-<div class="h-6 w-px bg-[#f0f4f2] dark:bg-white/10"></div>
-<p class="text-sm font-medium text-[#61896f] uppercase tracking-widest" id="currentDate"></p>
-</div>
-</header>
-<section class="p-8 space-y-6">
-<div class="flex flex-col lg:flex-row gap-4 items-center justify-between bg-white dark:bg-white/5 p-4 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
-<div class="flex flex-1 flex-wrap gap-3 w-full lg:w-auto">
-<div class="relative flex-1 min-w-[280px]">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#61896f] text-xl">search</span>
-<input id="searchInput" class="w-full pl-10 pr-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all" placeholder="Tìm mã booking, tên bệnh nhân..." type="text" onkeyup="handleSearch()"/>
-</div>
-<select id="statusFilter" class="px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-medium text-[#61896f] focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer" onchange="handleFilter()">
-<option value="">Tất cả Trạng thái</option>
-<option value="PENDING">Chờ xác nhận</option>
-<option value="CONFIRMED">Đã xác nhận</option>
-<option value="CHECKED_IN">Đã check-in</option>
-<option value="SCREENING">Đang khám</option>
-<option value="APPROVED">Đủ điều kiện</option>
-<option value="REJECTED">Từ chối</option>
-<option value="INJECTING">Đang tiêm</option>
-<option value="MONITORING">Đang theo dõi</option>
-<option value="COMPLETED">Hoàn thành</option>
-<option value="CANCELLED">Đã hủy</option>
-</select>
-<input id="startDateFilter" type="date" class="px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-medium text-[#61896f] focus:ring-2 focus:ring-primary/50 transition-all" onchange="handleFilter()"/>
-<input id="endDateFilter" type="date" class="px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-medium text-[#61896f] focus:ring-2 focus:ring-primary/50 transition-all" onchange="handleFilter()"/>
-</div>
-</div>
-<div class="bg-white dark:bg-white/5 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm overflow-hidden">
-<div class="overflow-x-auto">
-<table class="w-full text-left border-collapse">
-<thead>
-<tr class="bg-gray-50 dark:bg-white/5 border-b border-[#f0f4f2] dark:border-white/10">
-<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Mã Booking</th>
-<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Bệnh nhân</th>
-<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Ngày hẹn</th>
-<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Vaccine</th>
-<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Trung tâm</th>
-<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Trạng thái</th>
-<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f] text-right">Hành động</th>
-</tr>
-</thead>
-<tbody id="appointmentsTableBody" class="divide-y divide-[#f0f4f2] dark:divide-white/10">
-<tr>
-<td colspan="7" class="px-6 py-4 text-center text-[#61896f]">
-<div class="flex items-center justify-center gap-2">
-<span class="material-symbols-outlined animate-spin">hourglass_empty</span>
-<span>Đang tải dữ liệu...</span>
-</div>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="px-6 py-4 bg-gray-50 dark:bg-white/5 border-t border-[#f0f4f2] dark:border-white/10 flex items-center justify-between">
-<p id="paginationText" class="text-[11px] font-bold text-[#61896f] uppercase tracking-wider">Đang tải...</p>
-<div class="flex gap-2" id="paginationControls">
-</div>
-</div>
+    <div class="flex h-screen overflow-hidden">
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <main class="flex-1 lg:ml-72 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
+            <header
+                class="sticky top-0 z-10 flex items-center justify-between bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
+                <div class="flex flex-1 items-center gap-4">
+                    <h2 class="text-xl font-bold text-[#111813] dark:text-white">Quản lý Lịch hẹn</h2>
+                </div>
+                <div class="flex items-center gap-4 pl-4">
+                    <button class="relative p-2 rounded-lg bg-[#f0f4f2] dark:bg-white/5 text-[#111813] dark:text-white">
+                        <span class="material-symbols-outlined text-[20px]">notifications</span>
+                        <span
+                            class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-background-dark"></span>
+                    </button>
+                    <div class="h-6 w-px bg-[#f0f4f2] dark:bg-white/10"></div>
+                    <p class="text-sm font-medium text-[#61896f] uppercase tracking-widest" id="currentDate"></p>
+                </div>
+            </header>
+            <section class="p-8 space-y-6">
+                <div
+                    class="flex flex-col lg:flex-row gap-4 items-center justify-between bg-white dark:bg-white/5 p-4 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
+                    <div class="flex flex-1 flex-wrap gap-3 w-full lg:w-auto">
+                        <div class="relative flex-1 min-w-[280px]">
+                            <span
+                                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#61896f] text-xl">search</span>
+                            <input id="searchInput"
+                                class="w-full pl-10 pr-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all"
+                                placeholder="Tìm mã booking, tên bệnh nhân..." type="text" onkeyup="handleSearch()" />
+                        </div>
+                        <select id="statusFilter"
+                            class="px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-medium text-[#61896f] focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer"
+                            onchange="handleFilter()">
+                            <option value="">Tất cả Trạng thái</option>
+                            <option value="PENDING">Chờ xác nhận</option>
+                            <option value="CONFIRMED">Đã xác nhận</option>
+                            <option value="CHECKED_IN">Đã check-in</option>
+                            <option value="SCREENING">Đang khám</option>
+                            <option value="APPROVED">Đủ điều kiện</option>
+                            <option value="REJECTED">Từ chối</option>
+                            <option value="INJECTING">Đang tiêm</option>
+                            <option value="MONITORING">Đang theo dõi</option>
+                            <option value="COMPLETED">Hoàn thành</option>
+                            <option value="CANCELLED">Đã hủy</option>
+                        </select>
+                        <input id="startDateFilter" type="date"
+                            class="px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-medium text-[#61896f] focus:ring-2 focus:ring-primary/50 transition-all"
+                            onchange="handleFilter()" />
+                        <input id="endDateFilter" type="date"
+                            class="px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-medium text-[#61896f] focus:ring-2 focus:ring-primary/50 transition-all"
+                            onchange="handleFilter()" />
+                    </div>
+                </div>
+                <div
+                    class="bg-white dark:bg-white/5 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 dark:bg-white/5 border-b border-[#f0f4f2] dark:border-white/10">
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Mã Booking</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Bệnh nhân</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Ngày hẹn</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Vaccine</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Trung tâm</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Trạng thái</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f] text-right">
+                                        Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="appointmentsTableBody" class="divide-y divide-[#f0f4f2] dark:divide-white/10">
+                                <tr>
+                                    <td colspan="7" class="px-6 py-4 text-center text-[#61896f]">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <span class="material-symbols-outlined animate-spin">hourglass_empty</span>
+                                            <span>Đang tải dữ liệu...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div
+                        class="px-6 py-4 bg-gray-50 dark:bg-white/5 border-t border-[#f0f4f2] dark:border-white/10 flex items-center justify-between">
+                        <p id="paginationText" class="text-[11px] font-bold text-[#61896f] uppercase tracking-wider">
+                            Đang tải...</p>
+                        <div class="flex gap-2" id="paginationControls">
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
-</section>
-</main>
-</div>
 
-<!-- Modal Xem Chi Tiết -->
-<div id="detailModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
-    <div class="bg-white dark:bg-background-dark rounded-2xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="sticky top-0 bg-white dark:bg-background-dark border-b border-[#f0f4f2] dark:border-white/10 px-6 py-4 flex items-center justify-between">
-            <h3 class="text-xl font-bold text-[#111813] dark:text-white">Chi tiết Lịch hẹn</h3>
-            <button onclick="closeDetailModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-        <div class="p-6 space-y-4" id="detailModalContent">
-            <!-- Nội dung sẽ được load từ API -->
-        </div>
-    </div>
-</div>
-
-<!-- Modal Cập nhật Trạng thái -->
-<div id="statusModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
-    <div class="bg-white dark:bg-background-dark rounded-2xl shadow-xl max-w-md w-full mx-4">
-        <div class="border-b border-[#f0f4f2] dark:border-white/10 px-6 py-4 flex items-center justify-between">
-            <h3 class="text-xl font-bold text-[#111813] dark:text-white">Cập nhật Trạng thái</h3>
-            <button onclick="closeStatusModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-        <div class="p-6 space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-[#61896f] mb-2">Mã Booking</label>
-                <p id="statusModalBookingCode" class="text-sm font-bold text-[#111813] dark:text-white"></p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-[#61896f] mb-2">Trạng thái hiện tại</label>
-                <p id="statusModalCurrentStatus" class="text-sm font-bold text-[#111813] dark:text-white"></p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-[#61896f] mb-2">Trạng thái mới</label>
-                <select id="statusModalNewStatus" class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-medium text-[#61896f] focus:ring-2 focus:ring-primary/50 transition-all">
-                    <option value="PENDING">Chờ xác nhận</option>
-                    <option value="CONFIRMED">Đã xác nhận</option>
-                    <option value="CHECKED_IN">Đã check-in</option>
-                    <option value="SCREENING">Đang khám</option>
-                    <option value="APPROVED">Đủ điều kiện</option>
-                    <option value="REJECTED">Từ chối</option>
-                    <option value="INJECTING">Đang tiêm</option>
-                    <option value="MONITORING">Đang theo dõi</option>
-                    <option value="COMPLETED">Hoàn thành</option>
-                    <option value="CANCELLED">Đã hủy</option>
-                </select>
-            </div>
-            <div class="flex gap-3 pt-4">
-                <button onclick="closeStatusModal()" class="flex-1 px-4 py-2 bg-gray-100 dark:bg-white/10 text-[#111813] dark:text-white rounded-xl font-bold hover:bg-gray-200 transition-colors">
-                    Hủy
-                </button>
-                <button onclick="confirmUpdateStatus()" class="flex-1 px-4 py-2 bg-primary text-[#111813] rounded-xl font-bold hover:bg-primary/90 transition-colors">
-                    Cập nhật
+    <!-- Modal Xem Chi Tiết -->
+    <div id="detailModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+        <div
+            class="bg-white dark:bg-background-dark rounded-2xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div
+                class="sticky top-0 bg-white dark:bg-background-dark border-b border-[#f0f4f2] dark:border-white/10 px-6 py-4 flex items-center justify-between">
+                <h3 class="text-xl font-bold text-[#111813] dark:text-white">Chi tiết Lịch hẹn</h3>
+                <button onclick="closeDetailModal()"
+                    class="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
+            <div class="p-6 space-y-4" id="detailModalContent">
+                <!-- Nội dung sẽ được load từ API -->
+            </div>
         </div>
     </div>
-</div>
 
-<script th:inline="javascript">
-/*<![CDATA[*/
-(function() {
-    let currentPage = 1;
-    const pageSize = 10;
-    let allAppointments = [];
-    
-    // Set current date
-    const today = new Date();
-    const dateStr = today.toLocaleDateString('vi-VN');
-    const currentDateEl = document.getElementById('currentDate');
-    if (currentDateEl) {
-        currentDateEl.textContent = 'Hôm nay: ' + dateStr;
-    }
-    
-    // Filter và search
-    window.handleSearch = function() {
-        currentPage = 1;
-        loadAppointments();
-    };
-    
-    window.handleFilter = function() {
-        currentPage = 1;
-        loadAppointments();
-    };
-    
-    // Load appointments với filter
-    async function loadAppointments() {
-        try {
-            const search = document.getElementById('searchInput')?.value || '';
-            const status = document.getElementById('statusFilter')?.value || '';
-            const startDate = document.getElementById('startDateFilter')?.value || '';
-            const endDate = document.getElementById('endDateFilter')?.value || '';
-            
-            let url = '/api/admin/appointments?';
-            if (status) url += `status=${encodeURIComponent(status)}&`;
-            if (startDate) url += `startDate=${encodeURIComponent(startDate)}&`;
-            if (endDate) url += `endDate=${encodeURIComponent(endDate)}&`;
-            if (search) url += `search=${encodeURIComponent(search)}&`;
-            
-            const response = await fetch(url, {
-                credentials: 'include'
-            });
-            if (!response.ok) throw new Error('Failed to load appointments');
-            allAppointments = await response.json();
-            
-            renderAppointments();
-            updatePagination();
-        } catch (error) {
-            console.error('Error loading appointments:', error);
-            const tbody = document.getElementById('appointmentsTableBody');
-            if (tbody) {
-                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Lỗi khi tải dữ liệu</td></tr>';
-            }
-        }
-    }
-    
-    // Render appointments table
-    function renderAppointments() {
-        const tbody = document.getElementById('appointmentsTableBody');
-        if (!tbody) return;
-        
-        const start = (currentPage - 1) * pageSize;
-        const end = start + pageSize;
-        const pageAppointments = allAppointments.slice(start, end);
-        
-        if (pageAppointments.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-[#61896f]">Không có dữ liệu</td></tr>';
-            return;
-        }
-        
-        const statusMap = {
-            'PENDING': { text: 'Chờ xác nhận', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
-            'CONFIRMED': { text: 'Đã xác nhận', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
-            'CHECKED_IN': { text: 'Đã check-in', color: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400' },
-            'SCREENING': { text: 'Đang khám', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
-            'APPROVED': { text: 'Đủ điều kiện', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
-            'REJECTED': { text: 'Từ chối', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
-            'INJECTING': { text: 'Đang tiêm', color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400' },
-            'MONITORING': { text: 'Đang theo dõi', color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400' },
-            'COMPLETED': { text: 'Hoàn thành', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
-            'CANCELLED': { text: 'Đã hủy', color: 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-400' }
-        };
-        
-        tbody.innerHTML = pageAppointments.map(apt => {
-            const patientInfo = apt.patientInfo || {};
-            const patientName = patientInfo.fullName || 'N/A';
-            const patientPhone = patientInfo.phoneNumber || '';
-            const vaccineName = apt.vaccineInfo ? apt.vaccineInfo.name : 'N/A';
-            const centerName = apt.centerName || 'N/A';
-            const appointmentDate = apt.appointmentDate ? new Date(apt.appointmentDate).toLocaleDateString('vi-VN') : 'N/A';
-            const appointmentTime = apt.appointmentTime || '';
-            const statusInfo = statusMap[apt.status] || { text: apt.status || 'N/A', color: 'bg-gray-100 text-gray-700' };
-            
-            return `
+    <!-- Modal Cập nhật Trạng thái -->
+    <div id="statusModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+        <div class="bg-white dark:bg-background-dark rounded-2xl shadow-xl max-w-md w-full mx-4">
+            <div class="border-b border-[#f0f4f2] dark:border-white/10 px-6 py-4 flex items-center justify-between">
+                <h3 class="text-xl font-bold text-[#111813] dark:text-white">Cập nhật Trạng thái</h3>
+                <button onclick="closeStatusModal()"
+                    class="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-[#61896f] mb-2">Mã Booking</label>
+                    <p id="statusModalBookingCode" class="text-sm font-bold text-[#111813] dark:text-white"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[#61896f] mb-2">Trạng thái hiện tại</label>
+                    <p id="statusModalCurrentStatus" class="text-sm font-bold text-[#111813] dark:text-white"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-[#61896f] mb-2">Trạng thái mới</label>
+                    <select id="statusModalNewStatus"
+                        class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-medium text-[#61896f] focus:ring-2 focus:ring-primary/50 transition-all">
+                        <option value="PENDING">Chờ xác nhận</option>
+                        <option value="CONFIRMED">Đã xác nhận</option>
+                        <option value="CHECKED_IN">Đã check-in</option>
+                        <option value="SCREENING">Đang khám</option>
+                        <option value="APPROVED">Đủ điều kiện</option>
+                        <option value="REJECTED">Từ chối</option>
+                        <option value="INJECTING">Đang tiêm</option>
+                        <option value="MONITORING">Đang theo dõi</option>
+                        <option value="COMPLETED">Hoàn thành</option>
+                        <option value="CANCELLED">Đã hủy</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button onclick="closeStatusModal()"
+                        class="flex-1 px-4 py-2 bg-gray-100 dark:bg-white/10 text-[#111813] dark:text-white rounded-xl font-bold hover:bg-gray-200 transition-colors">
+                        Hủy
+                    </button>
+                    <button onclick="confirmUpdateStatus()"
+                        class="flex-1 px-4 py-2 bg-primary text-[#111813] rounded-xl font-bold hover:bg-primary/90 transition-colors">
+                        Cập nhật
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+            /*<![CDATA[*/
+            (function () {
+                let currentPage = 1;
+                const pageSize = 10;
+                let allAppointments = [];
+
+                // Set current date
+                const today = new Date();
+                const dateStr = today.toLocaleDateString('vi-VN');
+                const currentDateEl = document.getElementById('currentDate');
+                if (currentDateEl) {
+                    currentDateEl.textContent = 'Hôm nay: ' + dateStr;
+                }
+
+                // Filter và search
+                window.handleSearch = function () {
+                    currentPage = 1;
+                    loadAppointments();
+                };
+
+                window.handleFilter = function () {
+                    currentPage = 1;
+                    loadAppointments();
+                };
+
+                // Load appointments với filter
+                async function loadAppointments() {
+                    try {
+                        const search = document.getElementById('searchInput')?.value || '';
+                        const status = document.getElementById('statusFilter')?.value || '';
+                        const startDate = document.getElementById('startDateFilter')?.value || '';
+                        const endDate = document.getElementById('endDateFilter')?.value || '';
+
+                        let url = '/api/admin/appointments?';
+                        if (status) url += `status=${encodeURIComponent(status)}&`;
+                        if (startDate) url += `startDate=${encodeURIComponent(startDate)}&`;
+                        if (endDate) url += `endDate=${encodeURIComponent(endDate)}&`;
+                        if (search) url += `search=${encodeURIComponent(search)}&`;
+
+                        const response = await fetch(url, {
+                            credentials: 'include'
+                        });
+                        if (!response.ok) throw new Error('Failed to load appointments');
+                        allAppointments = await response.json();
+
+                        renderAppointments();
+                        updatePagination();
+                    } catch (error) {
+                        console.error('Error loading appointments:', error);
+                        const tbody = document.getElementById('appointmentsTableBody');
+                        if (tbody) {
+                            tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Lỗi khi tải dữ liệu</td></tr>';
+                        }
+                    }
+                }
+
+                // Render appointments table
+                function renderAppointments() {
+                    const tbody = document.getElementById('appointmentsTableBody');
+                    if (!tbody) return;
+
+                    const start = (currentPage - 1) * pageSize;
+                    const end = start + pageSize;
+                    const pageAppointments = allAppointments.slice(start, end);
+
+                    if (pageAppointments.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-[#61896f]">Không có dữ liệu</td></tr>';
+                        return;
+                    }
+
+                    const statusMap = {
+                        'PENDING': { text: 'Chờ xác nhận', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
+                        'CONFIRMED': { text: 'Đã xác nhận', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+                        'CHECKED_IN': { text: 'Đã check-in', color: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400' },
+                        'SCREENING': { text: 'Đang khám', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
+                        'APPROVED': { text: 'Đủ điều kiện', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+                        'REJECTED': { text: 'Từ chối', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+                        'INJECTING': { text: 'Đang tiêm', color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400' },
+                        'MONITORING': { text: 'Đang theo dõi', color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400' },
+                        'COMPLETED': { text: 'Hoàn thành', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+                        'CANCELLED': { text: 'Đã hủy', color: 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-400' }
+                    };
+
+                    tbody.innerHTML = pageAppointments.map(apt => {
+                        const patientInfo = apt.patientInfo || {};
+                        const patientName = patientInfo.fullName || 'N/A';
+                        const patientPhone = patientInfo.phoneNumber || '';
+                        const vaccineName = apt.vaccineInfo ? apt.vaccineInfo.name : 'N/A';
+                        const centerName = apt.centerName || 'N/A';
+                        const appointmentDate = apt.appointmentDate ? new Date(apt.appointmentDate).toLocaleDateString('vi-VN') : 'N/A';
+                        const appointmentTime = apt.appointmentTime || '';
+                        const statusInfo = statusMap[apt.status] || { text: apt.status || 'N/A', color: 'bg-gray-100 text-gray-700' };
+
+                        return `
                 <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                     <td class="px-6 py-4">
                         <span class="text-sm font-bold text-[#111813] dark:text-white">${apt.bookingCode || 'N/A'}</span>
@@ -309,104 +349,104 @@
                     </td>
                 </tr>
             `;
-        }).join('');
-    }
-    
-    // Update pagination
-    function updatePagination() {
-        const totalPages = Math.ceil(allAppointments.length / pageSize);
-        const start = (currentPage - 1) * pageSize + 1;
-        const end = Math.min(currentPage * pageSize, allAppointments.length);
-        
-        const paginationText = document.getElementById('paginationText');
-        if (paginationText) {
-            paginationText.textContent = `Hiển thị ${start}-${end} của ${allAppointments.length} lịch hẹn`;
-        }
-        
-        const paginationControls = document.getElementById('paginationControls');
-        if (paginationControls) {
-            let html = '';
-            if (currentPage > 1) {
-                html += `<button onclick="changePage(${currentPage - 1})" class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors">
-                    <span class="material-symbols-outlined text-sm">chevron_left</span>
-                </button>`;
-            } else {
-                html += `<button disabled class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 opacity-50">
-                    <span class="material-symbols-outlined text-sm">chevron_left</span>
-                </button>`;
-            }
-            
-            for (let i = 1; i <= totalPages && i <= 5; i++) {
-                if (i === currentPage) {
-                    html += `<button class="p-2 rounded-lg bg-primary text-[#111813] font-bold text-xs px-4">${i}</button>`;
-                } else {
-                    html += `<button onclick="changePage(${i})" class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors text-xs px-4">${i}</button>`;
+                    }).join('');
                 }
-            }
-            
-            if (currentPage < totalPages) {
-                html += `<button onclick="changePage(${currentPage + 1})" class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors">
+
+                // Update pagination
+                function updatePagination() {
+                    const totalPages = Math.ceil(allAppointments.length / pageSize);
+                    const start = (currentPage - 1) * pageSize + 1;
+                    const end = Math.min(currentPage * pageSize, allAppointments.length);
+
+                    const paginationText = document.getElementById('paginationText');
+                    if (paginationText) {
+                        paginationText.textContent = `Hiển thị ${start}-${end} của ${allAppointments.length} lịch hẹn`;
+                    }
+
+                    const paginationControls = document.getElementById('paginationControls');
+                    if (paginationControls) {
+                        let html = '';
+                        if (currentPage > 1) {
+                            html += `<button onclick="changePage(${currentPage - 1})" class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors">
+                    <span class="material-symbols-outlined text-sm">chevron_left</span>
+                </button>`;
+                        } else {
+                            html += `<button disabled class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 opacity-50">
+                    <span class="material-symbols-outlined text-sm">chevron_left</span>
+                </button>`;
+                        }
+
+                        for (let i = 1; i <= totalPages && i <= 5; i++) {
+                            if (i === currentPage) {
+                                html += `<button class="p-2 rounded-lg bg-primary text-[#111813] font-bold text-xs px-4">${i}</button>`;
+                            } else {
+                                html += `<button onclick="changePage(${i})" class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors text-xs px-4">${i}</button>`;
+                            }
+                        }
+
+                        if (currentPage < totalPages) {
+                            html += `<button onclick="changePage(${currentPage + 1})" class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors">
                     <span class="material-symbols-outlined text-sm">chevron_right</span>
                 </button>`;
-            } else {
-                html += `<button disabled class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 opacity-50">
+                        } else {
+                            html += `<button disabled class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 opacity-50">
                     <span class="material-symbols-outlined text-sm">chevron_right</span>
                 </button>`;
-            }
-            
-            paginationControls.innerHTML = html;
-        }
-    }
-    
-    window.changePage = function(page) {
-        currentPage = page;
-        renderAppointments();
-        updatePagination();
-    };
-    
-    let currentAppointmentId = null;
-    let currentStatusUpdateId = null;
-    let currentStatusUpdateBookingCode = null;
-    
-    window.viewAppointment = async function(appointmentId) {
-        currentAppointmentId = appointmentId;
-        const modal = document.getElementById('detailModal');
-        const content = document.getElementById('detailModalContent');
-        
-        content.innerHTML = '<div class="flex items-center justify-center py-8"><span class="material-symbols-outlined animate-spin">hourglass_empty</span><span class="ml-2">Đang tải...</span></div>';
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        
-        try {
-            // Load tất cả appointments và tìm appointment theo id
-            const response = await fetch('/api/admin/appointments', {
-                credentials: 'include'
-            });
-            if (!response.ok) throw new Error('Failed to load appointment details');
-            const appointments = await response.json();
-            const apt = appointments.find(a => a.id === appointmentId);
-            
-            if (!apt) {
-                content.innerHTML = '<div class="text-center py-8 text-red-500">Không tìm thấy lịch hẹn</div>';
-                return;
-            }
-            
-            const patientInfo = apt.patientInfo || {};
-            const vaccineInfo = apt.vaccineInfo || {};
-            const statusMap = {
-                'PENDING': 'Chờ xác nhận',
-                'CONFIRMED': 'Đã xác nhận',
-                'CHECKED_IN': 'Đã check-in',
-                'SCREENING': 'Đang khám',
-                'APPROVED': 'Đủ điều kiện',
-                'REJECTED': 'Từ chối',
-                'INJECTING': 'Đang tiêm',
-                'MONITORING': 'Đang theo dõi',
-                'COMPLETED': 'Hoàn thành',
-                'CANCELLED': 'Đã hủy'
-            };
-            
-            content.innerHTML = `
+                        }
+
+                        paginationControls.innerHTML = html;
+                    }
+                }
+
+                window.changePage = function (page) {
+                    currentPage = page;
+                    renderAppointments();
+                    updatePagination();
+                };
+
+                let currentAppointmentId = null;
+                let currentStatusUpdateId = null;
+                let currentStatusUpdateBookingCode = null;
+
+                window.viewAppointment = async function (appointmentId) {
+                    currentAppointmentId = appointmentId;
+                    const modal = document.getElementById('detailModal');
+                    const content = document.getElementById('detailModalContent');
+
+                    content.innerHTML = '<div class="flex items-center justify-center py-8"><span class="material-symbols-outlined animate-spin">hourglass_empty</span><span class="ml-2">Đang tải...</span></div>';
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+
+                    try {
+                        // Load tất cả appointments và tìm appointment theo id
+                        const response = await fetch('/api/admin/appointments', {
+                            credentials: 'include'
+                        });
+                        if (!response.ok) throw new Error('Failed to load appointment details');
+                        const appointments = await response.json();
+                        const apt = appointments.find(a => a.id === appointmentId);
+
+                        if (!apt) {
+                            content.innerHTML = '<div class="text-center py-8 text-red-500">Không tìm thấy lịch hẹn</div>';
+                            return;
+                        }
+
+                        const patientInfo = apt.patientInfo || {};
+                        const vaccineInfo = apt.vaccineInfo || {};
+                        const statusMap = {
+                            'PENDING': 'Chờ xác nhận',
+                            'CONFIRMED': 'Đã xác nhận',
+                            'CHECKED_IN': 'Đã check-in',
+                            'SCREENING': 'Đang khám',
+                            'APPROVED': 'Đủ điều kiện',
+                            'REJECTED': 'Từ chối',
+                            'INJECTING': 'Đang tiêm',
+                            'MONITORING': 'Đang theo dõi',
+                            'COMPLETED': 'Hoàn thành',
+                            'CANCELLED': 'Đã hủy'
+                        };
+
+                        content.innerHTML = `
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-medium text-[#61896f] mb-1">Mã Booking</label>
@@ -450,105 +490,106 @@
                 </div>
                 ` : ''}
             `;
-        } catch (error) {
-            console.error('Error loading appointment details:', error);
-            content.innerHTML = '<div class="text-center py-8 text-red-500">Lỗi khi tải chi tiết lịch hẹn</div>';
-        }
-    };
-    
-    window.closeDetailModal = function() {
-        const modal = document.getElementById('detailModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        currentAppointmentId = null;
-    };
-    
-    window.updateStatus = function(appointmentId, currentStatus, bookingCode) {
-        currentStatusUpdateId = appointmentId;
-        currentStatusUpdateBookingCode = bookingCode;
-        
-        const modal = document.getElementById('statusModal');
-        document.getElementById('statusModalBookingCode').textContent = bookingCode || 'N/A';
-        document.getElementById('statusModalCurrentStatus').textContent = currentStatus || 'N/A';
-        document.getElementById('statusModalNewStatus').value = currentStatus || 'PENDING';
-        
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    };
-    
-    window.closeStatusModal = function() {
-        const modal = document.getElementById('statusModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        currentStatusUpdateId = null;
-        currentStatusUpdateBookingCode = null;
-    };
-    
-    window.confirmUpdateStatus = async function() {
-        if (!currentStatusUpdateId) return;
-        
-        const newStatus = document.getElementById('statusModalNewStatus').value;
-        if (!newStatus) {
-            alert('Vui lòng chọn trạng thái mới');
-            return;
-        }
-        
-        try {
-            const response = await fetch(`/api/admin/appointments/${currentStatusUpdateId}/status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify({ status: newStatus })
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                alert(`Đã cập nhật trạng thái lịch hẹn "${currentStatusUpdateBookingCode}" thành công.`);
-                closeStatusModal();
+                    } catch (error) {
+                        console.error('Error loading appointment details:', error);
+                        content.innerHTML = '<div class="text-center py-8 text-red-500">Lỗi khi tải chi tiết lịch hẹn</div>';
+                    }
+                };
+
+                window.closeDetailModal = function () {
+                    const modal = document.getElementById('detailModal');
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    currentAppointmentId = null;
+                };
+
+                window.updateStatus = function (appointmentId, currentStatus, bookingCode) {
+                    currentStatusUpdateId = appointmentId;
+                    currentStatusUpdateBookingCode = bookingCode;
+
+                    const modal = document.getElementById('statusModal');
+                    document.getElementById('statusModalBookingCode').textContent = bookingCode || 'N/A';
+                    document.getElementById('statusModalCurrentStatus').textContent = currentStatus || 'N/A';
+                    document.getElementById('statusModalNewStatus').value = currentStatus || 'PENDING';
+
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                };
+
+                window.closeStatusModal = function () {
+                    const modal = document.getElementById('statusModal');
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    currentStatusUpdateId = null;
+                    currentStatusUpdateBookingCode = null;
+                };
+
+                window.confirmUpdateStatus = async function () {
+                    if (!currentStatusUpdateId) return;
+
+                    const newStatus = document.getElementById('statusModalNewStatus').value;
+                    if (!newStatus) {
+                        alert('Vui lòng chọn trạng thái mới');
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`/api/admin/appointments/${currentStatusUpdateId}/status`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify({ status: newStatus })
+                        });
+
+                        if (response.ok) {
+                            const result = await response.json();
+                            alert(`Đã cập nhật trạng thái lịch hẹn "${currentStatusUpdateBookingCode}" thành công.`);
+                            closeStatusModal();
+                            loadAppointments();
+                        } else {
+                            const errorData = await response.json();
+                            alert('Lỗi khi cập nhật trạng thái: ' + (errorData.error || 'Không xác định'));
+                        }
+                    } catch (error) {
+                        console.error('Error updating status:', error);
+                        alert('Lỗi kết nối server khi cập nhật trạng thái.');
+                    }
+                };
+
+                window.deleteAppointment = async function (appointmentId, bookingCode) {
+                    if (!confirm(`Bạn có chắc chắn muốn xóa lịch hẹn "${bookingCode}"? Hành động này không thể hoàn tác.`)) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`/api/admin/appointments/${appointmentId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'include'
+                        });
+
+                        if (response.ok) {
+                            alert(`Đã xóa lịch hẹn "${bookingCode}" thành công.`);
+                            loadAppointments();
+                        } else {
+                            const errorData = await response.json();
+                            alert('Lỗi khi xóa lịch hẹn: ' + (errorData.error || 'Không xác định'));
+                        }
+                    } catch (error) {
+                        console.error('Error deleting appointment:', error);
+                        alert('Lỗi kết nối server khi xóa lịch hẹn.');
+                    }
+                };
+
+                // Load appointments khi trang được tải
                 loadAppointments();
-            } else {
-                const errorData = await response.json();
-                alert('Lỗi khi cập nhật trạng thái: ' + (errorData.error || 'Không xác định'));
-            }
-        } catch (error) {
-            console.error('Error updating status:', error);
-            alert('Lỗi kết nối server khi cập nhật trạng thái.');
-        }
-    };
-    
-    window.deleteAppointment = async function(appointmentId, bookingCode) {
-        if (!confirm(`Bạn có chắc chắn muốn xóa lịch hẹn "${bookingCode}"? Hành động này không thể hoàn tác.`)) {
-            return;
-        }
-        
-        try {
-            const response = await fetch(`/api/admin/appointments/${appointmentId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include'
-            });
-            
-            if (response.ok) {
-                alert(`Đã xóa lịch hẹn "${bookingCode}" thành công.`);
-                loadAppointments();
-            } else {
-                const errorData = await response.json();
-                alert('Lỗi khi xóa lịch hẹn: ' + (errorData.error || 'Không xác định'));
-            }
-        } catch (error) {
-            console.error('Error deleting appointment:', error);
-            alert('Lỗi kết nối server khi xóa lịch hẹn.');
-        }
-    };
-    
-    // Load appointments khi trang được tải
-    loadAppointments();
-})();
-/*]]>*/
-</script>
+            })();
+        /*]]>*/
+    </script>
 </body>
+
 </html>

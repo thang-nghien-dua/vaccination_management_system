@@ -278,6 +278,7 @@ public class AppointmentService {
             validatePhoneVerificationForFamilyMember(familyMember, currentUser, dto.getPhoneNumber());
         } else {
             // Đặt cho bản thân
+            bookedForUser = currentUser; // Set bookedForUser = currentUser khi đặt cho bản thân
             userIdToCheck = currentUser.getId();
             
             // Validate phone verification cho bản thân
@@ -1016,6 +1017,194 @@ public class AppointmentService {
             case RESCHEDULED: return "Đã đổi lịch";
             default: return status.name();
         }
+    }
+    
+    /**
+     * Tạo walk-in appointment (đăng ký tại quầy, không cần đăng nhập)
+     * @param fullName Họ tên khách hàng
+     * @param phoneNumber Số điện thoại
+     * @param email Email (optional)
+     * @param dayOfBirth Ngày sinh (optional)
+     * @param gender Giới tính (optional)
+     * @param vaccineId ID vaccine
+     * @param centerId ID trung tâm
+     * @param slotId ID slot
+     * @param appointmentDate Ngày hẹn
+     * @param appointmentTime Giờ hẹn
+     * @param doseNumber Mũi thứ mấy
+     * @param paymentMethod Phương thức thanh toán
+     * @param notes Ghi chú (optional)
+     * @return Appointment đã tạo
+     */
+    public Appointment createWalkInAppointment(
+            String fullName,
+            String phoneNumber,
+            String email,
+            LocalDate dayOfBirth,
+            String gender,
+            Long vaccineId,
+            Long centerId,
+            Long slotId,
+            LocalDate appointmentDate,
+            LocalTime appointmentTime,
+            Integer doseNumber,
+            String paymentMethod,
+            String notes) {
+        
+        // Validate required fields
+        if (fullName == null || fullName.trim().isEmpty()) {
+            throw new RuntimeException("Họ tên là bắt buộc");
+        }
+        if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+            throw new RuntimeException("Số điện thoại là bắt buộc");
+        }
+        if (vaccineId == null) {
+            throw new RuntimeException("Vaccine ID là bắt buộc");
+        }
+        if (centerId == null) {
+            throw new RuntimeException("Center ID là bắt buộc");
+        }
+        if (slotId == null) {
+            throw new RuntimeException("Slot ID là bắt buộc");
+        }
+        if (appointmentDate == null) {
+            throw new RuntimeException("Ngày hẹn là bắt buộc");
+        }
+        if (appointmentTime == null) {
+            throw new RuntimeException("Giờ hẹn là bắt buộc");
+        }
+        
+        // Validate vaccine exists
+        Vaccine vaccine = vaccineRepository.findById(vaccineId)
+                .orElseThrow(() -> new RuntimeException("Vaccine not found"));
+        
+        // Validate center exists
+        VaccinationCenter center = vaccinationCenterRepository.findById(centerId)
+                .orElseThrow(() -> new RuntimeException("Vaccination center not found"));
+        
+        // Validate slot exists and is available
+        AppointmentSlot slot = appointmentSlotRepository.findById(slotId)
+                .orElseThrow(() -> new RuntimeException("Appointment slot not found"));
+        
+        // Check slot belongs to center
+        if (!slot.getCenter().getId().equals(center.getId())) {
+            throw new RuntimeException("Slot does not belong to selected center");
+        }
+        
+        // Check slot is available
+        if (!slot.getIsAvailable() || slot.getCurrentBookings() >= slot.getMaxCapacity()) {
+            throw new RuntimeException("Slot is no longer available");
+        }
+        
+        // Check slot date is not in the past
+        if (slot.getDate().isBefore(LocalDate.now())) {
+            throw new RuntimeException("Cannot book appointment for past date");
+        }
+        
+        // Validate doseNumber
+        if (doseNumber == null || doseNumber <= 0) {
+            doseNumber = 1; // Default to dose 1
+        }
+        
+        if (vaccine.getDosesRequired() != null && doseNumber > vaccine.getDosesRequired()) {
+            throw new RuntimeException(
+                String.format("Vaccine '%s' chỉ cần %d mũi. Không thể đặt mũi thứ %d.", 
+                    vaccine.getName(), vaccine.getDosesRequired(), doseNumber)
+            );
+        }
+        
+        // Validate: Kiểm tra stock quantity
+        Optional<CenterVaccine> centerVaccineOpt = centerVaccineRepository.findByCenterAndVaccine(center, vaccine);
+        if (centerVaccineOpt.isEmpty()) {
+            throw new RuntimeException("Vaccine không có tại trung tâm này");
+        }
+        CenterVaccine centerVaccine = centerVaccineOpt.get();
+        if (centerVaccine.getStockQuantity() == null || centerVaccine.getStockQuantity() <= 0) {
+            throw new RuntimeException("Vaccine hiện đang hết hàng tại trung tâm này");
+        }
+        
+        // Parse gender
+        ut.edu.vaccinationmanagementsystem.entity.enums.Gender genderEnum = null;
+        if (gender != null && !gender.trim().isEmpty()) {
+            try {
+                genderEnum = ut.edu.vaccinationmanagementsystem.entity.enums.Gender.valueOf(gender.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Invalid gender, will be null
+            }
+        }
+        
+        // Create appointment
+        Appointment appointment = new Appointment();
+        appointment.setBookingCode(generateBookingCode());
+        appointment.setBookedByUser(null); // Walk-in không cần đăng nhập
+        appointment.setBookedForUser(null);
+        appointment.setFamilyMember(null);
+        appointment.setVaccine(vaccine);
+        appointment.setCenter(center);
+        appointment.setSlot(slot);
+        appointment.setAppointmentDate(appointmentDate);
+        appointment.setAppointmentTime(appointmentTime);
+        appointment.setRequiresConsultation(false); // Walk-in không cần tư vấn
+        appointment.setStatus(AppointmentStatus.CONFIRMED); // Tự động xác nhận
+        appointment.setDoseNumber(doseNumber);
+        appointment.setNotes(notes);
+        
+        // Set guest information
+        appointment.setGuestFullName(fullName.trim());
+        appointment.setConsultationPhone(phoneNumber.trim());
+        if (email != null && !email.trim().isEmpty()) {
+            appointment.setGuestEmail(email.trim());
+        }
+        if (dayOfBirth != null) {
+            appointment.setGuestDayOfBirth(dayOfBirth);
+        }
+        if (genderEnum != null) {
+            appointment.setGuestGender(genderEnum);
+        }
+        
+        // Lấy phòng từ slot (nếu slot có phòng)
+        if (slot.getRoom() != null) {
+            appointment.setRoom(slot.getRoom());
+        }
+        
+        appointment.setCreatedAt(LocalDateTime.now());
+        appointment.setUpdatedAt(LocalDateTime.now());
+        
+        // Update slot booking count
+        slot.setCurrentBookings(slot.getCurrentBookings() + 1);
+        if (slot.getCurrentBookings() >= slot.getMaxCapacity()) {
+            slot.setIsAvailable(false);
+        }
+        appointmentSlotRepository.save(slot);
+        
+        // Save appointment first to get ID
+        appointment = appointmentRepository.save(appointment);
+        
+        // Create Payment
+        PaymentMethod paymentMethodEnum = PaymentMethod.CASH; // Default to CASH
+        if (paymentMethod != null && !paymentMethod.trim().isEmpty()) {
+            try {
+                paymentMethodEnum = PaymentMethod.valueOf(paymentMethod.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Invalid payment method, use default CASH
+            }
+        }
+        
+        Payment payment = paymentService.createPayment(appointment, paymentMethodEnum);
+        appointment.setPayment(payment);
+        
+        appointment = appointmentRepository.save(appointment);
+        
+        // Tạo thông báo đặt lịch thành công (nếu có email)
+        try {
+            notificationService.createAppointmentCreatedNotification(appointment);
+        } catch (Exception e) {
+            // Log error nhưng không throw để không làm gián đoạn quá trình đặt lịch
+            System.err.println("Failed to create notification: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return appointment;
     }
     
     /**

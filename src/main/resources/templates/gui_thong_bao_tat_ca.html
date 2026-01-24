@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi">
+
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Soạn &amp; Gửi Thông báo Mới - Vaccination Admin</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -58,257 +61,299 @@
         }
     </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
-<div class="flex h-screen overflow-hidden">
-<div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
-<main class="flex-1 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
-<!-- Header with Tabs -->
-<header class="bg-white dark:bg-slate-900 border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
-<div class="flex items-center gap-3 mb-4">
-<button onclick="window.location.href='/admin/notifications'" class="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-[#61896f] dark:text-zinc-400" title="Quay lại">
-<span class="material-symbols-outlined">arrow_back</span>
-</button>
-<div class="flex items-center gap-2">
-<a class="text-[#61896f] dark:text-zinc-400 text-sm font-medium hover:underline" th:href="@{/admin/home}">Hệ thống</a>
-<span class="text-[#61896f] dark:text-zinc-400 text-sm font-medium">/</span>
-<a class="text-[#61896f] dark:text-zinc-400 text-sm font-medium hover:underline" th:href="@{/admin/notifications}">Thông báo</a>
-</div>
-</div>
-<!-- Tabs Navigation -->
-<div class="flex gap-8 border-b border-zinc-200 dark:border-zinc-800">
-<button onclick="window.location.href='/admin/notifications/send-individual'" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
-<span class="material-symbols-outlined text-lg leading-none">person</span>
-Cá nhân cụ thể
-</button>
-<button onclick="window.location.href='/admin/notifications/send-all'" class="tab-active py-4 text-sm font-bold flex items-center gap-2">
-<span class="material-symbols-outlined text-lg leading-none">groups</span>
-Tất cả người dùng
-</button>
-<button onclick="window.location.href='/admin/notifications/send-role'" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
-<span class="material-symbols-outlined text-lg leading-none">shield_person</span>
-Theo vai trò
-</button>
-<button onclick="window.location.href='/admin/notifications/send-center'" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
-<span class="material-symbols-outlined text-lg leading-none">home_work</span>
-Theo Trung tâm
-</button>
-<button onclick="window.location.href='/admin/notifications/templates'" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
-<span class="material-symbols-outlined text-lg leading-none">description</span>
-Quản lý Template
-</button>
-</div>
-</header>
-<!-- Content -->
-<div class="flex-1 p-8">
-<div class="max-w-[1200px] mx-auto">
-<!-- Page Heading -->
-<div class="mb-8">
-<h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Soạn &amp; Gửi Thông báo Mới</h1>
-<p class="text-slate-500 dark:text-slate-400 mt-1">Quản lý và gửi thông báo hàng loạt hoặc cá nhân tới người dùng hệ thống.</p>
-</div>
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-<!-- Main Form Column -->
-<div class="lg:col-span-2 space-y-6">
-<!-- Section 1: Đối tượng nhận -->
-<div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-<div class="flex items-center gap-2 mb-6">
-<span class="bg-primary/20 text-primary-dark font-bold px-2 py-0.5 rounded text-sm">1</span>
-<h2 class="text-lg font-bold">Chọn đối tượng nhận</h2>
-</div>
-<div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-dashed border-slate-300 dark:border-slate-700">
-<p class="text-sm text-slate-500 dark:text-slate-400 italic">Hệ thống sẽ gửi thông báo đến <strong id="totalUsersCount">đang tải...</strong> người dùng đang hoạt động.</p>
-</div>
-</div>
-<!-- Section 2 & 3: Nội dung -->
-<div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-<div class="flex items-center gap-2 mb-6">
-<span class="bg-primary/20 text-primary-dark font-bold px-2 py-0.5 rounded text-sm">2</span>
-<h2 class="text-lg font-bold">Nội dung thông báo</h2>
-</div>
-<div class="space-y-4">
-<div class="space-y-2">
-<label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Tiêu đề thông báo <span class="text-red-500">*</span></label>
-<input id="notificationTitle" class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary/50 py-2.5 px-4" placeholder="Nhập tiêu đề thu hút sự chú ý..." type="text" required/>
-</div>
-<div class="space-y-2">
-<label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Nội dung chi tiết <span class="text-red-500">*</span></label>
-<textarea id="notificationContent" class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary/50 p-4 resize-none" placeholder="Nhập nội dung thông báo tại đây..." rows="8" required></textarea>
-</div>
-<div class="flex items-center gap-4">
-<label class="flex items-center gap-2 cursor-pointer">
-<input id="sendSms" class="w-4 h-4 text-primary border-slate-300 dark:border-slate-700 rounded focus:ring-primary" type="checkbox"/>
-<span class="text-sm text-slate-700 dark:text-slate-300">Gửi qua SMS</span>
-</label>
-<label class="flex items-center gap-2 cursor-pointer">
-<input id="sendApp" class="w-4 h-4 text-primary border-slate-300 dark:border-slate-700 rounded focus:ring-primary" type="checkbox" checked=""/>
-<span class="text-sm text-slate-700 dark:text-slate-300">Gửi qua ứng dụng</span>
-</label>
-</div>
-</div>
-</div>
-</div>
-<!-- Sidebar Column -->
-<div class="space-y-6">
-<!-- Preview Panel -->
-<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-<div class="bg-slate-50 dark:bg-slate-800/50 p-4 border-b border-slate-200 dark:border-slate-800">
-<h3 class="font-bold flex items-center gap-2">
-<span class="material-symbols-outlined text-primary">visibility</span>
-                            Xem trước
-                        </h3>
-</div>
-<div class="p-6">
-<div class="mt-8 space-y-3">
-<div class="flex justify-between items-center text-sm">
-<span class="text-slate-500">Ước tính người nhận:</span>
-<span id="previewUserCount" class="font-bold text-slate-900 dark:text-white">đang tải...</span>
-</div>
-<div class="flex justify-between items-center text-sm">
-<span class="text-slate-500">Kênh gửi:</span>
-<div id="previewChannels" class="flex gap-1">
-<span class="material-symbols-outlined text-base text-primary">smartphone</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Scheduling & Actions -->
-<div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-<div class="pt-4 space-y-3">
-<button id="sendButton" onclick="sendNotification()" class="w-full py-3 px-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-primary/25 flex items-center justify-center gap-2">
-<span class="material-symbols-outlined">send</span> Gửi ngay bây giờ
-                        </button>
-<button onclick="saveDraft()" class="w-full py-2 px-4 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-medium text-sm transition-all">
-                            Lưu bản nháp
-                        </button>
-</div>
-</div>
-<!-- Tips / Info Card -->
-<div class="bg-primary/5 border border-primary/20 rounded-xl p-4">
-<div class="flex gap-3">
-<span class="material-symbols-outlined text-primary">lightbulb</span>
-<div>
-<p class="text-sm font-bold text-slate-800 dark:text-slate-200">Mẹo nhanh</p>
-<p class="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">Sử dụng biến <strong>{Ten_Khach_Hang}</strong> để tăng tỉ lệ mở thông báo lên 25%!</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</main>
-</div>
-<script>
-let totalUsers = 0;
 
-// Load total users count
-function loadUsersCount() {
-    fetch('/api/notifications/admin/users/count')
-        .then(res => res.json())
-        .then(data => {
-            if (data.error) {
-                console.error('Error loading users count:', data.error);
-                document.getElementById('totalUsersCount').textContent = '0';
-                document.getElementById('previewUserCount').textContent = '0';
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
+    <div class="flex h-screen overflow-hidden">
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <main class="flex-1 lg:ml-72 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
+            <!-- Header with Tabs -->
+            <header class="bg-white dark:bg-slate-900 border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
+                <div class="flex items-center gap-3 mb-4">
+                    <button onclick="window.location.href='/admin/notifications'"
+                        class="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-[#61896f] dark:text-zinc-400"
+                        title="Quay lại">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <a class="text-[#61896f] dark:text-zinc-400 text-sm font-medium hover:underline"
+                            th:href="@{/admin/home}">Hệ thống</a>
+                        <span class="text-[#61896f] dark:text-zinc-400 text-sm font-medium">/</span>
+                        <a class="text-[#61896f] dark:text-zinc-400 text-sm font-medium hover:underline"
+                            th:href="@{/admin/notifications}">Thông báo</a>
+                    </div>
+                </div>
+                <!-- Tabs Navigation -->
+                <div class="flex gap-8 border-b border-zinc-200 dark:border-zinc-800">
+                    <button onclick="window.location.href='/admin/notifications/send-individual'"
+                        class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">person</span>
+                        Cá nhân cụ thể
+                    </button>
+                    <button onclick="window.location.href='/admin/notifications/send-all'"
+                        class="tab-active py-4 text-sm font-bold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">groups</span>
+                        Tất cả người dùng
+                    </button>
+                    <button onclick="window.location.href='/admin/notifications/send-role'"
+                        class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">shield_person</span>
+                        Theo vai trò
+                    </button>
+                    <button onclick="window.location.href='/admin/notifications/send-center'"
+                        class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">home_work</span>
+                        Theo Trung tâm
+                    </button>
+                    <button onclick="window.location.href='/admin/notifications/templates'"
+                        class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">description</span>
+                        Quản lý Template
+                    </button>
+                </div>
+            </header>
+            <!-- Content -->
+            <div class="flex-1 p-8">
+                <div class="max-w-[1200px] mx-auto">
+                    <!-- Page Heading -->
+                    <div class="mb-8">
+                        <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Soạn &amp; Gửi
+                            Thông báo Mới</h1>
+                        <p class="text-slate-500 dark:text-slate-400 mt-1">Quản lý và gửi thông báo hàng loạt hoặc cá
+                            nhân tới người dùng hệ thống.</p>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Main Form Column -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <!-- Section 1: Đối tượng nhận -->
+                            <div
+                                class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                                <div class="flex items-center gap-2 mb-6">
+                                    <span
+                                        class="bg-primary/20 text-primary-dark font-bold px-2 py-0.5 rounded text-sm">1</span>
+                                    <h2 class="text-lg font-bold">Chọn đối tượng nhận</h2>
+                                </div>
+                                <div
+                                    class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-dashed border-slate-300 dark:border-slate-700">
+                                    <p class="text-sm text-slate-500 dark:text-slate-400 italic">Hệ thống sẽ gửi thông
+                                        báo đến <strong id="totalUsersCount">đang tải...</strong> người dùng đang hoạt
+                                        động.</p>
+                                </div>
+                            </div>
+                            <!-- Section 2 & 3: Nội dung -->
+                            <div
+                                class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                                <div class="flex items-center gap-2 mb-6">
+                                    <span
+                                        class="bg-primary/20 text-primary-dark font-bold px-2 py-0.5 rounded text-sm">2</span>
+                                    <h2 class="text-lg font-bold">Nội dung thông báo</h2>
+                                </div>
+                                <div class="space-y-4">
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Tiêu đề
+                                            thông báo <span class="text-red-500">*</span></label>
+                                        <input id="notificationTitle"
+                                            class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary/50 py-2.5 px-4"
+                                            placeholder="Nhập tiêu đề thu hút sự chú ý..." type="text" required />
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Nội dung
+                                            chi tiết <span class="text-red-500">*</span></label>
+                                        <textarea id="notificationContent"
+                                            class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary/50 p-4 resize-none"
+                                            placeholder="Nhập nội dung thông báo tại đây..." rows="8"
+                                            required></textarea>
+                                    </div>
+                                    <div class="flex items-center gap-4">
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input id="sendSms"
+                                                class="w-4 h-4 text-primary border-slate-300 dark:border-slate-700 rounded focus:ring-primary"
+                                                type="checkbox" />
+                                            <span class="text-sm text-slate-700 dark:text-slate-300">Gửi qua SMS</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input id="sendApp"
+                                                class="w-4 h-4 text-primary border-slate-300 dark:border-slate-700 rounded focus:ring-primary"
+                                                type="checkbox" checked="" />
+                                            <span class="text-sm text-slate-700 dark:text-slate-300">Gửi qua ứng
+                                                dụng</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Sidebar Column -->
+                        <div class="space-y-6">
+                            <!-- Preview Panel -->
+                            <div
+                                class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                                <div
+                                    class="bg-slate-50 dark:bg-slate-800/50 p-4 border-b border-slate-200 dark:border-slate-800">
+                                    <h3 class="font-bold flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary">visibility</span>
+                                        Xem trước
+                                    </h3>
+                                </div>
+                                <div class="p-6">
+                                    <div class="mt-8 space-y-3">
+                                        <div class="flex justify-between items-center text-sm">
+                                            <span class="text-slate-500">Ước tính người nhận:</span>
+                                            <span id="previewUserCount"
+                                                class="font-bold text-slate-900 dark:text-white">đang tải...</span>
+                                        </div>
+                                        <div class="flex justify-between items-center text-sm">
+                                            <span class="text-slate-500">Kênh gửi:</span>
+                                            <div id="previewChannels" class="flex gap-1">
+                                                <span
+                                                    class="material-symbols-outlined text-base text-primary">smartphone</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Scheduling & Actions -->
+                            <div
+                                class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                                <div class="pt-4 space-y-3">
+                                    <button id="sendButton" onclick="sendNotification()"
+                                        class="w-full py-3 px-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-primary/25 flex items-center justify-center gap-2">
+                                        <span class="material-symbols-outlined">send</span> Gửi ngay bây giờ
+                                    </button>
+                                    <button onclick="saveDraft()"
+                                        class="w-full py-2 px-4 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-medium text-sm transition-all">
+                                        Lưu bản nháp
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Tips / Info Card -->
+                            <div class="bg-primary/5 border border-primary/20 rounded-xl p-4">
+                                <div class="flex gap-3">
+                                    <span class="material-symbols-outlined text-primary">lightbulb</span>
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-800 dark:text-slate-200">Mẹo nhanh</p>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">Sử
+                                            dụng biến <strong>{Ten_Khach_Hang}</strong> để tăng tỉ lệ mở thông báo lên
+                                            25%!</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        let totalUsers = 0;
+
+        // Load total users count
+        function loadUsersCount() {
+            fetch('/api/notifications/admin/users/count')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error loading users count:', data.error);
+                        document.getElementById('totalUsersCount').textContent = '0';
+                        document.getElementById('previewUserCount').textContent = '0';
+                        return;
+                    }
+                    totalUsers = data.total || 0;
+                    document.getElementById('totalUsersCount').textContent = totalUsers.toLocaleString('vi-VN');
+                    document.getElementById('previewUserCount').textContent = totalUsers.toLocaleString('vi-VN');
+                })
+                .catch(err => {
+                    console.error('Error loading users count:', err);
+                    document.getElementById('totalUsersCount').textContent = '0';
+                    document.getElementById('previewUserCount').textContent = '0';
+                });
+        }
+
+        // Update preview channels
+        function updatePreviewChannels() {
+            const sendSms = document.getElementById('sendSms').checked;
+            const sendApp = document.getElementById('sendApp').checked;
+            const channelsDiv = document.getElementById('previewChannels');
+
+            channelsDiv.innerHTML = '';
+            if (sendApp) {
+                channelsDiv.innerHTML += '<span class="material-symbols-outlined text-base text-primary">smartphone</span>';
+            }
+            if (sendSms) {
+                channelsDiv.innerHTML += '<span class="material-symbols-outlined text-base text-blue-500">mail</span>';
+            }
+            if (!sendApp && !sendSms) {
+                channelsDiv.innerHTML = '<span class="text-xs text-slate-400">Chưa chọn kênh</span>';
+            }
+        }
+
+        document.getElementById('sendSms').addEventListener('change', updatePreviewChannels);
+        document.getElementById('sendApp').addEventListener('change', updatePreviewChannels);
+
+        function sendNotification() {
+            const title = document.getElementById('notificationTitle').value.trim();
+            const content = document.getElementById('notificationContent').value.trim();
+            const sendSms = document.getElementById('sendSms').checked;
+            const sendApp = document.getElementById('sendApp').checked;
+
+            if (!title || !content) {
+                alert('Vui lòng nhập tiêu đề và nội dung thông báo!');
                 return;
             }
-            totalUsers = data.total || 0;
-            document.getElementById('totalUsersCount').textContent = totalUsers.toLocaleString('vi-VN');
-            document.getElementById('previewUserCount').textContent = totalUsers.toLocaleString('vi-VN');
-        })
-        .catch(err => {
-            console.error('Error loading users count:', err);
-            document.getElementById('totalUsersCount').textContent = '0';
-            document.getElementById('previewUserCount').textContent = '0';
-        });
-}
 
-// Update preview channels
-function updatePreviewChannels() {
-    const sendSms = document.getElementById('sendSms').checked;
-    const sendApp = document.getElementById('sendApp').checked;
-    const channelsDiv = document.getElementById('previewChannels');
-    
-    channelsDiv.innerHTML = '';
-    if (sendApp) {
-        channelsDiv.innerHTML += '<span class="material-symbols-outlined text-base text-primary">smartphone</span>';
-    }
-    if (sendSms) {
-        channelsDiv.innerHTML += '<span class="material-symbols-outlined text-base text-blue-500">mail</span>';
-    }
-    if (!sendApp && !sendSms) {
-        channelsDiv.innerHTML = '<span class="text-xs text-slate-400">Chưa chọn kênh</span>';
-    }
-}
+            if (!sendSms && !sendApp) {
+                alert('Vui lòng chọn ít nhất một kênh gửi (SMS hoặc Ứng dụng)!');
+                return;
+            }
 
-document.getElementById('sendSms').addEventListener('change', updatePreviewChannels);
-document.getElementById('sendApp').addEventListener('change', updatePreviewChannels);
+            const sendButton = document.getElementById('sendButton');
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<span class="material-symbols-outlined animate-spin">refresh</span> Đang gửi...';
 
-function sendNotification() {
-    const title = document.getElementById('notificationTitle').value.trim();
-    const content = document.getElementById('notificationContent').value.trim();
-    const sendSms = document.getElementById('sendSms').checked;
-    const sendApp = document.getElementById('sendApp').checked;
-    
-    if (!title || !content) {
-        alert('Vui lòng nhập tiêu đề và nội dung thông báo!');
-        return;
-    }
-    
-    if (!sendSms && !sendApp) {
-        alert('Vui lòng chọn ít nhất một kênh gửi (SMS hoặc Ứng dụng)!');
-        return;
-    }
-    
-    const sendButton = document.getElementById('sendButton');
-    sendButton.disabled = true;
-    sendButton.innerHTML = '<span class="material-symbols-outlined animate-spin">refresh</span> Đang gửi...';
-    
-    fetch('/api/notifications/admin/send-all', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            title: title,
-            content: content,
-            sendSms: sendSms,
-            sendApp: sendApp
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.error) {
-            alert('Lỗi: ' + data.error);
-        } else {
-            alert('Đã gửi thông báo thành công cho ' + data.successCount + ' người dùng!');
-            // Reset form
-            document.getElementById('notificationTitle').value = '';
-            document.getElementById('notificationContent').value = '';
-            document.getElementById('sendSms').checked = false;
-            document.getElementById('sendApp').checked = true;
-            updatePreviewChannels();
+            fetch('/api/notifications/admin/send-all', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    title: title,
+                    content: content,
+                    sendSms: sendSms,
+                    sendApp: sendApp
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('Lỗi: ' + data.error);
+                    } else {
+                        alert('Đã gửi thông báo thành công cho ' + data.successCount + ' người dùng!');
+                        // Reset form
+                        document.getElementById('notificationTitle').value = '';
+                        document.getElementById('notificationContent').value = '';
+                        document.getElementById('sendSms').checked = false;
+                        document.getElementById('sendApp').checked = true;
+                        updatePreviewChannels();
+                    }
+                })
+                .catch(err => {
+                    console.error('Error sending notification:', err);
+                    alert('Lỗi khi gửi thông báo: ' + err.message);
+                })
+                .finally(() => {
+                    sendButton.disabled = false;
+                    sendButton.innerHTML = '<span class="material-symbols-outlined">send</span> Gửi ngay bây giờ';
+                });
         }
-    })
-    .catch(err => {
-        console.error('Error sending notification:', err);
-        alert('Lỗi khi gửi thông báo: ' + err.message);
-    })
-    .finally(() => {
-        sendButton.disabled = false;
-        sendButton.innerHTML = '<span class="material-symbols-outlined">send</span> Gửi ngay bây giờ';
-    });
-}
 
-function saveDraft() {
-    alert('Chức năng lưu nháp đang được phát triển');
-}
+        function saveDraft() {
+            alert('Chức năng lưu nháp đang được phát triển');
+        }
 
-// Load on page load
-document.addEventListener('DOMContentLoaded', function() {
-    loadUsersCount();
-    updatePreviewChannels();
-});
-</script>
-</body></html>
+        // Load on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            loadUsersCount();
+            updatePreviewChannels();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi">
+
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Gửi Thông báo cho Cá nhân - Hệ thống Tiêm chủng</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -20,7 +24,7 @@
                     fontFamily: {
                         "display": ["Manrope", "sans-serif"]
                     },
-                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
                 },
             },
         }
@@ -56,179 +60,220 @@
         }
     </style>
 </head>
+
 <body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white antialiased">
-<div class="flex h-screen overflow-hidden">
-<div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
-<main class="flex-1 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
-<!-- Header with Tabs -->
-<header class="bg-white dark:bg-zinc-900 border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
-<div class="flex items-center gap-3 mb-4">
-<button onclick="window.location.href='/admin/notifications'" class="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-[#61896f] dark:text-zinc-400" title="Quay lại">
-<span class="material-symbols-outlined">arrow_back</span>
-</button>
-<div class="flex items-center gap-2">
-<a class="text-[#61896f] dark:text-zinc-400 text-sm font-medium hover:underline" th:href="@{/admin/home}">Hệ thống</a>
-<span class="text-[#61896f] dark:text-zinc-400 text-sm font-medium">/</span>
-<a class="text-[#61896f] dark:text-zinc-400 text-sm font-medium hover:underline" th:href="@{/admin/notifications}">Thông báo</a>
-</div>
-</div>
-<!-- Tabs Navigation -->
-<div class="flex gap-8 border-b border-zinc-200 dark:border-zinc-800">
-<button onclick="window.location.href='/admin/notifications/send-individual'" class="tab-active py-4 text-sm font-bold flex items-center gap-2">
-<span class="material-symbols-outlined text-lg leading-none">person</span>
-Cá nhân cụ thể
-</button>
-<button onclick="window.location.href='/admin/notifications/send-all'" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
-<span class="material-symbols-outlined text-lg leading-none">groups</span>
-Tất cả người dùng
-</button>
-<button onclick="window.location.href='/admin/notifications/send-role'" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
-<span class="material-symbols-outlined text-lg leading-none">shield_person</span>
-Theo vai trò
-</button>
-<button onclick="window.location.href='/admin/notifications/send-center'" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
-<span class="material-symbols-outlined text-lg leading-none">home_work</span>
-Theo Trung tâm
-</button>
-<button onclick="window.location.href='/admin/notifications/templates'" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
-<span class="material-symbols-outlined text-lg leading-none">description</span>
-Quản lý Template
-</button>
-</div>
-</header>
-<!-- Content -->
-<div class="flex-1 p-8">
-<div class="max-w-5xl mx-auto">
-<!-- Page Heading -->
-<div class="mb-8">
-<h2 class="text-3xl font-black text-[#111813] dark:text-white tracking-tight">Gửi Thông báo cho Cá nhân</h2>
-<p class="text-[#61896f] dark:text-[#a0c4ac] mt-1">Gửi tin nhắn đích danh qua ứng dụng di động hoặc SMS cho người dân.</p>
-</div>
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-<!-- Form Section -->
-<div class="lg:col-span-2 space-y-6">
-<!-- Recipient Selection -->
-<div class="bg-white dark:bg-[#1a2e20] rounded-xl p-6 shadow-sm border border-[#e0e7e2] dark:border-[#2d4a35]">
-<h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-<span class="material-symbols-outlined text-primary">person_search</span>
-                                Người nhận
-                            </h3>
-<!-- Search Bar -->
-<div class="relative mb-4">
-<label class="block text-sm font-semibold text-[#61896f] dark:text-[#a0c4ac] mb-2">Tìm kiếm người dân</label>
-<div class="flex items-center bg-[#f0f4f2] dark:bg-[#253d2c] rounded-lg px-4 py-3 focus-within:ring-2 ring-primary">
-<span class="material-symbols-outlined text-[#61896f] dark:text-[#a0c4ac] mr-3">search</span>
-<input id="userSearchInput" class="bg-transparent border-none focus:ring-0 w-full text-sm placeholder-[#61896f] dark:placeholder-[#a0c4ac]" placeholder="Tìm theo tên, email hoặc số điện thoại..." type="text"/>
-</div>
-<!-- Autocomplete Suggestion (Floating) -->
-<div id="userSearchResults" class="absolute z-10 w-full mt-2 bg-white dark:bg-[#1a2e20] rounded-lg shadow-xl border border-[#e0e7e2] dark:border-[#2d4a35] overflow-hidden hidden max-h-60 overflow-y-auto">
-</div>
-</div>
-<!-- Selected Recipients -->
-<div class="space-y-2">
-<label class="block text-sm font-semibold text-[#61896f] dark:text-[#a0c4ac] mb-2">Người nhận đã chọn</label>
-<div id="selectedUsers" class="flex flex-wrap gap-2 min-h-[60px] p-3 bg-[#f0f4f2] dark:bg-[#253d2c] rounded-lg border-2 border-dashed border-[#dbe6df] dark:border-[#2d4a35]">
-<span class="text-xs text-[#61896f] dark:text-[#a0c4ac]">Chưa chọn người nhận</span>
-</div>
-</div>
-</div>
-<!-- Message Content -->
-<div class="bg-white dark:bg-[#1a2e20] rounded-xl p-6 shadow-sm border border-[#e0e7e2] dark:border-[#2d4a35]">
-<h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-<span class="material-symbols-outlined text-primary">edit</span>
-                                Nội dung thông báo
-                            </h3>
-<div class="space-y-4">
-<div>
-<label class="block text-sm font-semibold text-[#61896f] dark:text-[#a0c4ac] mb-2">Tiêu đề <span class="text-red-500">*</span></label>
-<input id="notificationTitle" class="w-full px-4 py-2 bg-[#f0f4f2] dark:bg-[#253d2c] border border-[#dbe6df] dark:border-[#2d4a35] rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm" placeholder="Nhập tiêu đề thông báo..." type="text" required/>
-</div>
-<div>
-<label class="block text-sm font-semibold text-[#61896f] dark:text-[#a0c4ac] mb-2">Nội dung <span class="text-red-500">*</span></label>
-<textarea id="notificationContent" class="w-full px-4 py-3 bg-[#f0f4f2] dark:bg-[#253d2c] border border-[#dbe6df] dark:border-[#2d4a35] rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm min-h-[120px]" placeholder="Nhập nội dung thông báo..." required></textarea>
-</div>
-<div class="flex items-center gap-4">
-<label class="flex items-center gap-2 cursor-pointer">
-<input id="sendSms" class="w-4 h-4 text-primary border-[#dbe6df] dark:border-[#2d4a35] rounded focus:ring-primary" type="checkbox"/>
-<span class="text-sm text-[#61896f] dark:text-[#a0c4ac]">Gửi qua SMS</span>
-</label>
-<label class="flex items-center gap-2 cursor-pointer">
-<input id="sendApp" class="w-4 h-4 text-primary border-[#dbe6df] dark:border-[#2d4a35] rounded focus:ring-primary" type="checkbox" checked=""/>
-<span class="text-sm text-[#61896f] dark:text-[#a0c4ac]">Gửi qua ứng dụng</span>
-</label>
-</div>
-</div>
-</div>
-<!-- Action Buttons -->
-<div class="flex gap-3">
-<button id="sendButton" onclick="sendNotification()" class="flex-1 px-6 py-3 bg-primary text-[#111813] font-bold rounded-lg hover:bg-primary/90 transition-all shadow-md">
-<span class="material-symbols-outlined align-middle mr-2">send</span>
-                                Gửi ngay
-                            </button>
-<button onclick="saveDraft()" class="px-6 py-3 bg-white dark:bg-[#1a2e20] border border-[#dbe6df] dark:border-[#2d4a35] text-[#111813] dark:text-white font-semibold rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#253d2c] transition-all">
-                                Lưu nháp
-                            </button>
-</div>
-</div>
-<!-- Sidebar Info -->
-<div class="lg:col-span-1">
-<div class="bg-primary/10 dark:bg-primary/20 rounded-xl p-6 border border-primary/20 relative overflow-hidden">
-<div class="relative z-10">
-<h4 class="font-bold text-sm mb-2">Lưu ý quan trọng</h4>
-<ul class="text-[11px] text-gray-400 space-y-2 list-disc pl-4">
-<li>Thông báo qua SMS có thể phát sinh chi phí theo gói cước.</li>
-<li>Hãy kiểm tra kỹ thông tin người nhận trước khi nhấn Gửi.</li>
-<li>Nên sử dụng Tiếng Việt không dấu cho nội dung SMS để tránh lỗi font.</li>
-</ul>
-</div>
-<div class="absolute -right-4 -bottom-4 opacity-10">
-<span class="material-symbols-outlined text-8xl">info</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</main>
-</div>
-<script>
-let selectedUsers = [];
-let searchTimeout = null;
+    <div class="flex h-screen overflow-hidden">
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <main class="flex-1 lg:ml-72 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
+            <!-- Header with Tabs -->
+            <header class="bg-white dark:bg-zinc-900 border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
+                <div class="flex items-center gap-3 mb-4">
+                    <button onclick="window.location.href='/admin/notifications'"
+                        class="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-[#61896f] dark:text-zinc-400"
+                        title="Quay lại">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <a class="text-[#61896f] dark:text-zinc-400 text-sm font-medium hover:underline"
+                            th:href="@{/admin/home}">Hệ thống</a>
+                        <span class="text-[#61896f] dark:text-zinc-400 text-sm font-medium">/</span>
+                        <a class="text-[#61896f] dark:text-zinc-400 text-sm font-medium hover:underline"
+                            th:href="@{/admin/notifications}">Thông báo</a>
+                    </div>
+                </div>
+                <!-- Tabs Navigation -->
+                <div class="flex gap-8 border-b border-zinc-200 dark:border-zinc-800">
+                    <button onclick="window.location.href='/admin/notifications/send-individual'"
+                        class="tab-active py-4 text-sm font-bold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">person</span>
+                        Cá nhân cụ thể
+                    </button>
+                    <button onclick="window.location.href='/admin/notifications/send-all'"
+                        class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">groups</span>
+                        Tất cả người dùng
+                    </button>
+                    <button onclick="window.location.href='/admin/notifications/send-role'"
+                        class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">shield_person</span>
+                        Theo vai trò
+                    </button>
+                    <button onclick="window.location.href='/admin/notifications/send-center'"
+                        class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">home_work</span>
+                        Theo Trung tâm
+                    </button>
+                    <button onclick="window.location.href='/admin/notifications/templates'"
+                        class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">description</span>
+                        Quản lý Template
+                    </button>
+                </div>
+            </header>
+            <!-- Content -->
+            <div class="flex-1 p-8">
+                <div class="max-w-5xl mx-auto">
+                    <!-- Page Heading -->
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-black text-[#111813] dark:text-white tracking-tight">Gửi Thông báo cho
+                            Cá nhân</h2>
+                        <p class="text-[#61896f] dark:text-[#a0c4ac] mt-1">Gửi tin nhắn đích danh qua ứng dụng di động
+                            hoặc SMS cho người dân.</p>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Form Section -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <!-- Recipient Selection -->
+                            <div
+                                class="bg-white dark:bg-[#1a2e20] rounded-xl p-6 shadow-sm border border-[#e0e7e2] dark:border-[#2d4a35]">
+                                <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary">person_search</span>
+                                    Người nhận
+                                </h3>
+                                <!-- Search Bar -->
+                                <div class="relative mb-4">
+                                    <label
+                                        class="block text-sm font-semibold text-[#61896f] dark:text-[#a0c4ac] mb-2">Tìm
+                                        kiếm người dân</label>
+                                    <div
+                                        class="flex items-center bg-[#f0f4f2] dark:bg-[#253d2c] rounded-lg px-4 py-3 focus-within:ring-2 ring-primary">
+                                        <span
+                                            class="material-symbols-outlined text-[#61896f] dark:text-[#a0c4ac] mr-3">search</span>
+                                        <input id="userSearchInput"
+                                            class="bg-transparent border-none focus:ring-0 w-full text-sm placeholder-[#61896f] dark:placeholder-[#a0c4ac]"
+                                            placeholder="Tìm theo tên, email hoặc số điện thoại..." type="text" />
+                                    </div>
+                                    <!-- Autocomplete Suggestion (Floating) -->
+                                    <div id="userSearchResults"
+                                        class="absolute z-10 w-full mt-2 bg-white dark:bg-[#1a2e20] rounded-lg shadow-xl border border-[#e0e7e2] dark:border-[#2d4a35] overflow-hidden hidden max-h-60 overflow-y-auto">
+                                    </div>
+                                </div>
+                                <!-- Selected Recipients -->
+                                <div class="space-y-2">
+                                    <label
+                                        class="block text-sm font-semibold text-[#61896f] dark:text-[#a0c4ac] mb-2">Người
+                                        nhận đã chọn</label>
+                                    <div id="selectedUsers"
+                                        class="flex flex-wrap gap-2 min-h-[60px] p-3 bg-[#f0f4f2] dark:bg-[#253d2c] rounded-lg border-2 border-dashed border-[#dbe6df] dark:border-[#2d4a35]">
+                                        <span class="text-xs text-[#61896f] dark:text-[#a0c4ac]">Chưa chọn người
+                                            nhận</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Message Content -->
+                            <div
+                                class="bg-white dark:bg-[#1a2e20] rounded-xl p-6 shadow-sm border border-[#e0e7e2] dark:border-[#2d4a35]">
+                                <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary">edit</span>
+                                    Nội dung thông báo
+                                </h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label
+                                            class="block text-sm font-semibold text-[#61896f] dark:text-[#a0c4ac] mb-2">Tiêu
+                                            đề <span class="text-red-500">*</span></label>
+                                        <input id="notificationTitle"
+                                            class="w-full px-4 py-2 bg-[#f0f4f2] dark:bg-[#253d2c] border border-[#dbe6df] dark:border-[#2d4a35] rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+                                            placeholder="Nhập tiêu đề thông báo..." type="text" required />
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="block text-sm font-semibold text-[#61896f] dark:text-[#a0c4ac] mb-2">Nội
+                                            dung <span class="text-red-500">*</span></label>
+                                        <textarea id="notificationContent"
+                                            class="w-full px-4 py-3 bg-[#f0f4f2] dark:bg-[#253d2c] border border-[#dbe6df] dark:border-[#2d4a35] rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm min-h-[120px]"
+                                            placeholder="Nhập nội dung thông báo..." required></textarea>
+                                    </div>
+                                    <div class="flex items-center gap-4">
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input id="sendSms"
+                                                class="w-4 h-4 text-primary border-[#dbe6df] dark:border-[#2d4a35] rounded focus:ring-primary"
+                                                type="checkbox" />
+                                            <span class="text-sm text-[#61896f] dark:text-[#a0c4ac]">Gửi qua SMS</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input id="sendApp"
+                                                class="w-4 h-4 text-primary border-[#dbe6df] dark:border-[#2d4a35] rounded focus:ring-primary"
+                                                type="checkbox" checked="" />
+                                            <span class="text-sm text-[#61896f] dark:text-[#a0c4ac]">Gửi qua ứng
+                                                dụng</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Action Buttons -->
+                            <div class="flex gap-3">
+                                <button id="sendButton" onclick="sendNotification()"
+                                    class="flex-1 px-6 py-3 bg-primary text-[#111813] font-bold rounded-lg hover:bg-primary/90 transition-all shadow-md">
+                                    <span class="material-symbols-outlined align-middle mr-2">send</span>
+                                    Gửi ngay
+                                </button>
+                                <button onclick="saveDraft()"
+                                    class="px-6 py-3 bg-white dark:bg-[#1a2e20] border border-[#dbe6df] dark:border-[#2d4a35] text-[#111813] dark:text-white font-semibold rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#253d2c] transition-all">
+                                    Lưu nháp
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Sidebar Info -->
+                        <div class="lg:col-span-1">
+                            <div
+                                class="bg-primary/10 dark:bg-primary/20 rounded-xl p-6 border border-primary/20 relative overflow-hidden">
+                                <div class="relative z-10">
+                                    <h4 class="font-bold text-sm mb-2">Lưu ý quan trọng</h4>
+                                    <ul class="text-[11px] text-gray-400 space-y-2 list-disc pl-4">
+                                        <li>Thông báo qua SMS có thể phát sinh chi phí theo gói cước.</li>
+                                        <li>Hãy kiểm tra kỹ thông tin người nhận trước khi nhấn Gửi.</li>
+                                        <li>Nên sử dụng Tiếng Việt không dấu cho nội dung SMS để tránh lỗi font.</li>
+                                    </ul>
+                                </div>
+                                <div class="absolute -right-4 -bottom-4 opacity-10">
+                                    <span class="material-symbols-outlined text-8xl">info</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        let selectedUsers = [];
+        let searchTimeout = null;
 
-// Search users
-document.getElementById('userSearchInput').addEventListener('input', function(e) {
-    const query = e.target.value.trim();
-    const resultsDiv = document.getElementById('userSearchResults');
-    
-    if (query.length < 2) {
-        resultsDiv.classList.add('hidden');
-        return;
-    }
-    
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        searchUsers(query);
-    }, 300);
-});
-
-function searchUsers(query) {
-    fetch(`/api/notifications/admin/users/search?q=${encodeURIComponent(query)}`)
-        .then(res => res.json())
-        .then(data => {
+        // Search users
+        document.getElementById('userSearchInput').addEventListener('input', function (e) {
+            const query = e.target.value.trim();
             const resultsDiv = document.getElementById('userSearchResults');
-            resultsDiv.classList.remove('hidden');
-            
-            if (data.error) {
-                resultsDiv.innerHTML = `<div class="p-3 text-sm text-red-500">${data.error}</div>`;
+
+            if (query.length < 2) {
+                resultsDiv.classList.add('hidden');
                 return;
             }
-            
-            if (data.length === 0) {
-                resultsDiv.innerHTML = `<div class="p-3 text-sm text-[#61896f]">Không tìm thấy người dùng</div>`;
-                return;
-            }
-            
-            resultsDiv.innerHTML = data.map(user => `
+
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchUsers(query);
+            }, 300);
+        });
+
+        function searchUsers(query) {
+            fetch(`/api/notifications/admin/users/search?q=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(data => {
+                    const resultsDiv = document.getElementById('userSearchResults');
+                    resultsDiv.classList.remove('hidden');
+
+                    if (data.error) {
+                        resultsDiv.innerHTML = `<div class="p-3 text-sm text-red-500">${data.error}</div>`;
+                        return;
+                    }
+
+                    if (data.length === 0) {
+                        resultsDiv.innerHTML = `<div class="p-3 text-sm text-[#61896f]">Không tìm thấy người dùng</div>`;
+                        return;
+                    }
+
+                    resultsDiv.innerHTML = data.map(user => `
                 <div onclick="selectUser(${user.id}, '${(user.fullName || '').replace(/'/g, "\\'")}', '${(user.email || '').replace(/'/g, "\\'")}', '${(user.phoneNumber || '').replace(/'/g, "\\'")}')" 
                      class="p-2 hover:bg-[#f0f4f2] dark:hover:bg-[#253d2c] cursor-pointer flex items-center gap-3">
                     <div class="size-8 rounded-full bg-primary/20 flex items-center justify-center font-bold text-xs">${(user.fullName || user.email || 'U').charAt(0).toUpperCase()}</div>
@@ -238,37 +283,37 @@ function searchUsers(query) {
                     </div>
                 </div>
             `).join('');
-        })
-        .catch(err => {
-            console.error('Error searching users:', err);
-            document.getElementById('userSearchResults').innerHTML = `<div class="p-3 text-sm text-red-500">Lỗi tìm kiếm</div>`;
-        });
-}
+                })
+                .catch(err => {
+                    console.error('Error searching users:', err);
+                    document.getElementById('userSearchResults').innerHTML = `<div class="p-3 text-sm text-red-500">Lỗi tìm kiếm</div>`;
+                });
+        }
 
-function selectUser(userId, fullName, email, phoneNumber) {
-    if (selectedUsers.find(u => u.id === userId)) {
-        return; // Already selected
-    }
-    
-    selectedUsers.push({ id: userId, fullName, email, phoneNumber });
-    renderSelectedUsers();
-    document.getElementById('userSearchInput').value = '';
-    document.getElementById('userSearchResults').classList.add('hidden');
-}
+        function selectUser(userId, fullName, email, phoneNumber) {
+            if (selectedUsers.find(u => u.id === userId)) {
+                return; // Already selected
+            }
 
-function removeUser(userId) {
-    selectedUsers = selectedUsers.filter(u => u.id !== userId);
-    renderSelectedUsers();
-}
+            selectedUsers.push({ id: userId, fullName, email, phoneNumber });
+            renderSelectedUsers();
+            document.getElementById('userSearchInput').value = '';
+            document.getElementById('userSearchResults').classList.add('hidden');
+        }
 
-function renderSelectedUsers() {
-    const container = document.getElementById('selectedUsers');
-    if (selectedUsers.length === 0) {
-        container.innerHTML = '<span class="text-xs text-[#61896f] dark:text-[#a0c4ac]">Chưa chọn người nhận</span>';
-        return;
-    }
-    
-    container.innerHTML = selectedUsers.map(user => `
+        function removeUser(userId) {
+            selectedUsers = selectedUsers.filter(u => u.id !== userId);
+            renderSelectedUsers();
+        }
+
+        function renderSelectedUsers() {
+            const container = document.getElementById('selectedUsers');
+            if (selectedUsers.length === 0) {
+                container.innerHTML = '<span class="text-xs text-[#61896f] dark:text-[#a0c4ac]">Chưa chọn người nhận</span>';
+                return;
+            }
+
+            container.innerHTML = selectedUsers.map(user => `
         <div class="flex items-center gap-2 px-3 py-1.5 bg-primary/20 rounded-lg border border-primary/30">
             <span class="text-xs font-medium text-[#111813] dark:text-white">${user.fullName || user.email}</span>
             <button onclick="removeUser(${user.id})" class="hover:bg-primary/20 rounded-full p-0.5">
@@ -276,87 +321,89 @@ function renderSelectedUsers() {
             </button>
         </div>
     `).join('');
-}
-
-function sendNotification() {
-    const title = document.getElementById('notificationTitle').value.trim();
-    const content = document.getElementById('notificationContent').value.trim();
-    const sendSms = document.getElementById('sendSms').checked;
-    const sendApp = document.getElementById('sendApp').checked;
-    
-    if (!title || !content) {
-        alert('Vui lòng nhập tiêu đề và nội dung thông báo!');
-        return;
-    }
-    
-    if (selectedUsers.length === 0) {
-        alert('Vui lòng chọn ít nhất một người nhận!');
-        return;
-    }
-    
-    if (!sendSms && !sendApp) {
-        alert('Vui lòng chọn ít nhất một kênh gửi (SMS hoặc Ứng dụng)!');
-        return;
-    }
-    
-    const userIds = selectedUsers.map(u => u.id);
-    
-    const sendButton = document.getElementById('sendButton');
-    sendButton.disabled = true;
-    sendButton.innerHTML = '<span class="material-symbols-outlined animate-spin">refresh</span> Đang gửi...';
-    
-    fetch('/api/notifications/admin/bulk', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            userIds: userIds,
-            title: title,
-            content: content,
-            sendSms: sendSms,
-            sendApp: sendApp,
-            type: sendSms ? 'SMS' : 'IN_APP'
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.error) {
-            alert('Lỗi: ' + data.error);
-        } else {
-            alert('Đã gửi thông báo thành công cho ' + (data.successCount || 0) + ' người dùng!');
-            // Reset form
-            selectedUsers = [];
-            renderSelectedUsers();
-            document.getElementById('notificationTitle').value = '';
-            document.getElementById('notificationContent').value = '';
-            document.getElementById('sendSms').checked = false;
-            document.getElementById('sendApp').checked = true;
         }
-    })
-    .catch(err => {
-        console.error('Error sending notification:', err);
-        alert('Lỗi khi gửi thông báo: ' + (err.message || 'Vui lòng thử lại sau'));
-    })
-    .finally(() => {
-        const sendButton = document.getElementById('sendButton');
-        if (sendButton) {
-            sendButton.disabled = false;
-            sendButton.innerHTML = '<span class="material-symbols-outlined align-middle mr-2">send</span> Gửi ngay';
+
+        function sendNotification() {
+            const title = document.getElementById('notificationTitle').value.trim();
+            const content = document.getElementById('notificationContent').value.trim();
+            const sendSms = document.getElementById('sendSms').checked;
+            const sendApp = document.getElementById('sendApp').checked;
+
+            if (!title || !content) {
+                alert('Vui lòng nhập tiêu đề và nội dung thông báo!');
+                return;
+            }
+
+            if (selectedUsers.length === 0) {
+                alert('Vui lòng chọn ít nhất một người nhận!');
+                return;
+            }
+
+            if (!sendSms && !sendApp) {
+                alert('Vui lòng chọn ít nhất một kênh gửi (SMS hoặc Ứng dụng)!');
+                return;
+            }
+
+            const userIds = selectedUsers.map(u => u.id);
+
+            const sendButton = document.getElementById('sendButton');
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<span class="material-symbols-outlined animate-spin">refresh</span> Đang gửi...';
+
+            fetch('/api/notifications/admin/bulk', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userIds: userIds,
+                    title: title,
+                    content: content,
+                    sendSms: sendSms,
+                    sendApp: sendApp,
+                    type: sendSms ? 'SMS' : 'IN_APP'
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('Lỗi: ' + data.error);
+                    } else {
+                        alert('Đã gửi thông báo thành công cho ' + (data.successCount || 0) + ' người dùng!');
+                        // Reset form
+                        selectedUsers = [];
+                        renderSelectedUsers();
+                        document.getElementById('notificationTitle').value = '';
+                        document.getElementById('notificationContent').value = '';
+                        document.getElementById('sendSms').checked = false;
+                        document.getElementById('sendApp').checked = true;
+                    }
+                })
+                .catch(err => {
+                    console.error('Error sending notification:', err);
+                    alert('Lỗi khi gửi thông báo: ' + (err.message || 'Vui lòng thử lại sau'));
+                })
+                .finally(() => {
+                    const sendButton = document.getElementById('sendButton');
+                    if (sendButton) {
+                        sendButton.disabled = false;
+                        sendButton.innerHTML = '<span class="material-symbols-outlined align-middle mr-2">send</span> Gửi ngay';
+                    }
+                });
         }
-    });
-}
 
-function saveDraft() {
-    // TODO: Implement save draft functionality
-    alert('Chức năng lưu nháp đang được phát triển');
-}
+        function saveDraft() {
+            // TODO: Implement save draft functionality
+            alert('Chức năng lưu nháp đang được phát triển');
+        }
 
-// Close search results when clicking outside
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('#userSearchInput') && !e.target.closest('#userSearchResults')) {
-        document.getElementById('userSearchResults').classList.add('hidden');
-    }
-});
-</script>
-</body></html>
+        // Close search results when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('#userSearchInput') && !e.target.closest('#userSearchResults')) {
+                document.getElementById('userSearchResults').classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+
+</html>
