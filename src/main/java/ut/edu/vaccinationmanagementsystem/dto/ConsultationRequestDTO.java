@@ -21,6 +21,7 @@ public class ConsultationRequestDTO {
     
     // Chung cho cả 2 loại
     private String consultationPhone; // SĐT để lễ tân gọi
+    private String workUnit; // Đơn vị công tác (optional)
     private String reason; // Lý do cần tư vấn
     private String notes; // Ghi chú thêm
     
@@ -87,6 +88,14 @@ public class ConsultationRequestDTO {
     
     public void setReason(String reason) {
         this.reason = reason;
+    }
+    
+    public String getWorkUnit() {
+        return workUnit;
+    }
+    
+    public void setWorkUnit(String workUnit) {
+        this.workUnit = workUnit;
     }
     
     public String getNotes() {

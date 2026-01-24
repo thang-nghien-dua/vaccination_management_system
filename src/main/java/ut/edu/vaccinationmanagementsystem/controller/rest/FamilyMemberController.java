@@ -61,8 +61,108 @@ public class FamilyMemberController {
     }
     
     /**
+     * GET /api/family-members
+     * Lấy danh sách người thân của user hiện tại
+     */
+    @GetMapping("/family-members")
+    public ResponseEntity<?> getFamilyMembers() {
+        try {
+            User currentUser = getCurrentUser();
+            List<FamilyMember> familyMembers = familyMemberService.getFamilyMembersByUser(currentUser);
+            
+            List<Map<String, Object>> result = familyMembers.stream().map(fm -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", fm.getId());
+                map.put("fullName", fm.getFullName());
+                map.put("dateOfBirth", fm.getDateOfBirth());
+                map.put("gender", fm.getGender() != null ? fm.getGender().name() : null);
+                map.put("citizenId", fm.getCitizenId());
+                map.put("phoneNumber", fm.getPhoneNumber());
+                map.put("relationship", fm.getRelationship().name());
+                map.put("createdAt", fm.getCreatedAt());
+                return map;
+            }).collect(Collectors.toList());
+            
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * GET /api/family-members/{id}
+     * Lấy thông tin một người thân theo ID
+     */
+    @GetMapping("/family-members/{id}")
+    public ResponseEntity<?> getFamilyMember(@PathVariable Long id) {
+        try {
+            User currentUser = getCurrentUser();
+            FamilyMember familyMember = familyMemberService.getFamilyMemberById(id, currentUser);
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("id", familyMember.getId());
+            result.put("fullName", familyMember.getFullName());
+            result.put("dateOfBirth", familyMember.getDateOfBirth());
+            result.put("gender", familyMember.getGender() != null ? familyMember.getGender().name() : null);
+            result.put("citizenId", familyMember.getCitizenId());
+            result.put("phoneNumber", familyMember.getPhoneNumber());
+            result.put("relationship", familyMember.getRelationship().name());
+            result.put("createdAt", familyMember.getCreatedAt());
+            
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * POST /api/family-members
+     * Thêm người thân mới
+     */
+    @PostMapping("/family-members")
+    public ResponseEntity<?> createFamilyMember(@RequestBody FamilyMemberDTO dto) {
+        try {
+            User currentUser = getCurrentUser();
+            FamilyMember familyMember = familyMemberService.createFamilyMember(dto, currentUser);
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("id", familyMember.getId());
+            result.put("fullName", familyMember.getFullName());
+            result.put("dateOfBirth", familyMember.getDateOfBirth());
+            result.put("gender", familyMember.getGender() != null ? familyMember.getGender().name() : null);
+            result.put("citizenId", familyMember.getCitizenId());
+            result.put("phoneNumber", familyMember.getPhoneNumber());
+            result.put("relationship", familyMember.getRelationship().name());
+            result.put("createdAt", familyMember.getCreatedAt());
+            result.put("message", "Family member added successfully");
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
      * GET /api/users/{userId}/family-members
-     * Xem danh sách người thân của một user cụ thể
+     * Xem danh sách người thân của một user cụ thể (cho admin)
      */
     @GetMapping("/users/{userId}/family-members")
     public ResponseEntity<?> getFamilyMembersByUserId(@PathVariable Long userId) {

@@ -163,6 +163,9 @@ public class NotificationController {
                     if (notification.getAppointment().getCenter() != null) {
                         appointmentInfo.put("centerName", notification.getAppointment().getCenter().getName());
                     }
+                    if (notification.getAppointment().getRoom() != null) {
+                        appointmentInfo.put("roomNumber", notification.getAppointment().getRoom().getRoomNumber());
+                    }
                     appointmentInfo.put("appointmentDate", notification.getAppointment().getAppointmentDate());
                     appointmentInfo.put("appointmentTime", notification.getAppointment().getAppointmentTime());
                     dto.put("appointment", appointmentInfo);
@@ -243,6 +246,9 @@ public class NotificationController {
                     }
                     if (notification.getAppointment().getCenter() != null) {
                         appointmentInfo.put("centerName", notification.getAppointment().getCenter().getName());
+                    }
+                    if (notification.getAppointment().getRoom() != null) {
+                        appointmentInfo.put("roomNumber", notification.getAppointment().getRoom().getRoomNumber());
                     }
                     appointmentInfo.put("appointmentDate", notification.getAppointment().getAppointmentDate());
                     appointmentInfo.put("appointmentTime", notification.getAppointment().getAppointmentTime());

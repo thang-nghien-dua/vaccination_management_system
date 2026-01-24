@@ -143,7 +143,7 @@
             <div class="flex items-center gap-4">
                 <a href="/notifications" class="p-2 rounded-lg bg-background-light dark:bg-[#1a2e21] hover:bg-[#e0e7e3] transition-colors relative">
                     <span class="material-symbols-outlined">notifications</span>
-                    <span id="notificationBadge" class="hidden absolute top-2.5 right-2.5 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 border-2 border-white dark:border-[#1a2e21]">0</span>
+                    <span id="headerNotificationBadge" class="hidden absolute top-2.5 right-2.5 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 border-2 border-white dark:border-[#1a2e21]">0</span>
                 </a>
             </div>
         </header>
@@ -493,9 +493,12 @@
     }
 
     // Open booking modal
-    window.openBookingModal = function(slotId) {
+    window.openBookingModal = async function(slotId) {
         const slot = availableSlots.find(s => s.id === slotId);
         if (!slot) return;
+
+        // Reset phone verification state khi mở modal mới
+        resetPhoneVerificationState();
 
         selectedSlotForBooking = slot;
         const vaccineId = document.getElementById('vaccineSelect').value;
@@ -575,8 +578,23 @@
             });
         });
 
-        // Load current user phone number if available
-        loadCurrentUserPhone();
+        // Load current user phone number if available - đợi hoàn thành trước khi hiển thị modal
+        await loadCurrentUserPhone();
+
+        // Reset nút về trạng thái ban đầu (quan trọng: nút nằm ngoài bookingModalContent nên không bị reset khi innerHTML)
+        const confirmBtn = document.getElementById('confirmBookingBtn');
+        const confirmBtnText = document.getElementById('confirmBookingBtnText');
+        const confirmBtnSpinner = document.getElementById('confirmBookingBtnSpinner');
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            if (confirmBtnText) {
+                confirmBtnText.textContent = 'Xác nhận đặt lịch';
+            }
+            if (confirmBtnSpinner) {
+                confirmBtnSpinner.classList.add('hidden');
+            }
+            console.log('[DEBUG] openBookingModal: Đã reset trạng thái nút về enabled');
+        }
 
         document.getElementById('bookingModal').classList.remove('hidden');
     };
@@ -584,18 +602,30 @@
     // Load current user phone number
     async function loadCurrentUserPhone() {
         try {
+            console.log('[DEBUG] loadCurrentUserPhone: Bắt đầu load số điện thoại');
             const response = await fetch('/api/phone/verification-status', {
                 credentials: 'include'
             });
             if (response.ok) {
                 const status = await response.json();
+                console.log('[DEBUG] loadCurrentUserPhone: API response:', status);
                 // Chỉ pre-fill nếu số điện thoại đã được xác thực
                 if (status.verified && status.phoneNumber) {
-                    document.getElementById('bookingPhoneNumber').value = status.phoneNumber;
+                    const phoneInput = document.getElementById('bookingPhoneNumber');
+                    if (phoneInput) {
+                        phoneInput.value = status.phoneNumber;
+                        console.log('[DEBUG] loadCurrentUserPhone: Đã điền số điện thoại vào form:', status.phoneNumber);
+                    } else {
+                        console.warn('[DEBUG] loadCurrentUserPhone: Không tìm thấy element bookingPhoneNumber');
+                    }
+                } else {
+                    console.log('[DEBUG] loadCurrentUserPhone: Số điện thoại chưa được xác thực hoặc không có số');
                 }
+            } else {
+                console.error('[DEBUG] loadCurrentUserPhone: API response không OK:', response.status);
             }
         } catch (error) {
-            console.error('Error loading user phone:', error);
+            console.error('[DEBUG] loadCurrentUserPhone: Error loading user phone:', error);
         }
     }
 
@@ -648,7 +678,7 @@
         const centerId = document.getElementById('centerSelect').value;
         const bookingFor = document.querySelector('input[name="bookingFor"]:checked').value;
         const bookedForUserId = bookingFor === 'family' ? document.getElementById('bookedForUserId').value : null;
-        const phoneNumber = document.getElementById('bookingPhoneNumber').value.trim();
+        let phoneNumber = document.getElementById('bookingPhoneNumber').value.trim();
         const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
         const notes = document.getElementById('bookingNotes').value || null;
 
@@ -660,6 +690,27 @@
             return;
         }
 
+        // Chỉ pre-fill số điện thoại từ database nếu form trống, KHÔNG tự động submit
+        // User vẫn cần xác thực số điện thoại mỗi lần đặt lịch
+        if (!phoneNumber || phoneNumber.trim() === '') {
+            try {
+                const statusResponse = await fetch('/api/phone/verification-status', {
+                    credentials: 'include'
+                });
+                if (statusResponse.ok) {
+                    const status = await statusResponse.json();
+                    if (status.phoneNumber) {
+                        // Chỉ pre-fill số, không tự động submit
+                        document.getElementById('bookingPhoneNumber').value = status.phoneNumber;
+                        phoneNumber = status.phoneNumber;
+                    }
+                }
+            } catch (error) {
+                console.error('[DEBUG] confirmBooking: Lỗi khi load số điện thoại:', error);
+            }
+        }
+
+        // Chỉ yêu cầu nhập số nếu số trong database chưa verified
         if (!phoneNumber) {
             confirmBtn.disabled = false;
             confirmBtnText.textContent = 'Xác nhận đặt lịch';
@@ -740,23 +791,34 @@
                 return;
             } else {
                 // Check user phone verification
+                console.log('[DEBUG] confirmBooking: Kiểm tra xác thực số điện thoại cho user');
+                console.log('[DEBUG] confirmBooking: Số điện thoại trong form:', phoneNumber);
                 const statusResponse = await fetch('/api/phone/verification-status', {
                     credentials: 'include'
                 });
                 if (statusResponse.ok) {
                     const status = await statusResponse.json();
-                    // Kiểm tra số điện thoại trong form có khớp với số đã xác thực không
+                    console.log('[DEBUG] confirmBooking: API response:', status);
+                    
+                    // Kiểm tra số trong form có khớp với số đã xác thực trong database không
                     if (status.verified && status.phoneNumber) {
                         const normalizedStatusPhone = normalizePhoneNumber(status.phoneNumber);
                         const normalizedFormPhone = normalizePhoneNumber(phoneNumber);
                         
-                        // Nếu số điện thoại khớp, không cần xác thực lại
+                        // Nếu số trong form khớp với số đã xác thực trong database → cho phép submit
                         if (normalizedStatusPhone === normalizedFormPhone) {
+                            console.log('[DEBUG] confirmBooking: Số trong form khớp với số đã verified trong database, submit luôn');
                             confirmBtnText.textContent = 'Đang đặt lịch...';
                             await submitBooking();
                             return;
+                        } else {
+                            console.log('[DEBUG] confirmBooking: Số trong form khác với số đã verified trong database, cần xác thực');
                         }
+                    } else {
+                        console.log('[DEBUG] confirmBooking: Số điện thoại trong database chưa được xác thực hoặc không có số');
                     }
+                } else {
+                    console.error('[DEBUG] confirmBooking: API response không OK:', statusResponse.status);
                 }
                 
                 // Need to verify user phone
@@ -825,9 +887,8 @@
                         const paymentResult = await paymentResponse.json();
                         
                         if (paymentResponse.ok && paymentResult.paymentUrl) {
-                            // Reset verification flags trước khi redirect
-                            phoneJustVerified = false;
-                            verifiedPhoneNumber = null;
+                            // Reset phone verification state trước khi redirect
+                            resetPhoneVerificationState();
                             // Redirect to VNPay
                             window.location.href = paymentResult.paymentUrl;
                             return;
@@ -851,12 +912,11 @@
                     
                     showMessage(successMessage, 'success');
                     document.getElementById('bookingModal').classList.add('hidden');
+                    // Reset phone verification state
+                    resetPhoneVerificationState();
                     // Reload slots
                     await loadAvailableSlots();
                     pendingBookingData = null;
-                    // Reset verification flags
-                    phoneJustVerified = false;
-                    verifiedPhoneNumber = null;
                 }
             } else {
                 // Re-enable button khi có lỗi
@@ -911,20 +971,24 @@
 
     // Phone Verification Modal Functions
     function openPhoneVerificationModal() {
+        // Reset state trước tiên
+        resetPhoneVerificationState();
+        
         document.getElementById('phoneVerificationModal').classList.remove('hidden');
         document.getElementById('phoneNumberStep').classList.remove('hidden');
         document.getElementById('verificationCodeStep').classList.add('hidden');
+        
         // Giữ số điện thoại từ form đặt lịch (đã được set trước đó)
         if (!document.getElementById('phoneNumberInput').value) {
             document.getElementById('phoneNumberInput').value = document.getElementById('bookingPhoneNumber').value;
         }
-        document.getElementById('verificationCodeInput').value = '';
-        document.getElementById('phoneError').classList.add('hidden');
-        document.getElementById('codeError').classList.add('hidden');
+        document.getElementById('verificationCodeInput').focus();
     }
 
     function closePhoneVerificationModal() {
         document.getElementById('phoneVerificationModal').classList.add('hidden');
+        // Reset state khi đóng modal
+        resetPhoneVerificationState();
     }
 
     // Send verification code
@@ -1110,6 +1174,47 @@
             remaining--;
         }, 1000);
     }
+    
+    // Reset phone verification state - GIẢI PHÁP cho lỗi đặt lịch
+    function resetPhoneVerificationState() {
+        // Reset flags
+        phoneJustVerified = false;
+        verifiedPhoneNumber = null;
+        
+        // Clear countdown interval
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+        }
+        
+        // Reset modal UI
+        const phoneInput = document.getElementById('phoneNumberInput');
+        const codeInput = document.getElementById('verificationCodeInput');
+        const phoneError = document.getElementById('phoneError');
+        const codeError = document.getElementById('codeError');
+        const timerElement = document.getElementById('countdownTimer');
+        const phoneNumberStep = document.getElementById('phoneNumberStep');
+        const verificationCodeStep = document.getElementById('verificationCodeStep');
+        
+        if (phoneInput) phoneInput.value = '';
+        if (codeInput) codeInput.value = '';
+        if (phoneError) {
+            phoneError.textContent = '';
+            phoneError.classList.add('hidden');
+        }
+        if (codeError) {
+            codeError.textContent = '';
+            codeError.classList.add('hidden');
+        }
+        if (timerElement) {
+            timerElement.textContent = '';
+            timerElement.classList.remove('text-red-600');
+        }
+        
+        // Reset modal step
+        if (phoneNumberStep) phoneNumberStep.classList.remove('hidden');
+        if (verificationCodeStep) verificationCodeStep.classList.add('hidden');
+    }
 
     // Close phone verification modal
     document.getElementById('closePhoneModalBtn').addEventListener('click', () => {
@@ -1207,13 +1312,26 @@
             const response = await fetch('/api/notifications/unread-count');
             if (response.ok) {
                 const data = await response.json();
-                const badge = document.getElementById('notificationBadge');
-                if (badge) {
+                
+                // Update sidebar badge
+                const sidebarBadge = document.getElementById('notificationBadge');
+                if (sidebarBadge) {
                     if (data.count > 0) {
-                        badge.textContent = data.count > 99 ? '99+' : data.count;
-                        badge.classList.remove('hidden');
+                        sidebarBadge.textContent = data.count > 99 ? '99+' : data.count;
+                        sidebarBadge.classList.remove('hidden');
                     } else {
-                        badge.classList.add('hidden');
+                        sidebarBadge.classList.add('hidden');
+                    }
+                }
+                
+                // Update header badge
+                const headerBadge = document.getElementById('headerNotificationBadge');
+                if (headerBadge) {
+                    if (data.count > 0) {
+                        headerBadge.textContent = data.count > 99 ? '99+' : data.count;
+                        headerBadge.classList.remove('hidden');
+                    } else {
+                        headerBadge.classList.add('hidden');
                     }
                 }
             }

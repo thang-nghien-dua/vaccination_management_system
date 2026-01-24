@@ -261,16 +261,19 @@ public class HomeController {
     @GetMapping("/vaccines/{id}")
     public String vaccineDetail(@PathVariable Long id, Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
-            return "redirect:/login";
-        }
-        try {
-            User currentUser = getCurrentUser(authentication);
-            model.addAttribute("currentUser", currentUser);
-            model.addAttribute("isAuthenticated", true);
-            model.addAttribute("vaccineId", id);
-        } catch (Exception e) {
-            return "redirect:/login";
+        // Cho phép khách vãng lai xem chi tiết vaccine
+        boolean isAuthenticated = authentication != null && authentication.isAuthenticated() && !authentication.getName().equals("anonymousUser");
+        model.addAttribute("isAuthenticated", isAuthenticated);
+        model.addAttribute("vaccineId", id);
+        
+        if (isAuthenticated) {
+            try {
+                User currentUser = getCurrentUser(authentication);
+                model.addAttribute("currentUser", currentUser);
+            } catch (Exception e) {
+                // Nếu có lỗi khi lấy user, vẫn cho phép xem như khách vãng lai
+                model.addAttribute("isAuthenticated", false);
+            }
         }
         return "vaccine-detail";
     }
@@ -340,7 +343,7 @@ public class HomeController {
         } catch (Exception e) {
             return "redirect:/login";
         }
-        return "thong_bao_user";
+        return "notifications";
     }
     
     /**

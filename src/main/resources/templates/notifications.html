@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html class="light" lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Thông báo - VacciCare</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="/js/sidebar.js"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0f766e",
+                        "primary-light": "#14b8a6",
+                        "primary-dark": "#134e4a",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav {
+            background-color: #f0f4f2;
+            border-left: 4px solid #0f766e;
+        }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .notification-card {
+            transition: all 0.2s ease;
+        }
+        .notification-card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen text-[#111813] dark:text-white font-display">
+<div class="flex min-h-screen">
+    <!-- Sidebar Overlay (mobile) -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-72 bg-white dark:bg-[#1a2e21] border-r border-[#f0f4f2] dark:border-[#2d3f33] fixed h-full z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
+        <div class="p-6 flex items-center gap-3">
+            <button id="sidebarToggleBtn" class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors flex-shrink-0" title="Menu">
+                <span class="material-symbols-outlined text-xl">menu</span>
+            </button>
+            <h1 id="sidebarLogoText" class="text-xl font-bold tracking-tight flex-1 lg:block">VacciCare</h1>
+            <button id="sidebarCloseBtn" class="lg:hidden p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors flex-shrink-0" title="Đóng sidebar">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div id="sidebarUserProfile" class="px-4 mb-6" th:if="${isAuthenticated}">
+            <div class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark rounded-xl">
+                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 bg-primary/20 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0" th:if="${currentUser?.fullName != null}">
+                    <span th:text="${#strings.substring(currentUser.fullName, 0, 1)}"></span>
+                </div>
+                <div class="flex flex-col overflow-hidden min-w-0 lg:block">
+                    <p id="sidebarUserName" class="text-sm font-bold truncate" th:text="${currentUser?.fullName ?: currentUser?.email}">Tên người dùng</p>
+                    <p id="sidebarUserRole" class="text-xs text-[#61896f] truncate" th:text="${currentUser?.role?.name() == 'CUSTOMER' ? 'Người dùng cá nhân' : (currentUser?.role?.name() == 'ADMIN' ? 'Quản trị viên' : 'Nhân viên y tế')}">Người dùng cá nhân</p>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 px-2 space-y-1 overflow-y-auto">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/home">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">dashboard</span>
+                <span id="navTextHome" class="text-sm font-medium">Tổng quan</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/profile">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">person</span>
+                <span id="navTextProfile" class="text-sm font-medium">Thông tin cá nhân</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/appointments">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">calendar_month</span>
+                <span id="navTextAppointments" class="text-sm font-medium">Đặt lịch</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/vaccination-history">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">history_edu</span>
+                <span id="navTextHistory" class="text-sm font-medium">Hồ sơ tiêm chủng</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/family-members">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">group</span>
+                <span id="navTextFamily" class="text-sm font-medium">Người thân</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/vaccines">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">vaccines</span>
+                <span id="navTextVaccines" class="text-sm font-medium">Vaccine</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg active-nav text-primary font-bold relative" href="/notifications">
+                <span class="material-symbols-outlined">notifications</span>
+                <span id="navTextNotifications" class="text-sm">Thông báo</span>
+                <span id="notificationBadge" class="hidden absolute top-2 right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">0</span>
+            </a>
+        </nav>
+        <div class="mt-auto p-4 border-t border-[#f0f4f2] dark:border-[#2d3f33] space-y-2">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="#">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">settings</span>
+                <span id="navTextSettings" class="text-sm font-medium">Cài đặt</span>
+            </a>
+            <form th:action="@{/api/auth/logout}" method="post" class="inline">
+                <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-50 transition-colors">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span id="navTextLogout" class="text-sm font-medium">Đăng xuất</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-72 flex flex-col min-h-screen">
+        <header class="sticky top-0 z-50 bg-gradient-to-r from-primary/10 via-primary/5 to-white/90 dark:from-primary/20 dark:via-primary/10 dark:to-[#102216]/90 backdrop-blur-xl border-b border-primary/20 dark:border-primary/30 px-8 py-6 transition-all">
+            <div class="flex items-center gap-4">
+                <div class="size-12 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                    <span class="material-symbols-outlined text-white text-2xl">notifications</span>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-[#111813] dark:text-white mb-1">Thông báo</h2>
+                    <p class="text-sm text-[#61896f]">Xem tất cả thông báo và cập nhật mới nhất</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 p-8">
+            <div class="max-w-4xl mx-auto">
+                <!-- Header với filter và actions -->
+                <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border border-[#f0f4f2] dark:border-[#2d3f33] p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold">Danh sách thông báo</h3>
+                        <div class="flex items-center gap-3">
+                            <button id="markAllReadBtn" class="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white font-semibold text-sm px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-300 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95">
+                                <span class="material-symbols-outlined text-base">done_all</span>
+                                <span>Đánh dấu tất cả đã đọc</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabs -->
+                    <div class="flex border-b border-[#e2e8f0] dark:border-[#2d3f33] mb-4">
+                        <button id="tabAll" class="tab-button active px-4 py-2 font-bold text-sm border-b-2 border-primary text-primary transition-all">
+                            Tất cả
+                        </button>
+                        <button id="tabUnread" class="tab-button px-4 py-2 font-bold text-sm text-[#61896f] hover:text-primary transition-all border-b-2 border-transparent">
+                            Chưa đọc
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Danh sách thông báo -->
+                <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border border-[#f0f4f2] dark:border-[#2d3f33] p-6">
+                    <div id="notificationsList" class="space-y-3">
+                        <div class="text-center py-8 text-[#61896f]">
+                            <span class="material-symbols-outlined text-4xl mb-2 opacity-50 block">notifications</span>
+                            <p>Đang tải thông báo...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    let allNotifications = [];
+    let currentFilter = 'all'; // 'all' or 'unread'
+
+    // Load thông báo khi trang load
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadNotifications();
+        await loadUnreadCount();
+        setupTabs();
+        setupEventListeners();
+        
+        // Auto refresh mỗi 30 giây
+        setInterval(async () => {
+            await loadNotifications();
+            await loadUnreadCount();
+        }, 30000);
+    });
+
+    // Setup tabs
+    function setupTabs() {
+        document.getElementById('tabAll').addEventListener('click', () => {
+            currentFilter = 'all';
+            document.getElementById('tabAll').classList.add('active', 'text-primary', 'border-primary');
+            document.getElementById('tabAll').classList.remove('text-[#61896f]', 'border-transparent');
+            document.getElementById('tabUnread').classList.remove('active', 'text-primary', 'border-primary');
+            document.getElementById('tabUnread').classList.add('text-[#61896f]', 'border-transparent');
+            renderNotifications();
+        });
+
+        document.getElementById('tabUnread').addEventListener('click', () => {
+            currentFilter = 'unread';
+            document.getElementById('tabUnread').classList.add('active', 'text-primary', 'border-primary');
+            document.getElementById('tabUnread').classList.remove('text-[#61896f]', 'border-transparent');
+            document.getElementById('tabAll').classList.remove('active', 'text-primary', 'border-primary');
+            document.getElementById('tabAll').classList.add('text-[#61896f]', 'border-transparent');
+            renderNotifications();
+        });
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        document.getElementById('markAllReadBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/notifications/mark-all-read', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    await loadNotifications();
+                    await loadUnreadCount();
+                } else {
+                    alert('Có lỗi xảy ra khi đánh dấu tất cả đã đọc');
+                }
+            } catch (error) {
+                console.error('Error marking all as read:', error);
+                alert('Có lỗi xảy ra');
+            }
+        });
+    }
+
+    // Load thông báo
+    async function loadNotifications() {
+        try {
+            const response = await fetch('/api/notifications');
+            if (response.ok) {
+                allNotifications = await response.json();
+                renderNotifications();
+            } else {
+                console.error('Failed to load notifications');
+            }
+        } catch (error) {
+            console.error('Error loading notifications:', error);
+        }
+    }
+
+    // Load số lượng thông báo chưa đọc
+    async function loadUnreadCount() {
+        try {
+            const response = await fetch('/api/notifications/unread-count');
+            if (response.ok) {
+                const data = await response.json();
+                const badge = document.getElementById('notificationBadge');
+                if (data.count > 0) {
+                    badge.textContent = data.count > 99 ? '99+' : data.count;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading unread count:', error);
+        }
+    }
+
+    // Render thông báo
+    function renderNotifications() {
+        const container = document.getElementById('notificationsList');
+        const filteredNotifications = currentFilter === 'unread' 
+            ? allNotifications.filter(n => !n.isRead)
+            : allNotifications;
+
+        if (filteredNotifications.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-12 text-[#61896f]">
+                    <span class="material-symbols-outlined text-5xl mb-3 opacity-50 block">notifications_off</span>
+                    <p class="text-lg font-semibold">${currentFilter === 'unread' ? 'Không có thông báo chưa đọc' : 'Chưa có thông báo nào'}</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = filteredNotifications.map((notification, index) => {
+            // Format date đúng cách
+            let formattedDate = 'Không xác định';
+            try {
+                if (notification.createdAt) {
+                    const dateStr = notification.createdAt;
+                    const date = dateStr.includes('T') ? new Date(dateStr) : new Date(dateStr);
+                    if (!isNaN(date.getTime())) {
+                        const now = new Date();
+                        const diffMs = now - date;
+                        const diffMins = Math.floor(diffMs / 60000);
+                        const diffHours = Math.floor(diffMs / 3600000);
+                        const diffDays = Math.floor(diffMs / 86400000);
+                        
+                        if (diffMins < 1) {
+                            formattedDate = 'Vừa xong';
+                        } else if (diffMins < 60) {
+                            formattedDate = `${diffMins} phút trước`;
+                        } else if (diffHours < 24) {
+                            formattedDate = `${diffHours} giờ trước`;
+                        } else if (diffDays < 7) {
+                            formattedDate = `${diffDays} ngày trước`;
+                        } else {
+                            formattedDate = date.toLocaleDateString('vi-VN', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Error formatting date:', e);
+            }
+
+            const icon = notification.type === 'EMAIL' ? 'email' : 
+                        notification.type === 'IN_APP' ? 'notifications' : 'notifications';
+            
+            const typeLabel = notification.type === 'EMAIL' ? 'Email' : 
+                             notification.type === 'IN_APP' ? 'Trong ứng dụng' : 'Thông báo';
+
+            // Rút gọn nội dung - chỉ lấy dòng đầu tiên hoặc 100 ký tự đầu
+            const contentPreview = notification.content ? 
+                (notification.content.split('\n')[0].substring(0, 100) + (notification.content.length > 100 ? '...' : '')) : 
+                '';
+
+            // Kiểm tra có appointment không
+            const hasAppointment = notification.appointment && notification.appointment.bookingCode;
+
+            return `
+                <div class="notification-card group border-2 ${!notification.isRead ? 'border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent' : 'border-[#f0f4f2] dark:border-[#2d3f33] bg-white dark:bg-[#1a2e21]'} rounded-xl p-4 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 cursor-pointer relative overflow-hidden" onclick="toggleNotificationDetail(${notification.id})">
+                    ${!notification.isRead ? '<div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary to-primary-dark"></div>' : ''}
+                    <div class="flex items-start gap-3 relative z-10">
+                        <div class="flex-shrink-0 ${!notification.isRead ? 'bg-primary/20' : 'bg-[#f0f4f2] dark:bg-[#2d3f33]'} rounded-full p-2.5">
+                            <span class="material-symbols-outlined ${!notification.isRead ? 'text-primary' : 'text-[#61896f]'} text-lg">${icon}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between gap-2 mb-1">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <h4 class="font-bold text-base ${!notification.isRead ? 'text-primary' : 'text-[#111813] dark:text-white'} truncate">${escapeHtml(notification.title)}</h4>
+                                        ${!notification.isRead ? '<span class="bg-primary text-white text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0">Mới</span>' : ''}
+                                    </div>
+                                    <div class="flex items-center gap-2 text-xs text-[#61896f] mb-2">
+                                        <span>${typeLabel}</span>
+                                        <span>•</span>
+                                        <span>${formattedDate}</span>
+                                        ${hasAppointment ? '<span>•</span><span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">event</span><span>Có lịch hẹn</span></span>' : ''}
+                                    </div>
+                                    <p class="text-sm text-[#111813] dark:text-white line-clamp-2 mb-2">${escapeHtml(contentPreview)}</p>
+                                </div>
+                                <button onclick="event.stopPropagation(); deleteNotification(${notification.id})" class="flex-shrink-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-1.5 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
+                                    <span class="material-symbols-outlined text-base">delete</span>
+                                </button>
+                            </div>
+                            
+                            <!-- Chi tiết đầy đủ (ẩn mặc định) -->
+                            <div id="notificationDetail_${notification.id}" class="hidden mt-3 pt-3 border-t border-[#f0f4f2] dark:border-[#2d3f33]">
+                                <div class="bg-[#f0f4f2] dark:bg-[#2d3f33] rounded-lg p-3 mb-3">
+                                    <p class="text-sm text-[#111813] dark:text-white whitespace-pre-line leading-relaxed">${escapeHtml(notification.content)}</p>
+                                </div>
+                                ${notification.appointment ? `
+                                    <div class="bg-primary/5 dark:bg-primary/10 rounded-lg p-3 space-y-2 mb-3">
+                                        <div class="flex items-center gap-2 text-sm font-semibold text-primary mb-2">
+                                            <span class="material-symbols-outlined text-sm">event</span>
+                                            <span>Thông tin lịch hẹn</span>
+                                        </div>
+                                        ${notification.appointment.bookingCode ? `
+                                            <div class="flex items-center gap-2 text-sm text-[#111813] dark:text-white">
+                                                <span class="material-symbols-outlined text-sm text-[#61896f]">qr_code</span>
+                                                <span class="font-semibold">Mã booking:</span>
+                                                <span class="font-mono">${escapeHtml(notification.appointment.bookingCode)}</span>
+                                            </div>
+                                        ` : ''}
+                                        ${notification.appointment.vaccineName ? `
+                                            <div class="flex items-center gap-2 text-sm text-[#111813] dark:text-white">
+                                                <span class="material-symbols-outlined text-sm text-[#61896f]">vaccines</span>
+                                                <span>${escapeHtml(notification.appointment.vaccineName)}</span>
+                                            </div>
+                                        ` : ''}
+                                        ${notification.appointment.centerName ? `
+                                            <div class="flex items-center gap-2 text-sm text-[#111813] dark:text-white">
+                                                <span class="material-symbols-outlined text-sm text-[#61896f]">location_on</span>
+                                                <span>${escapeHtml(notification.appointment.centerName)}</span>
+                                            </div>
+                                        ` : ''}
+                                        ${notification.appointment.roomNumber ? `
+                                            <div class="flex items-center gap-2 text-sm text-[#111813] dark:text-white">
+                                                <span class="material-symbols-outlined text-sm text-[#61896f]">meeting_room</span>
+                                                <span>Phòng: ${escapeHtml(notification.appointment.roomNumber)}</span>
+                                            </div>
+                                        ` : ''}
+                                        ${notification.appointment.appointmentDate ? `
+                                            <div class="flex items-center gap-2 text-sm text-[#111813] dark:text-white">
+                                                <span class="material-symbols-outlined text-sm text-[#61896f]">calendar_today</span>
+                                                <span>${formatDate(notification.appointment.appointmentDate)}${notification.appointment.appointmentTime ? ' lúc ' + formatTime(notification.appointment.appointmentTime) : ''}</span>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                    <div class="mb-3">
+                                        <a href="/vaccination-history" onclick="event.stopPropagation()" class="text-primary hover:text-primary-dark text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all">
+                                            <span>Xem chi tiết lịch hẹn</span>
+                                            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                                        </a>
+                                    </div>
+                                ` : ''}
+                                ${!notification.isRead ? `
+                                    <div class="pt-2 border-t border-[#f0f4f2] dark:border-[#2d3f33]">
+                                        <button onclick="event.stopPropagation(); markAsRead(${notification.id})" class="text-primary hover:text-primary-dark text-sm font-semibold flex items-center gap-1.5 hover:gap-2 transition-all">
+                                            <span class="material-symbols-outlined text-base">check_circle</span>
+                                            <span>Đánh dấu đã đọc</span>
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    // Toggle hiển thị chi tiết thông báo và tự động đánh dấu đã đọc
+    async function toggleNotificationDetail(notificationId) {
+        // Tìm notification trong danh sách
+        const notification = allNotifications.find(n => n.id === notificationId);
+        if (!notification) return;
+        
+        const detailElement = document.getElementById(`notificationDetail_${notificationId}`);
+        if (detailElement) {
+            const isOpening = detailElement.classList.contains('hidden');
+            
+            // Mở chi tiết trước
+            detailElement.classList.toggle('hidden');
+            
+            // Nếu đang mở chi tiết và thông báo chưa đọc thì đánh dấu đã đọc ngay lập tức
+            if (isOpening && !notification.isRead) {
+                // Cập nhật trạng thái trong mảng ngay lập tức để UI cập nhật
+                notification.isRead = true;
+                
+                // Cập nhật UI ngay lập tức
+                updateNotificationCardUI(notificationId);
+                
+                // Đánh dấu đã đọc trên server (async, không cần đợi)
+                markAsRead(notificationId, true).catch(err => {
+                    console.error('Error marking as read:', err);
+                    // Nếu lỗi, revert lại trạng thái
+                    notification.isRead = false;
+                    renderNotifications();
+                });
+            }
+        }
+    }
+
+    // Đánh dấu đã đọc
+    async function markAsRead(notificationId, skipReload = false) {
+        try {
+            const response = await fetch(`/api/notifications/${notificationId}/read`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                // Cập nhật trạng thái trong danh sách hiện tại
+                const notification = allNotifications.find(n => n.id === notificationId);
+                if (notification) {
+                    notification.isRead = true;
+                }
+                
+                // Chỉ reload nếu không skip
+                if (!skipReload) {
+                    await loadNotifications();
+                }
+                await loadUnreadCount();
+                
+                // Cập nhật UI của card đó
+                updateNotificationCardUI(notificationId);
+            } else {
+                alert('Có lỗi xảy ra');
+            }
+        } catch (error) {
+            console.error('Error marking as read:', error);
+            alert('Có lỗi xảy ra');
+        }
+    }
+    
+    // Cập nhật UI của notification card sau khi đánh dấu đã đọc
+    function updateNotificationCardUI(notificationId) {
+        const notification = allNotifications.find(n => n.id === notificationId);
+        if (!notification) return;
+        
+        const card = document.querySelector(`[onclick="toggleNotificationDetail(${notificationId})"]`);
+        if (!card) return;
+        
+        // Cập nhật border và background - remove tất cả class liên quan đến unread
+        card.classList.remove('border-primary/30', 'bg-gradient-to-r', 'from-primary/10', 'via-primary/5', 'to-transparent');
+        card.classList.add('border-[#f0f4f2]', 'dark:border-[#2d3f33]', 'bg-white', 'dark:bg-[#1a2e21]');
+        
+        // Xóa thanh màu teal bên trái (nếu có)
+        const leftBar = card.querySelector('.absolute.top-0.left-0.w-1');
+        if (leftBar && leftBar.classList.contains('bg-gradient-to-b')) {
+            leftBar.remove();
+        }
+        
+        // Cập nhật icon background
+        const iconContainer = card.querySelector('.flex-shrink-0');
+        if (iconContainer) {
+            iconContainer.classList.remove('bg-primary/20');
+            iconContainer.classList.add('bg-[#f0f4f2]', 'dark:bg-[#2d3f33]');
+        }
+        
+        // Cập nhật icon color - tìm icon trong iconContainer
+        const icon = iconContainer ? iconContainer.querySelector('.material-symbols-outlined') : null;
+        if (icon) {
+            icon.classList.remove('text-primary');
+            icon.classList.add('text-[#61896f]');
+        }
+        
+        // Cập nhật title color
+        const title = card.querySelector('h4');
+        if (title) {
+            title.classList.remove('text-primary');
+            title.classList.add('text-[#111813]', 'dark:text-white');
+        }
+        
+        // Xóa badge "Mới"
+        const badge = card.querySelector('.bg-primary.text-white');
+        if (badge && badge.textContent.trim() === 'Mới') {
+            badge.remove();
+        }
+        
+        // Xóa nút "Đánh dấu đã đọc" trong chi tiết
+        const markReadBtn = document.querySelector(`#notificationDetail_${notificationId} .pt-2.border-t`);
+        if (markReadBtn) {
+            markReadBtn.remove();
+        }
+    }
+
+    // Xóa thông báo
+    async function deleteNotification(notificationId) {
+        if (!confirm('Bạn có chắc chắn muốn xóa thông báo này?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/notifications/${notificationId}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                await loadNotifications();
+                await loadUnreadCount();
+            } else {
+                alert('Có lỗi xảy ra');
+            }
+        } catch (error) {
+            console.error('Error deleting notification:', error);
+            alert('Có lỗi xảy ra');
+        }
+    }
+
+    // Escape HTML để tránh XSS
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Format date
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        try {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('vi-VN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        } catch (e) {
+            return dateStr;
+        }
+    }
+    
+    // Format time
+    function formatTime(timeStr) {
+        if (!timeStr) return '';
+        try {
+            // Nếu là string "HH:mm:ss" hoặc "HH:mm"
+            if (typeof timeStr === 'string') {
+                return timeStr.substring(0, 5); // Lấy HH:mm
+            }
+            return timeStr;
+        } catch (e) {
+            return timeStr;
+        }
+    }
+</script>
+</body>
+</html>
+
