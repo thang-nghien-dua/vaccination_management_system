@@ -149,9 +149,13 @@ public class PhoneVerificationService {
         user.setPhoneVerified(true);
         user.setPhoneVerificationCode(null);
         user.setPhoneVerificationExpiresAt(null);
+        // Đảm bảo phoneNumber không bị null (giữ nguyên số đã set khi gửi mã)
+        if (user.getPhoneNumber() == null || user.getPhoneNumber().trim().isEmpty()) {
+            log.warn("Phone number is null after verification for user {}", userId);
+        }
         userRepository.save(user);
         
-        log.info("Phone verified successfully for user {}", userId);
+        log.info("Phone verified successfully for user {} with phone: {}", userId, user.getPhoneNumber());
         return true;
     }
     

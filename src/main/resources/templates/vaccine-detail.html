@@ -45,6 +45,21 @@
             background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%);
             color: white;
         }
+        /* Smooth animations for form expand/collapse */
+        #formContainer {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, opacity 0.3s ease-out;
+        }
+        #formContainer.expanded {
+            max-height: 5000px;
+            opacity: 1;
+        }
+        /* Tooltip improvements */
+        .group:hover .group-hover\:opacity-100 {
+            transition-delay: 0.3s;
+        }
     </style>
 </head>
 <body class="bg-background-light dark:bg-background-dark min-h-screen text-[#111813] dark:text-white font-display">
@@ -296,27 +311,43 @@
                 <div class="lg:w-1/3">
                     <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-primary/20 dark:border-primary/30 p-6 sticky top-24 relative overflow-hidden">
                         <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-primary-light to-primary-dark"></div>
-                        <h3 class="text-lg font-bold mb-4 relative z-10 flex items-center gap-2">
-                            <span class="size-8 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center">
-                                <span class="material-symbols-outlined text-white text-sm">event</span>
-                            </span>
-                            Đặt lịch tiêm chủng
-                        </h3>
-                        
-                        <!-- Two Options: Self-booking or Consultation -->
-                        <div class="space-y-3 mb-6 relative z-10">
-                            <button id="selfBookingBtn" class="w-full bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95">
-                                <span class="material-symbols-outlined">event</span>
-                                <span>Đặt lịch ngay</span>
-                            </button>
-                            <button id="consultationBtn" class="w-full bg-white dark:bg-[#1a2e21] border-2 border-primary/30 text-primary hover:bg-primary/5 dark:hover:bg-primary/10 hover:border-primary/50 px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95">
-                                <span class="material-symbols-outlined">support_agent</span>
-                                <span>Cần tư vấn</span>
-                            </button>
-                        </div>
-                        
-                        <!-- Self-booking Form -->
-                        <div id="selfBookingForm" class="space-y-4 hidden">
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-bold flex items-center gap-2">
+                                    <span class="size-8 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-white text-sm">event</span>
+                                    </span>
+                                    Đặt lịch tiêm chủng
+                                </h3>
+                                <button id="collapseFormBtn" class="hidden p-2 rounded-lg hover:bg-primary/10 dark:hover:bg-primary/20 transition-all group" title="Thu gọn form">
+                                    <span class="material-symbols-outlined text-[#61896f] group-hover:text-primary transition-colors">expand_less</span>
+                                </button>
+                            </div>
+                            
+                            <!-- Two Options: Self-booking or Consultation -->
+                            <div class="space-y-3 mb-6" id="bookingOptions">
+                                <button id="selfBookingBtn" class="w-full bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95 group relative">
+                                    <span class="material-symbols-outlined">event</span>
+                                    <span>Đặt lịch ngay</span>
+                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                                        Đặt lịch trực tiếp, không cần tư vấn
+                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                    </div>
+                                </button>
+                                <button id="consultationBtn" class="w-full bg-white dark:bg-[#1a2e21] border-2 border-primary/30 text-primary hover:bg-primary/5 dark:hover:bg-primary/10 hover:border-primary/50 px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 group relative">
+                                    <span class="material-symbols-outlined">support_agent</span>
+                                    <span>Cần tư vấn</span>
+                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                                        Gửi yêu cầu, lễ tân sẽ gọi tư vấn
+                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                    </div>
+                                </button>
+                            </div>
+                            
+                            <!-- Form Container (Collapsible) -->
+                            <div id="formContainer" class="hidden overflow-hidden">
+                                <!-- Self-booking Form -->
+                                <div id="selfBookingForm" class="space-y-4 hidden">
                             <div>
                                 <label class="block text-sm font-semibold mb-2">Chọn trung tâm gần bạn</label>
                                 <select id="centerSelect" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
@@ -407,10 +438,10 @@
                             <p class="text-xs text-[#61896f] text-center">
                                 *Giá vaccine có thể thay đổi tùy thời điểm. Nhân viên VacciCare sẽ liên hệ xác nhận sau khi bạn đăng ký thành công.
                             </p>
-                        </div>
-                        
-                        <!-- Consultation Form -->
-                        <div id="consultationForm" class="space-y-4 hidden">
+                                </div>
+                                
+                                <!-- Consultation Form -->
+                                <div id="consultationForm" class="space-y-4 hidden">
                             <div>
                                 <label class="block text-sm font-semibold mb-2">Đặt cho</label>
                                 <div class="space-y-2">
@@ -463,6 +494,8 @@
                             </button>
                             
                             <div id="consultationMessage" class="hidden p-3 rounded-xl text-sm font-semibold"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -844,23 +877,84 @@
         document.getElementById('errorState').classList.remove('hidden');
     }
 
+    // Function to expand form
+    function expandForm() {
+        const formContainer = document.getElementById('formContainer');
+        const collapseBtn = document.getElementById('collapseFormBtn');
+        
+        // Remove hidden class first
+        formContainer.classList.remove('hidden');
+        
+        // Force reflow to ensure transition works
+        void formContainer.offsetHeight;
+        
+        // Add expanded class for animation
+        formContainer.classList.add('expanded');
+        collapseBtn.classList.remove('hidden');
+        
+        // Smooth scroll to form if needed (only on mobile)
+        if (window.innerWidth < 1024) {
+            setTimeout(() => {
+                formContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 200);
+        }
+    }
+    
+    // Function to collapse form
+    function collapseForm() {
+        const formContainer = document.getElementById('formContainer');
+        const collapseBtn = document.getElementById('collapseFormBtn');
+        
+        // Remove expanded class first for animation
+        formContainer.classList.remove('expanded');
+        collapseBtn.classList.add('hidden');
+        
+        // Wait for animation to complete before hiding
+        setTimeout(() => {
+            formContainer.classList.add('hidden');
+            
+            // Reset form states
+            document.getElementById('selfBookingForm').classList.add('hidden');
+            document.getElementById('consultationForm').classList.add('hidden');
+            
+            // Reset button styles
+            document.getElementById('selfBookingBtn').classList.remove('bg-primary', 'text-white');
+            document.getElementById('selfBookingBtn').classList.add('bg-gradient-to-r', 'from-primary', 'to-primary-dark', 'text-white');
+            document.getElementById('consultationBtn').classList.remove('bg-primary', 'text-white');
+            document.getElementById('consultationBtn').classList.add('bg-white', 'dark:bg-[#1a2e21]', 'border-2', 'border-primary/30', 'text-primary');
+        }, 400); // Wait for animation duration
+    }
+    
+    // Collapse button handler
+    document.getElementById('collapseFormBtn').addEventListener('click', () => {
+        collapseForm();
+    });
+    
     // Toggle between self-booking and consultation
     document.getElementById('selfBookingBtn').addEventListener('click', () => {
+        expandForm();
+        
         document.getElementById('selfBookingForm').classList.remove('hidden');
         document.getElementById('consultationForm').classList.add('hidden');
-        document.getElementById('selfBookingBtn').classList.add('bg-primary', 'text-white');
+        
+        // Update button styles
+        document.getElementById('selfBookingBtn').classList.add('bg-gradient-to-r', 'from-primary', 'to-primary-dark', 'text-white');
         document.getElementById('selfBookingBtn').classList.remove('bg-white', 'dark:bg-[#1a2e21]', 'border-2', 'border-primary', 'text-primary');
-        document.getElementById('consultationBtn').classList.remove('bg-primary', 'text-white');
-        document.getElementById('consultationBtn').classList.add('bg-white', 'dark:bg-[#1a2e21]', 'border-2', 'border-primary', 'text-primary');
+        document.getElementById('consultationBtn').classList.remove('bg-gradient-to-r', 'from-primary', 'to-primary-dark', 'text-white');
+        document.getElementById('consultationBtn').classList.add('bg-white', 'dark:bg-[#1a2e21]', 'border-2', 'border-primary/30', 'text-primary');
     });
     
     document.getElementById('consultationBtn').addEventListener('click', () => {
+        expandForm();
+        
         document.getElementById('consultationForm').classList.remove('hidden');
         document.getElementById('selfBookingForm').classList.add('hidden');
-        document.getElementById('consultationBtn').classList.add('bg-primary', 'text-white');
-        document.getElementById('consultationBtn').classList.remove('bg-white', 'dark:bg-[#1a2e21]', 'border-2', 'border-primary', 'text-primary');
-        document.getElementById('selfBookingBtn').classList.remove('bg-primary', 'text-white');
-        document.getElementById('selfBookingBtn').classList.add('bg-white', 'dark:bg-[#1a2e21]', 'border-2', 'border-primary', 'text-primary');
+        
+        // Update button styles
+        document.getElementById('consultationBtn').classList.add('bg-gradient-to-r', 'from-primary', 'to-primary-dark', 'text-white');
+        document.getElementById('consultationBtn').classList.remove('bg-white', 'dark:bg-[#1a2e21]', 'border-2', 'border-primary/30', 'text-primary');
+        document.getElementById('selfBookingBtn').classList.remove('bg-gradient-to-r', 'from-primary', 'to-primary-dark', 'text-white');
+        document.getElementById('selfBookingBtn').classList.add('bg-white', 'dark:bg-[#1a2e21]', 'border-2', 'border-primary/30', 'text-primary');
         
         // Load family members if needed
         loadFamilyMembers();
@@ -1248,10 +1342,9 @@
     // Load on page load
     document.addEventListener('DOMContentLoaded', () => {
         loadVaccineDetail();
-        // Default show self-booking form
-        document.getElementById('selfBookingForm').classList.remove('hidden');
-        document.getElementById('selfBookingBtn').classList.add('bg-primary', 'text-white');
-        document.getElementById('selfBookingBtn').classList.remove('bg-white', 'dark:bg-[#1a2e21]', 'border-2', 'border-primary', 'text-primary');
+        
+        // Form starts collapsed by default
+        // User needs to click a button to expand
         
         // Load current user phone number if available
         loadCurrentUserPhone();

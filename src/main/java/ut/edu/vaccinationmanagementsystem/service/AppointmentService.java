@@ -139,8 +139,19 @@ public class AppointmentService {
             appointment.setGuestEmail(dto.getGuestEmail());
             appointment.setGuestDayOfBirth(dto.getGuestDayOfBirth());
             appointment.setGuestGender(dto.getGuestGender());
-            appointment.setNotes((dto.getReason() != null ? "Lý do: " + dto.getReason() + ". " : "") +
-                               (dto.getNotes() != null ? "Ghi chú: " + dto.getNotes() : ""));
+            
+            // Build notes with workUnit if provided
+            StringBuilder notesBuilder = new StringBuilder();
+            if (dto.getWorkUnit() != null && !dto.getWorkUnit().trim().isEmpty()) {
+                notesBuilder.append("Đơn vị công tác: ").append(dto.getWorkUnit()).append(". ");
+            }
+            if (dto.getReason() != null && !dto.getReason().trim().isEmpty()) {
+                notesBuilder.append("Lý do: ").append(dto.getReason()).append(". ");
+            }
+            if (dto.getNotes() != null && !dto.getNotes().trim().isEmpty()) {
+                notesBuilder.append("Ghi chú: ").append(dto.getNotes());
+            }
+            appointment.setNotes(notesBuilder.toString().trim());
         }
         
         // Set vaccine (nullable)
@@ -707,8 +718,19 @@ public class AppointmentService {
      * @param phoneNumberFromForm Số điện thoại từ form đặt lịch (có thể null nếu không có)
      */
     private void validatePhoneVerificationForUser(User user, String phoneNumberFromForm) {
-        // Nếu có số điện thoại từ form, kiểm tra số đó có được xác thực không
+        // GIẢI PHÁP 1: Ưu tiên kiểm tra số trong database trước
+        // Nếu số trong database đã được xác thực → cho phép luôn, không cần kiểm tra số từ form
+        if (user.getPhoneNumber() != null && !user.getPhoneNumber().trim().isEmpty() &&
+            user.getPhoneVerified() != null && user.getPhoneVerified()) {
+            // Số trong database đã được xác thực → cho phép đặt lịch
+            // Không cần kiểm tra số từ form vì đã có số verified trong database
+            return;
+        }
+        
+        // Nếu số trong database chưa được xác thực hoặc không có số
+        // Kiểm tra số từ form (nếu có)
         if (phoneNumberFromForm != null && !phoneNumberFromForm.trim().isEmpty()) {
+            // Kiểm tra số từ form có được xác thực không
             boolean verified = phoneVerificationService.isPhoneVerifiedForUser(user.getId(), phoneNumberFromForm);
             if (!verified) {
                 throw new RuntimeException("Số điện thoại chưa được xác thực. Vui lòng xác thực số điện thoại trước khi đặt lịch tiêm");
@@ -716,7 +738,7 @@ public class AppointmentService {
             return; // Đã xác thực, không cần check tiếp
         }
         
-        // Nếu không có số từ form, kiểm tra số trong database
+        // Nếu không có số từ form và số trong database chưa được xác thực
         if (user.getPhoneNumber() == null || user.getPhoneNumber().trim().isEmpty()) {
             throw new RuntimeException("Vui lòng nhập và xác thực số điện thoại trước khi đặt lịch tiêm");
         }
@@ -733,7 +755,22 @@ public class AppointmentService {
      * @param phoneNumberFromForm Số điện thoại từ form đặt lịch (có thể null nếu không có)
      */
     private void validatePhoneVerificationForFamilyMember(FamilyMember familyMember, User currentUser, String phoneNumberFromForm) {
-        // Nếu có số điện thoại từ form
+        // GIẢI PHÁP 1: Ưu tiên kiểm tra số trong database trước
+        // Nếu số của family member trong database đã được xác thực → cho phép luôn
+        if (familyMember.getPhoneNumber() != null && !familyMember.getPhoneNumber().trim().isEmpty() &&
+            familyMember.getPhoneVerified() != null && familyMember.getPhoneVerified()) {
+            // Số của family member trong database đã được xác thực → cho phép đặt lịch
+            return;
+        }
+        
+        // Nếu số của user trong database đã được xác thực → cho phép luôn (có thể dùng số của user)
+        if (currentUser.getPhoneNumber() != null && !currentUser.getPhoneNumber().trim().isEmpty() &&
+            currentUser.getPhoneVerified() != null && currentUser.getPhoneVerified()) {
+            // Số của user trong database đã được xác thực → cho phép đặt lịch
+            return;
+        }
+        
+        // Nếu số trong database chưa được xác thực, kiểm tra số từ form (nếu có)
         if (phoneNumberFromForm != null && !phoneNumberFromForm.trim().isEmpty()) {
             // Kiểm tra số điện thoại trong form có được xác thực không
             // Có thể là số của family member hoặc số của user

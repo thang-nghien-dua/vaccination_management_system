@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import ut.edu.vaccinationmanagementsystem.entity.FamilyMember;
 import ut.edu.vaccinationmanagementsystem.entity.User;
 import ut.edu.vaccinationmanagementsystem.repository.FamilyMemberRepository;
+import ut.edu.vaccinationmanagementsystem.repository.UserRepository;
 import ut.edu.vaccinationmanagementsystem.service.CustomOAuth2User;
 import ut.edu.vaccinationmanagementsystem.service.CustomUserDetails;
 import ut.edu.vaccinationmanagementsystem.service.PhoneVerificationService;
@@ -27,6 +28,9 @@ public class PhoneVerificationController {
     
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private UserRepository userRepository;
     
     @Autowired
     private FamilyMemberRepository familyMemberRepository;
@@ -207,11 +211,16 @@ public class PhoneVerificationController {
     public ResponseEntity<?> getVerificationStatus() {
         try {
             User currentUser = getCurrentUser();
-            boolean verified = phoneVerificationService.isPhoneVerifiedForUser(currentUser.getId());
+            // GIẢI PHÁP: Reload user từ database để đảm bảo lấy dữ liệu mới nhất
+            // Tránh trường hợp user object trong session không được refresh sau khi verify phone
+            User freshUser = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            boolean verified = phoneVerificationService.isPhoneVerifiedForUser(freshUser.getId());
             
             Map<String, Object> response = new HashMap<>();
             response.put("verified", verified);
-            response.put("phoneNumber", currentUser.getPhoneNumber());
+            response.put("phoneNumber", freshUser.getPhoneNumber()); // Lấy từ database mới nhất
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
