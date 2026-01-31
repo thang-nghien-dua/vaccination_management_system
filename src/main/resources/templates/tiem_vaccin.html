@@ -58,17 +58,21 @@
 </head>
 
 <body class="bg-background-light dark:bg-background-dark min-h-screen text-[#111813] dark:text-white">
-    <div class="flex h-screen overflow-hidden">
+    <div class="flex min-h-screen">
+        <!-- Sidebar Overlay (mobile) -->
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden"></div>
+        <!-- Sidebar Fragment -->
         <div th:replace="~{fragments/nurse-sidebar :: sidebar}"></div>
-        <main class="flex-1 flex flex-col overflow-hidden">
+        <main class="flex-1 lg:ml-72 flex flex-col overflow-hidden">
             <header
                 class="bg-white dark:bg-surface-dark border-b border-border-light dark:border-border-dark px-8 py-5">
                 <div class="flex justify-between items-center">
-                    <div>
-                        <h2 class="text-[#111813] dark:text-white text-2xl font-extrabold tracking-tight">Thực hiện Tiêm
-                            chủng</h2>
-                        <p class="text-[#61896f] text-sm">Vui lòng kiểm tra kỹ thông tin bệnh nhân trước khi thực hiện
-                        </p>
+                    <div class="flex items-center gap-4">
+                        <button id="sidebarToggleBtn"
+                            class="lg:hidden p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors">
+                            <span class="material-symbols-outlined">menu</span>
+                        </button>
+                        <h1 class="text-2xl font-bold">Ghi nhận Tiêm chủng</h1>
                     </div>
                     <div class="flex items-center gap-4">
                         <div class="flex flex-col items-end">
@@ -564,14 +568,7 @@
                             }
 
                             // Hiển thị thông báo thành công với thông tin chi tiết
-                            const successMessage = `✅ Ghi nhận tiêm vaccine thành công!\n\n` +
-                                `📋 Mã chứng nhận: ${result.certificateNumber || 'N/A'}\n` +
-                                `💉 Vaccine: ${result.vaccineName || 'N/A'}\n` +
-                                `🔢 Mũi tiêm: ${result.doseNumber || 1}\n` +
-                                `📅 Ngày tiêm: ${result.injectionDate || 'N/A'}\n\n` +
-                                `Đang chuyển đến trang lịch sử tiêm...`;
-
-                            alert(successMessage);
+                            alert("Đã tiêm thành công!");
 
                             // Thêm delay nhỏ để đảm bảo database transaction đã commit
                             // và thêm cache-busting parameter để force refresh

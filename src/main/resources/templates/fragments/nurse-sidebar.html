@@ -3,11 +3,20 @@
 
 <body>
     <!-- Nurse Sidebar Fragment -->
-    <aside th:fragment="sidebar"
-        class="w-72 bg-white dark:bg-[#1a2e21] border-r border-[#f0f4f2] dark:border-[#2d3f33] fixed h-screen z-50 flex flex-col overflow-hidden">
+    <aside id="sidebar" th:fragment="sidebar"
+        class="w-72 bg-white dark:bg-[#1a2e21] border-r border-[#f0f4f2] dark:border-[#2d3f33] fixed h-screen z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col overflow-hidden shadow-xl lg:shadow-none">
         <div class="p-6 flex items-center gap-3 flex-shrink-0">
-            <span class="material-symbols-outlined text-[#111813] dark:text-white">menu</span>
-            <h1 class="text-xl font-bold tracking-tight flex-1">VacciCare</h1>
+            <button id="sidebarToggleBtn"
+                class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors flex-shrink-0"
+                title="Menu">
+                <span class="material-symbols-outlined text-xl text-[#111813] dark:text-white">menu</span>
+            </button>
+            <h1 id="sidebarLogoText" class="text-xl font-bold tracking-tight flex-1 lg:block">VacciCare</h1>
+            <button id="sidebarCloseBtn"
+                class="lg:hidden p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors flex-shrink-0"
+                title="Đóng sidebar">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">close</span>
+            </button>
         </div>
         <div class="px-4 mb-6 flex-shrink-0" th:if="${isAuthenticated}">
             <div class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark rounded-xl"
@@ -32,24 +41,6 @@
                 <span class="text-sm">Dashboard</span>
             </a>
             <a class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors"
-                th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/nurse/appointments') ? 'active-nav text-primary font-bold' : ''}"
-                th:href="@{/nurse/appointments}">
-                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">vaccines</span>
-                <span class="text-sm">Lịch hẹn</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors"
-                th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/nurse/vaccines') ? 'active-nav text-primary font-bold' : ''}"
-                th:href="@{/nurse/vaccines}">
-                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">inventory</span>
-                <span class="text-sm">Quản lý vaccine</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors"
-                th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/nurse/reactions') ? 'active-nav text-primary font-bold' : ''}"
-                th:href="@{/nurse/reactions}">
-                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">warning</span>
-                <span class="text-sm">Phản ứng phụ</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors"
                 th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/nurse/lich-su-tiem-y-ta') ? 'active-nav text-primary font-bold' : ''}"
                 th:href="@{/nurse/lich-su-tiem-y-ta}">
                 <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">history</span>
@@ -62,8 +53,8 @@
                 <span class="text-sm">Thông tin cá nhân</span>
             </a>
             <a class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors relative"
-                th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/notifications') ? 'active-nav text-primary font-bold' : ''}"
-                th:href="@{/notifications(role='NURSE')}">
+                th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/nurse/notifications') ? 'active-nav text-primary font-bold' : ''}"
+                th:href="@{/nurse/notifications}">
                 <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">notifications</span>
                 <span class="text-sm">Thông báo</span>
                 <span id="notificationBadge"

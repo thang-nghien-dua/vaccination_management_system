@@ -51,6 +51,8 @@
 
 <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
     <div class="flex min-h-screen">
+        <!-- Sidebar Overlay (mobile) -->
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden"></div>
         <!-- Sidebar Fragment -->
         <div th:replace="~{fragments/nurse-sidebar :: sidebar}"></div>
         <!-- Main Content Area -->

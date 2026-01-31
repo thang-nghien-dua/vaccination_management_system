@@ -2,7 +2,7 @@
 <html class="light" lang="vi" xmlns:th="http://www.thymeleaf.org"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Trang Tổng quan Người dùng - Hệ thống Tiêm chủng</title>
+<title>Trang Tổng quan Người dùng - VacciCare</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -11,9 +11,9 @@
     // Kiểm tra library đã load chưa
     window.addEventListener('load', function() {
         if (typeof QRCode !== 'undefined') {
-            console.log('✅ QRCode library loaded successfully');
+            console.log(' QRCode library loaded successfully');
         } else {
-            console.error('❌ QRCode library failed to load');
+            console.error(' QRCode library failed to load');
         }
     });
 </script>
@@ -183,86 +183,85 @@
 
 <!-- Utility Sections -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-<!-- Left Column: 2/3 width -->
-<div class="md:col-span-2 space-y-5">
-<!-- Upcoming Appointments Section -->
-<div class="space-y-3">
-<div class="flex items-center justify-between">
-<h3 class="text-xl font-bold">Lịch hẹn sắp tới</h3>
-<a class="text-sm font-bold text-primary hover:underline" href="/vaccination-history">Xem tất cả</a>
-</div>
-<div id="upcomingAppointmentContainer" class="bg-white dark:bg-[#1a2e21] rounded-2xl p-5 shadow-sm border border-[#f0f4f2] dark:border-[#2d3f33]">
-<div id="noUpcomingAppointment" class="text-center py-8 text-[#61896f]">
-<p>Bạn chưa có lịch hẹn sắp tới</p>
-<a href="/appointments" class="inline-block mt-4 text-primary hover:underline font-bold">Đặt lịch ngay</a>
-</div>
-<div id="upcomingAppointmentsList" class="hidden space-y-4">
-<!-- Appointments will be dynamically inserted here -->
-</div>
-</div>
-</div>
+    <!-- Left Column: 2/3 width -->
+    <div class="md:col-span-2 space-y-5">
+        <!-- Upcoming Appointments Section -->
+        <div class="space-y-3">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold">Lịch hẹn sắp tới</h3>
+                <a class="text-sm font-bold text-primary hover:underline" href="/vaccination-history">Xem tất cả</a>
+            </div>
+            <div id="upcomingAppointmentContainer" class="bg-white dark:bg-[#1a2e21] rounded-2xl p-5 shadow-sm border border-[#f0f4f2] dark:border-[#2d3f33]">
+                <div id="noUpcomingAppointment" class="text-center py-8 text-[#61896f]">
+                    <p>Bạn chưa có lịch hẹn sắp tới</p>
+                    <a href="/appointments" class="inline-block mt-4 text-primary hover:underline font-bold">Đặt lịch ngay</a>
+                </div>
+                <div id="upcomingAppointmentsList" class="hidden space-y-4">
+                    <!-- Appointments will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
 
-<!-- Statistics Cards Section -->
-<div class="grid grid-cols-2 gap-3">
-<div class="bg-white dark:bg-[#1a2e21] p-4 rounded-xl border border-[#f0f4f2] dark:border-[#2d3f33] flex items-center gap-3">
-<div class="size-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center flex-shrink-0">
-<span class="material-symbols-outlined">vaccines</span>
-</div>
-<div class="min-w-0">
-<p id="totalInjections" class="text-2xl font-black">0</p>
-<p class="text-xs text-[#61896f] font-medium">Mũi tiêm đã hoàn tất</p>
-</div>
-</div>
-<div class="bg-white dark:bg-[#1a2e21] p-4 rounded-xl border border-[#f0f4f2] dark:border-[#2d3f33] flex items-center gap-3">
-<div class="size-10 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg flex items-center justify-center flex-shrink-0">
-<span class="material-symbols-outlined">family_restroom</span>
-</div>
-<div class="min-w-0">
-<p id="familyMembersCount" class="text-2xl font-black">0</p>
-<p class="text-xs text-[#61896f] font-medium">Người thân đã đăng ký</p>
-</div>
-</div>
-</div>
-</div>
+        <!-- Statistics Cards Section -->
+        <div class="grid grid-cols-2 gap-3">
+            <div class="bg-white dark:bg-[#1a2e21] p-4 rounded-xl border border-[#f0f4f2] dark:border-[#2d3f33] flex items-center gap-3">
+                <div class="size-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined">vaccines</span>
+                </div>
+                <div class="min-w-0">
+                    <p id="totalInjections" class="text-2xl font-black">0</p>
+                    <p class="text-xs text-[#61896f] font-medium">Mũi tiêm đã hoàn tất</p>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-[#1a2e21] p-4 rounded-xl border border-[#f0f4f2] dark:border-[#2d3f33] flex items-center gap-3">
+                <div class="size-10 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined">family_restroom</span>
+                </div>
+                <div class="min-w-0">
+                    <p id="familyMembersCount" class="text-2xl font-black">0</p>
+                    <p class="text-xs text-[#61896f] font-medium">Người thân đã đăng ký</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<!-- Right Column: 1/3 width -->
-<div class="md:col-span-1 space-y-5">
-<!-- Recent History Section -->
-<div class="space-y-3">
-<div class="flex items-center justify-between">
-<h3 class="text-xl font-bold">Lịch sử gần đây</h3>
-<a class="text-sm font-bold text-primary hover:underline" href="/vaccination-history">Xem sổ tiêm</a>
-</div>
-<div class="bg-white dark:bg-[#1a2e21] rounded-2xl overflow-hidden shadow-sm border border-[#f0f4f2] dark:border-[#2d3f33]">
-<div id="recentHistoryList" class="divide-y divide-[#f0f4f2] dark:divide-[#2d3f33]">
-<div class="p-4 text-center text-[#61896f] py-6">
-<p>Chưa có lịch sử tiêm chủng</p>
-</div>
-</div>
-<div class="p-3 bg-gray-50 dark:bg-[#233d2c] text-center">
-<a href="/vaccination-history" class="text-sm font-bold text-[#61896f] hover:text-[#111813] dark:hover:text-white flex items-center justify-center gap-1 mx-auto">
-<span class="material-symbols-outlined text-lg">expand_more</span>
-                                    Xem tất cả
-                                </a>
-</div>
-</div>
-</div>
+    <!-- Right Column: 1/3 width -->
+    <div class="md:col-span-1 space-y-5">
+        <!-- Recent History Section -->
+        <div class="space-y-3">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold">Lịch sử gần đây</h3>
+                <a class="text-sm font-bold text-primary hover:underline" href="/vaccination-history">Xem sổ tiêm</a>
+            </div>
+            <div class="bg-white dark:bg-[#1a2e21] rounded-2xl overflow-hidden shadow-sm border border-[#f0f4f2] dark:border-[#2d3f33]">
+                <div id="recentHistoryList" class="divide-y divide-[#f0f4f2] dark:divide-[#2d3f33]">
+                    <div class="p-4 text-center text-[#61896f] py-6">
+                        <p>Chưa có lịch sử tiêm chủng</p>
+                    </div>
+                </div>
+                <div class="p-3 bg-gray-50 dark:bg-[#233d2c] text-center">
+                    <a href="/vaccination-history" class="text-sm font-bold text-[#61896f] hover:text-[#111813] dark:hover:text-white flex items-center justify-center gap-1 mx-auto">
+                        <span class="material-symbols-outlined text-lg">expand_more</span>
+                        Xem tất cả
+                    </a>
+                </div>
+            </div>
+        </div>
 
-<!-- Vaccine Knowledge Card -->
-<div class="bg-[#111813] dark:bg-[#08110b] rounded-2xl p-5 text-white relative overflow-hidden group shadow-sm">
-<div class="relative z-10 space-y-2.5">
-<h4 class="font-bold text-base">Kiến thức vaccine</h4>
-<p class="text-xs text-gray-400 leading-relaxed">Tại sao nên tiêm nhắc lại cúm hàng năm cho người trưởng thành?</p>
-<button class="text-primary text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all mt-3">
-Đọc thêm <span class="material-symbols-outlined text-base">arrow_forward</span>
-</button>
-</div>
-<div class="absolute -right-4 -bottom-4 opacity-20 transform group-hover:scale-110 transition-transform">
-<span class="material-symbols-outlined text-7xl">book_4</span>
-</div>
-</div>
-</div>
-</div>
+        <!-- Vaccine Knowledge Card -->
+        <div class="bg-[#111813] dark:bg-[#08110b] rounded-2xl p-5 text-white relative overflow-hidden group shadow-sm">
+            <div class="relative z-10 space-y-2.5">
+                <h4 class="font-bold text-base">Kiến thức vaccine</h4>
+                <p class="text-xs text-gray-400 leading-relaxed">Tại sao nên tiêm nhắc lại cúm hàng năm cho người trưởng thành?</p>
+                <button class="text-primary text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all mt-3">
+                    Đọc thêm <span class="material-symbols-outlined text-base">arrow_forward</span>
+                </button>
+            </div>
+            <div class="absolute -right-4 -bottom-4 opacity-20 transform group-hover:scale-110 transition-transform">
+                <span class="material-symbols-outlined text-7xl">book_4</span>
+            </div>
+        </div>
+    </div>
 </div>
 <footer class="mt-auto py-8 px-8 border-t border-[#f0f4f2] dark:border-[#2d3f33]">
 <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-[#61896f]">

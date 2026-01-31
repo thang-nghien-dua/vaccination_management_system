@@ -38,8 +38,8 @@
                 <span class="text-sm">Thông tin cá nhân</span>
             </a>
             <a class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors relative"
-                th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/notifications') ? 'active-nav text-primary font-bold' : ''}"
-                th:href="@{/notifications(role='RECEPTIONIST')}">
+                th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/receptionist/notifications') ? 'active-nav text-primary font-bold' : ''}"
+                th:href="@{/receptionist/notifications}">
                 <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">notifications</span>
                 <span class="text-sm">Thông báo</span>
                 <span id="notificationBadge"

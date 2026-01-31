@@ -7,7 +7,6 @@
         class="w-72 bg-white dark:bg-[#1a2e21] border-r border-[#f0f4f2] dark:border-[#2d3f33] fixed h-screen z-50 flex flex-col overflow-hidden">
         <!-- Header/Logo Section -->
         <div class="p-6 flex items-center gap-3 flex-shrink-0">
-            <span class="material-symbols-outlined text-[#111813] dark:text-white">menu</span>
             <h1 class="text-xl font-bold tracking-tight flex-1">VacciCare</h1>
         </div>
 
@@ -68,6 +67,15 @@
                         Lịch hẹn</p>
                 </a>
                 <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-white/5"
+                    th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/admin/slots') ? 'bg-primary/10 text-[#111813] dark:text-primary border-l-4 border-primary' : ''}"
+                    th:href="@{/admin/slots}">
+                    <span class="material-symbols-outlined"
+                        th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/admin/slots') ? 'text-primary' : ''}">schedule</span>
+                    <p class="text-sm font-semibold"
+                        th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/admin/slots') ? 'font-bold' : ''}">
+                        Quản lý Lịch hẹn</p>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-white/5"
                     th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/admin/staff') ? 'bg-primary/10 text-[#111813] dark:text-primary border-l-4 border-primary' : ''}"
                     th:href="@{/admin/staff}">
                     <span class="material-symbols-outlined"
@@ -86,15 +94,6 @@
                         Trung tâm tiêm chủng</p>
                 </a>
                 <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-white/5"
-                    th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/admin/adverse-reactions') ? 'bg-primary/10 text-[#111813] dark:text-primary border-l-4 border-primary' : ''}"
-                    th:href="@{/admin/adverse-reactions}">
-                    <span class="material-symbols-outlined"
-                        th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/admin/adverse-reactions') ? 'text-primary' : ''}">report_problem</span>
-                    <p class="text-sm font-semibold"
-                        th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/admin/adverse-reactions') ? 'font-bold' : ''}">
-                        Phản ứng phụ</p>
-                </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-white/5"
                     th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/admin/notifications') and not #strings.contains(#httpServletRequest.requestURI, '/notifications') ? 'bg-primary/10 text-[#111813] dark:text-primary border-l-4 border-primary' : ''}"
                     th:href="@{/admin/notifications}">
                     <span class="material-symbols-outlined"
@@ -102,24 +101,6 @@
                     <p class="text-sm font-semibold"
                         th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/admin/notifications') and not #strings.contains(#httpServletRequest.requestURI, '/notifications') ? 'font-bold' : ''}">
                         Quản lý Thông báo</p>
-                </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-white/5"
-                    th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/admin/reports') ? 'bg-primary/10 text-[#111813] dark:text-primary border-l-4 border-primary' : ''}"
-                    th:href="@{/admin/reports}">
-                    <span class="material-symbols-outlined"
-                        th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/admin/reports') ? 'text-primary' : ''}">bar_chart</span>
-                    <p class="text-sm font-semibold"
-                        th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/admin/reports') ? 'font-bold' : ''}">
-                        Thống kê & Báo cáo</p>
-                </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-white/5"
-                    th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/admin/settings') ? 'bg-primary/10 text-[#111813] dark:text-primary border-l-4 border-primary' : ''}"
-                    th:href="@{/admin/settings}">
-                    <span class="material-symbols-outlined"
-                        th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/admin/settings') ? 'text-primary' : ''}">settings</span>
-                    <p class="text-sm font-semibold"
-                        th:classappend="${#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/admin/settings') ? 'font-bold' : ''}">
-                        Cài đặt</p>
                 </a>
             </nav>
         </div>

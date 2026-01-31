@@ -153,6 +153,32 @@ public class AdminController {
     }
     
     /**
+     * GET /admin/slots
+     * Quản lý lịch hẹn (slots)
+     */
+    @GetMapping("/admin/slots")
+    public String adminSlots(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        
+        try {
+            User currentUser = getCurrentUser(authentication);
+            if (!checkAdminPermission(currentUser)) {
+                return "redirect:/home";
+            }
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        
+        return "quan_ly_lich_hen_slot";
+    }
+    
+    /**
      * GET /admin/staff
      * Quản lý nhân viên
      */

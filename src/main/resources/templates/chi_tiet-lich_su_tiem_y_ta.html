@@ -51,6 +51,8 @@
 <body
     class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200">
     <div class="flex min-h-screen">
+        <!-- Sidebar Overlay (mobile) -->
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden"></div>
         <!-- Sidebar Fragment -->
         <div th:replace="~{fragments/nurse-sidebar :: sidebar}"></div>
         <!-- Main Content Area -->
@@ -190,8 +192,10 @@
                                 <div
                                     class="md:col-span-3 flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
                                     <div class="flex items-center gap-3">
-                                        <img alt="Bác sĩ" class="w-10 h-10 rounded-full object-cover grayscale"
-                                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDa8UvmlCPAogx1xk4WKnsrS3acOVlRtGypIk5uuF2W2vp6SvvIHBiXWAz3Ja5WQNtZL5_8WIS2vR_GLehsL5Ptd3wrhV5Fc2okPfyLzJP180OIqjte4flghvXaWQ4VClN30_raAaM-aVpRIThga0xOFdlNmGEd7vXXy4qpjK4SRfc9yyg8Ocjll9IUX5wOjDWgc8L4pJQH_0Bsn8DBrszlRnU3NUJCOuBDubGTk1AMqDYhSr8U5T7KLzJn7zu6eNisHEbuljRsRZEl" />
+                                        <div
+                                            class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                                            <span class="material-icons-round">medical_services</span>
+                                        </div>
                                         <div>
                                             <p id="doctorNameFull" class="text-sm font-bold">...</p>
                                             <p class="text-xs text-slate-500">Khoa Khám bệnh</p>

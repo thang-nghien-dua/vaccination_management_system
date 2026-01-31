@@ -8,17 +8,24 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import ut.edu.vaccinationmanagementsystem.entity.User;
+import ut.edu.vaccinationmanagementsystem.repository.StaffInfoRepository;
 import ut.edu.vaccinationmanagementsystem.service.CustomOAuth2User;
 import ut.edu.vaccinationmanagementsystem.service.CustomUserDetails;
 import ut.edu.vaccinationmanagementsystem.service.UserService;
+
+import java.util.Optional;
+
+import java.util.Optional;
 
 @Controller
 public class HomeController {
     
     private final UserService userService;
+    private final StaffInfoRepository staffInfoRepository;
     
-    public HomeController(UserService userService) {
+    public HomeController(UserService userService, StaffInfoRepository staffInfoRepository) {
         this.userService = userService;
+        this.staffInfoRepository = staffInfoRepository;
     }
     
     /**
@@ -258,6 +265,30 @@ public class HomeController {
         return "vaccines";
     }
     
+    /**
+     * GET /public/vaccines/{id}
+     * Trang chi tiết vaccine công khai (cho trang about)
+     */
+    @GetMapping("/public/vaccines/{id}")
+    public String publicVaccineDetail(@PathVariable Long id, Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        // Cho phép khách vãng lai xem chi tiết vaccine
+        boolean isAuthenticated = authentication != null && authentication.isAuthenticated() && !authentication.getName().equals("anonymousUser");
+        model.addAttribute("isAuthenticated", isAuthenticated);
+        model.addAttribute("vaccineId", id);
+        
+        if (isAuthenticated) {
+            try {
+                User currentUser = getCurrentUser(authentication);
+                model.addAttribute("currentUser", currentUser);
+            } catch (Exception e) {
+                // Nếu có lỗi khi lấy user, vẫn cho phép xem như khách vãng lai
+                model.addAttribute("isAuthenticated", false);
+            }
+        }
+        return "vaccine-detail-public";
+    }
+    
     @GetMapping("/vaccines/{id}")
     public String vaccineDetail(@PathVariable Long id, Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -347,8 +378,20 @@ public class HomeController {
             // Nếu là staff/admin, trả về trang thông báo cho nhân viên
             if (currentUser.getRole() != null) {
                 String currentRole = currentUser.getRole().name();
-                if (currentRole.equals("ADMIN") || currentRole.equals("DOCTOR") || 
-                    currentRole.equals("NURSE") || currentRole.equals("RECEPTIONIST")) {
+                // Receptionist có trang riêng
+                if (currentRole.equals("RECEPTIONIST")) {
+                    return "redirect:/receptionist/notifications";
+                }
+                // Doctor có trang riêng
+                if (currentRole.equals("DOCTOR")) {
+                    return "redirect:/doctor/notifications";
+                }
+                // Nurse có trang riêng
+                if (currentRole.equals("NURSE")) {
+                    return "redirect:/nurse/notifications";
+                }
+                // Admin dùng trang chung
+                if (currentRole.equals("ADMIN")) {
                     return "thong_bao_nhan_vien";
                 }
             }
@@ -356,6 +399,90 @@ public class HomeController {
             return "redirect:/login";
         }
         return "notifications";
+    }
+    
+    /**
+     * GET /receptionist/notifications
+     * Trang thông báo cho Receptionist
+     */
+    @GetMapping("/receptionist/notifications")
+    public String receptionistNotifications(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            // Kiểm tra role
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.RECEPTIONIST && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        return "receptionist-notifications";
+    }
+    
+    /**
+     * GET /doctor/notifications
+     * Trang thông báo cho Doctor
+     */
+    @GetMapping("/doctor/notifications")
+    public String doctorNotifications(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            // Kiểm tra role
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.DOCTOR && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        return "doctor-notifications";
+    }
+    
+    /**
+     * GET /nurse/notifications
+     * Trang thông báo cho Nurse
+     */
+    @GetMapping("/nurse/notifications")
+    public String nurseNotifications(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            // Kiểm tra role
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.NURSE && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        return "nurse-notifications";
     }
     
     /**
@@ -470,6 +597,10 @@ public class HomeController {
                     // Nếu không refresh được, vẫn dùng user từ session
                 }
             }
+            
+            // Lấy StaffInfo của nurse
+            Optional<ut.edu.vaccinationmanagementsystem.entity.StaffInfo> staffInfoOpt = staffInfoRepository.findByUser(currentUser);
+            staffInfoOpt.ifPresent(staffInfo -> model.addAttribute("staffInfo", staffInfo));
             
             model.addAttribute("currentUser", currentUser);
             model.addAttribute("isAuthenticated", true);
@@ -801,7 +932,14 @@ public class HomeController {
                 }
             }
             
+            // Lấy StaffInfo nếu có
+            ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = null;
+            if (currentUser != null) {
+                staffInfo = staffInfoRepository.findByUser(currentUser).orElse(null);
+            }
+            
             model.addAttribute("currentUser", currentUser);
+            model.addAttribute("staffInfo", staffInfo);
             model.addAttribute("isAuthenticated", true);
             if (returnUrl != null && !returnUrl.isEmpty()) {
                 model.addAttribute("returnUrl", returnUrl);

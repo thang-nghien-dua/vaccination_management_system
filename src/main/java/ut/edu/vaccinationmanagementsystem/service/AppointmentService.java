@@ -10,10 +10,12 @@ import ut.edu.vaccinationmanagementsystem.dto.ConsultationRequestDTO;
 import ut.edu.vaccinationmanagementsystem.entity.*;
 import ut.edu.vaccinationmanagementsystem.entity.enums.AppointmentStatus;
 import ut.edu.vaccinationmanagementsystem.entity.enums.PaymentMethod;
+import ut.edu.vaccinationmanagementsystem.entity.enums.VaccineLotStatus;
 import ut.edu.vaccinationmanagementsystem.repository.*;
 import ut.edu.vaccinationmanagementsystem.service.CustomUserDetails;
 import ut.edu.vaccinationmanagementsystem.service.CustomOAuth2User;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -68,6 +70,9 @@ public class AppointmentService {
     @Autowired
     private NotificationService notificationService;
     
+    @Autowired
+    private VaccineLotRepository vaccineLotRepository;
+    
     /**
      * Tạo consultation request (yêu cầu tư vấn)
      * Hỗ trợ cả user đã đăng nhập và guest chưa đăng nhập
@@ -109,6 +114,18 @@ public class AppointmentService {
         
         if (currentUser != null) {
             // User đã đăng nhập
+            // Kiểm tra phí hủy chưa thanh toán
+            List<Payment> unpaidCancellationFees = paymentRepository.findUnpaidCancellationFeesByUser(currentUser.getId());
+            if (!unpaidCancellationFees.isEmpty()) {
+                BigDecimal totalUnpaidFee = unpaidCancellationFees.stream()
+                    .map(p -> p.getCancellationFee() != null ? p.getCancellationFee() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                throw new RuntimeException(
+                    String.format("Bạn có phí hủy lịch chưa thanh toán: %,.0f VNĐ. Vui lòng thanh toán để đặt lịch mới.", 
+                        totalUnpaidFee.doubleValue())
+                );
+            }
+            
             appointment.setBookedByUser(currentUser);
             
             // Set bookedForUser
@@ -223,6 +240,18 @@ public class AppointmentService {
         
         if (currentUser == null) {
             throw new RuntimeException("User must be authenticated to book appointment");
+        }
+        
+        // Kiểm tra phí hủy chưa thanh toán
+        List<Payment> unpaidCancellationFees = paymentRepository.findUnpaidCancellationFeesByUser(currentUser.getId());
+        if (!unpaidCancellationFees.isEmpty()) {
+            BigDecimal totalUnpaidFee = unpaidCancellationFees.stream()
+                .map(p -> p.getCancellationFee() != null ? p.getCancellationFee() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            throw new RuntimeException(
+                String.format("Bạn có phí hủy lịch chưa thanh toán: %,.0f VNĐ. Vui lòng thanh toán để đặt lịch mới.", 
+                    totalUnpaidFee.doubleValue())
+            );
         }
         
         // Validate vaccine exists
@@ -447,6 +476,13 @@ public class AppointmentService {
         
         // Save appointment first to get ID
         appointment = appointmentRepository.save(appointment);
+        
+        // Trừ vaccine khi CONFIRMED (giữ vaccine cho appointment)
+        if (appointment.getStatus() == AppointmentStatus.CONFIRMED && 
+            appointment.getVaccine() != null && 
+            appointment.getCenter() != null) {
+            reserveVaccineForAppointmentV2(appointment);
+        }
         
         // Create Payment
         PaymentMethod paymentMethod = dto.getPaymentMethod() != null 
@@ -839,25 +875,52 @@ public class AppointmentService {
             throw new RuntimeException("Bạn không có quyền hủy lịch hẹn này");
         }
         
-        // Cho phép hủy nếu trạng thái là PENDING hoặc CONFIRMED (nhưng chỉ cho hủy CONFIRMED trước 24h)
-        if (appointment.getStatus() == AppointmentStatus.CONFIRMED) {
-            // Kiểm tra xem lịch hẹn có trong vòng 24h tới không
-            if (appointment.getAppointmentDate() != null && appointment.getAppointmentTime() != null) {
-                LocalDateTime appointmentDateTime = LocalDateTime.of(appointment.getAppointmentDate(), appointment.getAppointmentTime());
-                LocalDateTime now = LocalDateTime.now();
-                long hoursUntilAppointment = java.time.Duration.between(now, appointmentDateTime).toHours();
-                
-                if (hoursUntilAppointment < 24) {
-                    throw new RuntimeException(
-                        String.format("Chỉ có thể hủy lịch hẹn trước 24 giờ. Lịch hẹn của bạn còn %d giờ nữa.", hoursUntilAppointment)
-                    );
-                }
-            }
-        } else if (appointment.getStatus() != AppointmentStatus.PENDING) {
+        // Cho phép hủy nếu trạng thái là PENDING hoặc CONFIRMED
+        if (appointment.getStatus() != AppointmentStatus.PENDING && 
+            appointment.getStatus() != AppointmentStatus.CONFIRMED) {
             throw new RuntimeException(
                 String.format("Chỉ có thể hủy lịch hẹn khi trạng thái là 'Chờ xác nhận' hoặc 'Đã xác nhận'. Trạng thái hiện tại: %s", 
                     getStatusLabel(appointment.getStatus()))
             );
+        }
+        
+        // Tính phí hủy và kiểm tra thời gian hủy cho CONFIRMED
+        BigDecimal cancellationFee = BigDecimal.ZERO;
+        long hoursUntilAppointment = 0;
+        
+        if (appointment.getStatus() == AppointmentStatus.CONFIRMED) {
+            // Kiểm tra thời gian hủy
+            if (appointment.getAppointmentDate() != null && appointment.getAppointmentTime() != null) {
+                LocalDateTime appointmentDateTime = LocalDateTime.of(appointment.getAppointmentDate(), appointment.getAppointmentTime());
+                LocalDateTime now = LocalDateTime.now();
+                hoursUntilAppointment = java.time.Duration.between(now, appointmentDateTime).toHours();
+                
+                // Không cho hủy nếu < 6 giờ
+                if (hoursUntilAppointment < 6) {
+                    throw new RuntimeException(
+                        String.format("Không thể hủy lịch hẹn trong vòng 6 giờ trước giờ hẹn. Lịch hẹn của bạn còn %d giờ nữa.", hoursUntilAppointment)
+                    );
+                }
+                
+                // Tính phí hủy nếu có payment
+                Payment payment = appointment.getPayment();
+                if (payment != null && payment.getAmount() != null) {
+                    cancellationFee = paymentService.calculateCancellationFee(
+                        payment.getAmount(), hoursUntilAppointment);
+                    
+                    // Lưu phí hủy vào payment cũ
+                    payment.setCancellationFee(cancellationFee);
+                    payment.setCancellationFeePaid(false); // Đánh dấu chưa thanh toán phí hủy
+                    payment.setCancellationReason("Hủy lịch hẹn - " + appointment.getBookingCode());
+                    paymentRepository.save(payment);
+                    
+                    // Note: Phí hủy sẽ được thanh toán thông qua endpoint riêng
+                    // Payment mới cho phí hủy sẽ được tạo khi user thanh toán (nếu cần)
+                }
+                
+                // Trả lại vaccine vào kho
+                returnVaccineToStock(appointment);
+            }
         }
         
         // Cập nhật trạng thái
@@ -1205,6 +1268,203 @@ public class AppointmentService {
         }
         
         return appointment;
+    }
+    
+    /**
+     * Giữ vaccine cho appointment khi CONFIRMED (trừ vaccine khỏi kho)
+     * Chọn lot theo FIFO (hết hạn trước)
+     */
+    private void reserveVaccineForAppointment(Appointment appointment) {
+        Vaccine vaccine = appointment.getVaccine();
+        VaccinationCenter center = appointment.getCenter();
+        
+        // Lấy CenterVaccine
+        Optional<CenterVaccine> centerVaccineOpt = centerVaccineRepository.findByCenterAndVaccine(center, vaccine);
+        if (centerVaccineOpt.isEmpty()) {
+            throw new RuntimeException("Vaccine không có tại trung tâm này");
+        }
+        
+        CenterVaccine centerVaccine = centerVaccineOpt.get();
+        
+        // Kiểm tra stock còn đủ không
+        if (centerVaccine.getStockQuantity() == null || centerVaccine.getStockQuantity() <= 0) {
+            throw new RuntimeException("Vaccine hiện đang hết hàng tại trung tâm này");
+        }
+        
+        // Chọn lot vaccine theo FIFO (hết hạn trước)
+        LocalDate today = LocalDate.now();
+        
+        // Lấy tất cả lot của vaccine này
+        List<VaccineLot> allLots = vaccineLotRepository.findByVaccineId(vaccine.getId());
+        
+        // Filter lot khả dụng: status=AVAILABLE, remainingQuantity>0, expiryDate>today
+        List<VaccineLot> availableLots = allLots.stream()
+            .filter(lot -> lot.getStatus() == VaccineLotStatus.AVAILABLE)
+            .filter(lot -> lot.getRemainingQuantity() != null && lot.getRemainingQuantity() > 0)
+            .filter(lot -> lot.getExpiryDate() != null && lot.getExpiryDate().isAfter(today))
+            .sorted((l1, l2) -> {
+                // Sắp xếp theo expiryDate (hết hạn trước), sau đó theo remainingQuantity (ít trước)
+                int dateCompare = l1.getExpiryDate().compareTo(l2.getExpiryDate());
+                if (dateCompare != 0) return dateCompare;
+                return Integer.compare(l1.getRemainingQuantity(), l2.getRemainingQuantity());
+            })
+            .collect(java.util.stream.Collectors.toList());
+        
+        if (availableLots.isEmpty()) {
+            // Debug info
+            long availableCount = allLots.stream()
+                .filter(lot -> lot.getStatus() == VaccineLotStatus.AVAILABLE).count();
+            long withStockCount = allLots.stream()
+                .filter(lot -> lot.getRemainingQuantity() != null && lot.getRemainingQuantity() > 0).count();
+            long notExpiredCount = allLots.stream()
+                .filter(lot -> lot.getExpiryDate() != null && lot.getExpiryDate().isAfter(today)).count();
+            
+            String debugInfo = String.format(
+                "Không có lô vaccine nào khả dụng cho vaccine '%s' (ID: %d). " +
+                "Tổng số lot: %d, Status=AVAILABLE: %d, Còn hàng: %d, Chưa hết hạn: %d, Ngày hôm nay: %s",
+                vaccine.getName(), vaccine.getId(), allLots.size(), availableCount, withStockCount, notExpiredCount, today
+            );
+            System.err.println("[DEBUG] " + debugInfo);
+            throw new RuntimeException("Không có lô vaccine nào khả dụng cho vaccine này. Vui lòng liên hệ quản trị viên.");
+        }
+        
+        // Chọn lot đầu tiên (hết hạn sớm nhất)
+        VaccineLot selectedLot = availableLots.get(0);
+        
+        // Kiểm tra lot còn vaccine không
+        if (selectedLot.getRemainingQuantity() == null || selectedLot.getRemainingQuantity() <= 0) {
+            throw new RuntimeException("Lô vaccine đã hết hàng");
+        }
+        
+        // Trừ vaccine từ lot
+        int currentLotRemaining = selectedLot.getRemainingQuantity();
+        selectedLot.setRemainingQuantity(currentLotRemaining - 1);
+        vaccineLotRepository.save(selectedLot);
+        
+        // Trừ vaccine từ center stock
+        int currentStock = centerVaccine.getStockQuantity();
+        centerVaccine.setStockQuantity(currentStock - 1);
+        centerVaccineRepository.save(centerVaccine);
+        
+        // Lưu lot đã giữ vào appointment
+        appointment.setReservedVaccineLot(selectedLot);
+    }
+    
+    /**
+     * Giữ vaccine cho appointment khi CONFIRMED (trừ vaccine khỏi kho) - Version 2
+     * Sử dụng query có sẵn để tối ưu hiệu suất
+     * Chọn lot theo FIFO (hết hạn trước)
+     */
+    private void reserveVaccineForAppointmentV2(Appointment appointment) {
+        Vaccine vaccine = appointment.getVaccine();
+        VaccinationCenter center = appointment.getCenter();
+        
+        // Lấy CenterVaccine
+        Optional<CenterVaccine> centerVaccineOpt = centerVaccineRepository.findByCenterAndVaccine(center, vaccine);
+        if (centerVaccineOpt.isEmpty()) {
+            throw new RuntimeException("Vaccine không có tại trung tâm này");
+        }
+        
+        CenterVaccine centerVaccine = centerVaccineOpt.get();
+        
+        // Kiểm tra stock còn đủ không
+        if (centerVaccine.getStockQuantity() == null || centerVaccine.getStockQuantity() <= 0) {
+            throw new RuntimeException("Vaccine hiện đang hết hàng tại trung tâm này");
+        }
+        
+        // Tự động cập nhật status cho các lot của vaccine này trước khi query
+        // (Đảm bảo lot hết hạn được đánh dấu EXPIRED)
+        LocalDate today = LocalDate.now();
+        List<VaccineLot> allLotsForVaccine = vaccineLotRepository.findByVaccineId(vaccine.getId());
+        List<VaccineLot> lotsToUpdate = new java.util.ArrayList<>();
+        for (VaccineLot lot : allLotsForVaccine) {
+            if (lot.getExpiryDate() != null && lot.getExpiryDate().isBefore(today) && 
+                lot.getStatus() == VaccineLotStatus.AVAILABLE) {
+                lot.setStatus(VaccineLotStatus.EXPIRED);
+                lotsToUpdate.add(lot);
+            } else if (lot.getRemainingQuantity() != null && lot.getRemainingQuantity() == 0 && 
+                       lot.getStatus() == VaccineLotStatus.AVAILABLE) {
+                lot.setStatus(VaccineLotStatus.DEPLETED);
+                lotsToUpdate.add(lot);
+            }
+        }
+        if (!lotsToUpdate.isEmpty()) {
+            vaccineLotRepository.saveAll(lotsToUpdate);
+        }
+        
+        // Chọn lot vaccine theo FIFO (hết hạn trước) - sử dụng query có sẵn
+        List<VaccineLot> availableLots = vaccineLotRepository.findAvailableLotsByVaccineIdOrderByExpiryDate(
+            vaccine.getId(), today);
+        
+        if (availableLots.isEmpty()) {
+            // Debug: Kiểm tra xem có lot nào không (không filter status/expiry)
+            List<VaccineLot> allLots = vaccineLotRepository.findByVaccineId(vaccine.getId());
+            long availableCount = allLots.stream()
+                .filter(lot -> lot.getStatus() == VaccineLotStatus.AVAILABLE).count();
+            long withStockCount = allLots.stream()
+                .filter(lot -> lot.getRemainingQuantity() != null && lot.getRemainingQuantity() > 0).count();
+            long notExpiredCount = allLots.stream()
+                .filter(lot -> lot.getExpiryDate() != null && lot.getExpiryDate().isAfter(today)).count();
+            
+            String debugInfo = String.format(
+                "Không có lô vaccine nào khả dụng cho vaccine '%s' (ID: %d). " +
+                "Tổng số lot: %d, Status=AVAILABLE: %d, Còn hàng: %d, Chưa hết hạn: %d, Ngày hôm nay: %s",
+                vaccine.getName(), vaccine.getId(), allLots.size(), availableCount, withStockCount, notExpiredCount, today
+            );
+            System.err.println("[DEBUG] " + debugInfo);
+            throw new RuntimeException("Không có lô vaccine nào khả dụng cho vaccine này. Vui lòng liên hệ quản trị viên.");
+        }
+        
+        // Chọn lot đầu tiên (hết hạn sớm nhất) - đã được sắp xếp bởi query
+        VaccineLot selectedLot = availableLots.get(0);
+        
+        // Kiểm tra lot còn vaccine không (double check)
+        if (selectedLot.getRemainingQuantity() == null || selectedLot.getRemainingQuantity() <= 0) {
+            throw new RuntimeException("Lô vaccine đã hết hàng");
+        }
+        
+        // Trừ vaccine từ lot
+        int currentLotRemaining = selectedLot.getRemainingQuantity();
+        selectedLot.setRemainingQuantity(currentLotRemaining - 1);
+        vaccineLotRepository.save(selectedLot);
+        
+        // Trừ vaccine từ center stock
+        int currentStock = centerVaccine.getStockQuantity();
+        centerVaccine.setStockQuantity(currentStock - 1);
+        centerVaccineRepository.save(centerVaccine);
+        
+        // Lưu lot đã giữ vào appointment
+        appointment.setReservedVaccineLot(selectedLot);
+    }
+    
+    /**
+     * Trả lại vaccine vào kho khi hủy appointment CONFIRMED
+     */
+    private void returnVaccineToStock(Appointment appointment) {
+        if (appointment.getReservedVaccineLot() == null) {
+            return; // Không có vaccine đã giữ, không cần trả lại
+        }
+        
+        VaccineLot reservedLot = appointment.getReservedVaccineLot();
+        Vaccine vaccine = appointment.getVaccine();
+        VaccinationCenter center = appointment.getCenter();
+        
+        // Cộng lại vaccine vào lot
+        int currentLotRemaining = reservedLot.getRemainingQuantity();
+        reservedLot.setRemainingQuantity(currentLotRemaining + 1);
+        vaccineLotRepository.save(reservedLot);
+        
+        // Cộng lại vaccine vào center stock
+        Optional<CenterVaccine> centerVaccineOpt = centerVaccineRepository.findByCenterAndVaccine(center, vaccine);
+        if (centerVaccineOpt.isPresent()) {
+            CenterVaccine centerVaccine = centerVaccineOpt.get();
+            int currentStock = centerVaccine.getStockQuantity();
+            centerVaccine.setStockQuantity(currentStock + 1);
+            centerVaccineRepository.save(centerVaccine);
+        }
+        
+        // Xóa reserved lot khỏi appointment
+        appointment.setReservedVaccineLot(null);
     }
     
     /**

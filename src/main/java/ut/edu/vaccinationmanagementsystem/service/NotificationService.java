@@ -307,7 +307,7 @@ public class NotificationService {
         
         sb.append("Bạn sẽ nhận được thông báo nhắc nhở trước lịch hẹn.\n\n");
         sb.append("Trân trọng,\n");
-        sb.append("Hệ thống Tiêm chủng Quốc gia");
+        sb.append("Hệ thống Tiêm chủng VacciCare");
         
         return sb.toString();
     }
@@ -337,7 +337,7 @@ public class NotificationService {
         
         sb.append("Nếu bạn muốn đặt lịch mới, vui lòng truy cập hệ thống.\n\n");
         sb.append("Trân trọng,\n");
-        sb.append("Hệ thống Tiêm chủng Quốc gia");
+        sb.append("Hệ thống Tiêm chủng VacciCare");
         
         return sb.toString();
     }

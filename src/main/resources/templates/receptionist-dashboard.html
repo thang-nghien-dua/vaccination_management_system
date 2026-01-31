@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Dashboard Lễ tân - Hệ thống Tiêm chủng</title>
+    <title>Dashboard Lễ tân - VacciCare</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -146,7 +146,7 @@
                 <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">person</span>
                 <span class="text-sm">Thông tin cá nhân</span>
             </a>
-            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium relative" href="/notifications">
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium relative" href="/receptionist/notifications">
                 <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">notifications</span>
                 <span class="text-sm">Thông báo</span>
                 <span id="notificationBadge" class="hidden absolute top-1.5 right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">0</span>
@@ -352,7 +352,7 @@
 <!-- Walk-in Modal -->
 <div id="walkInModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0" id="walkInModalContentWrapper">
-        <div class="sticky top-0 bg-white dark:bg-[#1a2e21] border-b border-[#e2e8f0] dark:border-[#2d3f33] p-6 flex items-center justify-between">
+        <div class="bg-white dark:bg-[#1a2e21] border-b border-[#e2e8f0] dark:border-[#2d3f33] p-6 flex items-center justify-between">
             <h3 class="text-xl font-bold flex items-center gap-2">
                 <span class="material-symbols-outlined text-primary">person_add</span>
                 Đăng ký Walk-in
@@ -364,7 +364,7 @@
         <div id="walkInModalContent" class="p-6">
             <p class="text-center text-[#61896f]">Đang tải form...</p>
         </div>
-        <div class="sticky bottom-0 bg-white dark:bg-[#1a2e21] border-t border-[#e2e8f0] dark:border-[#2d3f33] p-6 flex gap-4">
+        <div class="bg-white dark:bg-[#1a2e21] border-t border-[#e2e8f0] dark:border-[#2d3f33] p-6 flex gap-4">
             <button id="cancelWalkInBtn" class="flex-1 bg-[#f0f4f2] dark:bg-[#2d3f33] hover:bg-[#e2e8f0] dark:hover:bg-[#3d4f43] text-[#111813] dark:text-white px-6 py-3 rounded-xl font-bold transition-all">
                 Hủy
             </button>
@@ -381,7 +381,7 @@
 <!-- Appointment Detail Modal -->
 <div id="appointmentDetailModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0" id="appointmentDetailModalWrapper">
-        <div class="sticky top-0 bg-white dark:bg-[#1a2e21] border-b border-[#e2e8f0] dark:border-[#2d3f33] p-6 flex items-center justify-between">
+        <div class="bg-white dark:bg-[#1a2e21] border-b border-[#e2e8f0] dark:border-[#2d3f33] p-6 flex items-center justify-between">
             <h3 class="text-xl font-bold flex items-center gap-2">
                 <span class="material-symbols-outlined text-primary">info</span>
                 Chi tiết lịch hẹn
@@ -393,7 +393,7 @@
         <div id="appointmentDetailContent" class="p-6">
             <p class="text-center text-[#61896f]">Đang tải thông tin...</p>
         </div>
-        <div id="appointmentDetailFooter" class="sticky bottom-0 bg-white dark:bg-[#1a2e21] border-t border-[#e2e8f0] dark:border-[#2d3f33] p-6 flex gap-4">
+        <div id="appointmentDetailFooter" class="bg-white dark:bg-[#1a2e21] border-t border-[#e2e8f0] dark:border-[#2d3f33] p-6 flex gap-4">
             <button id="closeDetailModalBtn2" class="flex-1 bg-[#f0f4f2] dark:bg-[#2d3f33] hover:bg-[#e2e8f0] dark:hover:bg-[#3d4f43] text-[#111813] dark:text-white px-6 py-3 rounded-xl font-bold transition-all">
                 Đóng
             </button>
@@ -725,6 +725,17 @@
             };
         }
         
+        // Check familyMember FIRST (ưu tiên cao nhất - đây là người thân sẽ được tiêm)
+        if (apt.familyMember) {
+            return {
+                fullName: apt.familyMember.fullName || 'N/A',
+                phoneNumber: apt.familyMember.phoneNumber || 'N/A',
+                email: null,
+                dayOfBirth: apt.familyMember.dateOfBirth || null,
+                gender: apt.familyMember.gender ? (typeof apt.familyMember.gender === 'string' ? apt.familyMember.gender : apt.familyMember.gender.name || apt.familyMember.gender.toString()) : null
+            };
+        }
+        
         // Check bookedForUser (from /today and /search endpoints)
         if (apt.bookedForUser) {
             return {
@@ -733,17 +744,6 @@
                 email: apt.bookedForUser.email || null,
                 dayOfBirth: apt.bookedForUser.dayOfBirth || null,
                 gender: apt.bookedForUser.gender ? (typeof apt.bookedForUser.gender === 'string' ? apt.bookedForUser.gender : apt.bookedForUser.gender.name || apt.bookedForUser.gender.toString()) : null
-            };
-        }
-        
-        // Check familyMember
-        if (apt.familyMember) {
-            return {
-                fullName: apt.familyMember.fullName || 'N/A',
-                phoneNumber: apt.familyMember.phoneNumber || 'N/A',
-                email: null,
-                dayOfBirth: apt.familyMember.dateOfBirth || null,
-                gender: apt.familyMember.gender ? (typeof apt.familyMember.gender === 'string' ? apt.familyMember.gender : apt.familyMember.gender.name || apt.familyMember.gender.toString()) : null
             };
         }
         

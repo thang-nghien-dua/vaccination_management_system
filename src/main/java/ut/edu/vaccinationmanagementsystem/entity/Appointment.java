@@ -121,6 +121,11 @@ public class Appointment {
     @OneToMany(mappedBy = "appointment")
     private List<AppointmentHistory> appointmentHistories; // Lịch sử thay đổi trạng thái
     
+    @ManyToOne
+    @JoinColumn(name = "reserved_vaccine_lot_id", nullable = true)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"vaccinationRecords", "vaccine"})
+    private VaccineLot reservedVaccineLot; // Lô vaccine đã được giữ khi CONFIRMED
+    
     // Getters and Setters
     public Long getId() {
         return id;
@@ -356,6 +361,14 @@ public class Appointment {
     
     public void setAppointmentHistories(List<AppointmentHistory> appointmentHistories) {
         this.appointmentHistories = appointmentHistories;
+    }
+    
+    public VaccineLot getReservedVaccineLot() {
+        return reservedVaccineLot;
+    }
+    
+    public void setReservedVaccineLot(VaccineLot reservedVaccineLot) {
+        this.reservedVaccineLot = reservedVaccineLot;
     }
 }
 

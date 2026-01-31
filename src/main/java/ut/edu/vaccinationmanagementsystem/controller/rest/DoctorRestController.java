@@ -118,25 +118,33 @@ public class DoctorRestController {
                 map.put("appointmentTime", apt.getAppointmentTime());
                 map.put("status", apt.getStatus().name());
                 
-                // Thông tin bệnh nhân
+                // Thông tin bệnh nhân - ưu tiên: familyMember > bookedForUser > bookedByUser > guest
                 Map<String, Object> patientInfo = new HashMap<>();
-                if (apt.getBookedForUser() != null) {
+                if (apt.getFamilyMember() != null) {
+                    // Ưu tiên familyMember (người thân sẽ được tiêm)
+                    patientInfo.put("fullName", apt.getFamilyMember().getFullName());
+                    patientInfo.put("phoneNumber", apt.getFamilyMember().getPhoneNumber());
+                    patientInfo.put("dateOfBirth", apt.getFamilyMember().getDateOfBirth());
+                    patientInfo.put("gender", apt.getFamilyMember().getGender() != null ? apt.getFamilyMember().getGender().name() : null);
+                } else if (apt.getBookedForUser() != null) {
                     patientInfo.put("fullName", apt.getBookedForUser().getFullName());
                     patientInfo.put("email", apt.getBookedForUser().getEmail());
                     patientInfo.put("phoneNumber", apt.getBookedForUser().getPhoneNumber());
                     patientInfo.put("dateOfBirth", apt.getBookedForUser().getDayOfBirth());
                     patientInfo.put("gender", apt.getBookedForUser().getGender() != null ? apt.getBookedForUser().getGender().name() : null);
-                } else if (apt.getFamilyMember() != null) {
-                    patientInfo.put("fullName", apt.getFamilyMember().getFullName());
-                    patientInfo.put("phoneNumber", apt.getFamilyMember().getPhoneNumber());
-                    patientInfo.put("dateOfBirth", apt.getFamilyMember().getDateOfBirth());
-                    patientInfo.put("gender", apt.getFamilyMember().getGender() != null ? apt.getFamilyMember().getGender().name() : null);
-                } else {
+                } else if (apt.getBookedByUser() != null) {
+                    // Fallback: nếu bookedForUser null, dùng bookedByUser (người đặt lịch cho chính mình)
                     patientInfo.put("fullName", apt.getBookedByUser().getFullName());
                     patientInfo.put("email", apt.getBookedByUser().getEmail());
                     patientInfo.put("phoneNumber", apt.getBookedByUser().getPhoneNumber());
                     patientInfo.put("dateOfBirth", apt.getBookedByUser().getDayOfBirth());
                     patientInfo.put("gender", apt.getBookedByUser().getGender() != null ? apt.getBookedByUser().getGender().name() : null);
+                } else {
+                    // Guest info (walk-in appointments)
+                    patientInfo.put("fullName", apt.getGuestFullName() != null ? apt.getGuestFullName() : "Khách vãng lai");
+                    patientInfo.put("phoneNumber", apt.getConsultationPhone() != null ? apt.getConsultationPhone() : "N/A");
+                    patientInfo.put("dateOfBirth", apt.getGuestDayOfBirth());
+                    patientInfo.put("gender", apt.getGuestGender() != null ? apt.getGuestGender().name() : null);
                 }
                 map.put("patientInfo", patientInfo);
                 
@@ -459,6 +467,92 @@ public class DoctorRestController {
             stats.put("rejectedAppointments", rejectedCount);
             
             return ResponseEntity.ok(stats);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * GET /api/doctor/dashboard/weekly-stats
+     * Lấy thống kê theo tuần (7 ngày gần nhất) cho dashboard
+     */
+    @GetMapping("/dashboard/weekly-stats")
+    public ResponseEntity<?> getWeeklyStats() {
+        try {
+            User currentUser = getCurrentUser();
+            checkDoctorPermission(currentUser);
+            
+            // Lấy trung tâm của bác sĩ
+            ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = staffInfoRepository.findByUser(currentUser).orElse(null);
+            Long centerId = null;
+            if (staffInfo != null && staffInfo.getCenter() != null) {
+                centerId = staffInfo.getCenter().getId();
+            }
+            
+            // Tính toán 7 ngày gần nhất (từ 6 ngày trước đến hôm nay)
+            LocalDate today = LocalDate.now();
+            LocalDate startDate = today.minusDays(6);
+            
+            // Lấy tất cả screenings trong 7 ngày qua
+            List<Screening> screenings = screeningRepository.findByDoctorIdOrderByScreenedAtDesc(currentUser.getId())
+                    .stream()
+                    .filter(s -> {
+                        LocalDate screenedDate = s.getScreenedAt().toLocalDate();
+                        return !screenedDate.isBefore(startDate) && !screenedDate.isAfter(today);
+                    })
+                    .collect(Collectors.toList());
+            
+            // Đếm theo từng ngày trong tuần
+            Map<String, Integer> dailyCounts = new HashMap<>();
+            String[] dayLabels = {"T2", "T3", "T4", "T5", "T6", "T7", "CN"};
+            
+            // Khởi tạo tất cả các ngày với 0
+            for (int i = 0; i < 7; i++) {
+                LocalDate date = startDate.plusDays(i);
+                int dayOfWeek = date.getDayOfWeek().getValue(); // 1 = Monday, 7 = Sunday
+                // Chuyển sang index 0-6 (T2=0, T3=1, ..., CN=6)
+                int index = dayOfWeek == 7 ? 6 : dayOfWeek - 1;
+                dailyCounts.put(dayLabels[index], 0);
+            }
+            
+            // Đếm số lượng screenings theo ngày
+            for (Screening screening : screenings) {
+                LocalDate screenedDate = screening.getScreenedAt().toLocalDate();
+                int dayOfWeek = screenedDate.getDayOfWeek().getValue();
+                int index = dayOfWeek == 7 ? 6 : dayOfWeek - 1;
+                String dayLabel = dayLabels[index];
+                dailyCounts.put(dayLabel, dailyCounts.get(dayLabel) + 1);
+            }
+            
+            // Tìm ngày có số lượng cao nhất
+            String highestDay = dayLabels[0];
+            int highestCount = dailyCounts.get(highestDay);
+            for (String day : dayLabels) {
+                if (dailyCounts.get(day) > highestCount) {
+                    highestCount = dailyCounts.get(day);
+                    highestDay = day;
+                }
+            }
+            
+            // Tính trung bình
+            int totalCount = dailyCounts.values().stream().mapToInt(Integer::intValue).sum();
+            int averageCount = totalCount / 7;
+            
+            // Tạo response
+            Map<String, Object> result = new HashMap<>();
+            result.put("dailyCounts", dailyCounts);
+            result.put("highestDay", highestDay);
+            result.put("highestCount", highestCount);
+            result.put("averageCount", averageCount);
+            result.put("totalCount", totalCount);
+            
+            return ResponseEntity.ok(result);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());

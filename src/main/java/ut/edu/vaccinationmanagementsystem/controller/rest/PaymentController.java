@@ -24,7 +24,9 @@ import ut.edu.vaccinationmanagementsystem.service.VnPayService;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -110,6 +112,119 @@ public class PaymentController {
     }
     
     /**
+     * GET /api/payment/unpaid-cancellation-fees
+     * Lấy danh sách phí hủy chưa thanh toán của user hiện tại
+     */
+    @GetMapping("/unpaid-cancellation-fees")
+    public ResponseEntity<?> getUnpaidCancellationFees() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            User currentUser = getCurrentUser(authentication);
+            
+            if (currentUser == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "User must be authenticated");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+            
+            List<Payment> unpaidFees = paymentRepository.findUnpaidCancellationFeesByUser(currentUser.getId());
+            
+            List<Map<String, Object>> feesList = new ArrayList<>();
+            BigDecimal totalFee = BigDecimal.ZERO;
+            
+            for (Payment payment : unpaidFees) {
+                Map<String, Object> feeInfo = new HashMap<>();
+                feeInfo.put("appointmentId", payment.getAppointment().getId());
+                feeInfo.put("bookingCode", payment.getAppointment().getBookingCode());
+                feeInfo.put("cancellationFee", payment.getCancellationFee());
+                feeInfo.put("cancellationReason", payment.getCancellationReason());
+                feeInfo.put("appointmentDate", payment.getAppointment().getAppointmentDate());
+                feeInfo.put("appointmentTime", payment.getAppointment().getAppointmentTime());
+                
+                feesList.add(feeInfo);
+                totalFee = totalFee.add(payment.getCancellationFee() != null ? payment.getCancellationFee() : BigDecimal.ZERO);
+            }
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("fees", feesList);
+            response.put("totalFee", totalFee);
+            response.put("hasUnpaidFees", !unpaidFees.isEmpty());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * POST /api/payment/create-cancellation-fee-url
+     * Tạo URL thanh toán VNPay cho phí hủy lịch hẹn
+     */
+    @PostMapping("/create-cancellation-fee-url")
+    public ResponseEntity<?> createCancellationFeeUrl(@RequestBody Map<String, Object> request, HttpServletRequest httpRequest) {
+        try {
+            Long appointmentId = Long.valueOf(request.get("appointmentId").toString());
+            
+            // Get appointment
+            Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+            
+            // Check authorization
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            User currentUser = getCurrentUser(authentication);
+            
+            if (currentUser == null || appointment.getBookedByUser() == null || 
+                !appointment.getBookedByUser().getId().equals(currentUser.getId())) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Unauthorized");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+            }
+            
+            // Get payment
+            Payment payment = paymentService.findByAppointment(appointment);
+            if (payment == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Payment not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+            }
+            
+            // Check if cancellation fee exists and not paid
+            if (payment.getCancellationFee() == null || payment.getCancellationFee().compareTo(BigDecimal.ZERO) <= 0) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "No cancellation fee to pay");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            
+            if (payment.getCancellationFeePaid() != null && payment.getCancellationFeePaid()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Cancellation fee already paid");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            
+            // Create VNPay URL for cancellation fee
+            long amount = payment.getCancellationFee().longValue();
+            String orderInfo = "Thanh toan phi huy lich hen - " + appointment.getBookingCode();
+            String orderId = appointment.getBookingCode() + "-CANCEL";
+            String ipAddress = getClientIpAddress(httpRequest);
+            
+            String paymentUrl = vnPayService.createPaymentUrl(amount, orderInfo, orderId, ipAddress);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("paymentUrl", paymentUrl);
+            response.put("appointmentId", appointmentId);
+            response.put("cancellationFee", payment.getCancellationFee());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
      * GET /api/payment/vnpay-return
      * Callback từ VNPay sau khi thanh toán
      */
@@ -127,8 +242,12 @@ public class PaymentController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
             }
             
+            // Check if this is a cancellation fee payment (orderId ends with "-CANCEL")
+            boolean isCancellationFeePayment = orderId.endsWith("-CANCEL");
+            String bookingCode = isCancellationFeePayment ? orderId.replace("-CANCEL", "") : orderId;
+            
             // Find appointment by booking code
-            Appointment appointment = appointmentRepository.findByBookingCode(orderId)
+            Appointment appointment = appointmentRepository.findByBookingCode(bookingCode)
                 .orElse(null);
             
             // Nếu không tìm thấy appointment, có thể đã bị xóa hoặc không tồn tại
@@ -150,13 +269,23 @@ public class PaymentController {
             String queryString = request.getQueryString();
             if (queryString != null && queryString.contains("vnp_SecureHash")) {
                 if (!vnPayService.verifySignatureFromQueryString(queryString)) {
-                    // Signature không hợp lệ - xóa appointment nếu là VNPay payment
-                    if (payment.getPaymentMethod().toString().equals("VNPAY") && 
-                        appointment.getStatus().toString().equals("PENDING")) {
-                        try {
-                            appointmentService.deleteAppointmentWhenPaymentFailed(appointment.getId());
-                        } catch (Exception e) {
-                            // Log error but continue
+                    // Signature không hợp lệ
+                    if (isCancellationFeePayment) {
+                        // Với phí hủy, chỉ redirect về trang lỗi
+                        String redirectUrl = "/vaccination-history?error=" + 
+                            java.net.URLEncoder.encode("Chữ ký không hợp lệ. Vui lòng thử lại.", StandardCharsets.UTF_8);
+                        return ResponseEntity.status(HttpStatus.FOUND)
+                            .header("Location", redirectUrl)
+                            .build();
+                    } else {
+                        // Với payment thông thường, xóa appointment nếu là VNPay payment
+                        if (payment.getPaymentMethod().toString().equals("VNPAY") && 
+                            appointment.getStatus().toString().equals("PENDING")) {
+                            try {
+                                appointmentService.deleteAppointmentWhenPaymentFailed(appointment.getId());
+                            } catch (Exception e) {
+                                // Log error but continue
+                            }
                         }
                     }
                     
@@ -172,58 +301,91 @@ public class PaymentController {
             // Check response code (00 = success, 24 = user cancel, null/empty = user quit)
             if ("00".equals(responseCode)) {
                 // Payment successful
-                paymentService.markPaymentAsPaid(payment, transactionId);
-                
-                // Redirect to success page
-                String redirectUrl = String.format("/payment-result?success=true&bookingCode=%s&appointmentId=%d",
-                    appointment.getBookingCode(), appointment.getId());
-                return ResponseEntity.status(HttpStatus.FOUND)
-                    .header("Location", redirectUrl)
-                    .build();
+                if (isCancellationFeePayment) {
+                    // Đánh dấu phí hủy đã được thanh toán
+                    paymentService.markCancellationFeeAsPaid(payment);
+                    
+                    // Redirect to success page
+                    String redirectUrl = "/vaccination-history?success=true&message=" + 
+                        java.net.URLEncoder.encode("Thanh toán phí hủy thành công!", StandardCharsets.UTF_8);
+                    return ResponseEntity.status(HttpStatus.FOUND)
+                        .header("Location", redirectUrl)
+                        .build();
+                } else {
+                    // Payment thông thường
+                    paymentService.markPaymentAsPaid(payment, transactionId);
+                    
+                    // Redirect to success page
+                    String redirectUrl = String.format("/payment-result?success=true&bookingCode=%s&appointmentId=%d",
+                        appointment.getBookingCode(), appointment.getId());
+                    return ResponseEntity.status(HttpStatus.FOUND)
+                        .header("Location", redirectUrl)
+                        .build();
+                }
             } else if ("24".equals(responseCode) || responseCode == null || responseCode.isEmpty()) {
-                // User cancel (24) hoặc user quit (null/empty) - Xóa appointment
-                Long appointmentId = appointment.getId();
-                
-                try {
-                    // Xóa appointment (sẽ rollback slot và xóa payment)
-                    appointmentService.deleteAppointmentWhenPaymentFailed(appointmentId);
-                } catch (Exception e) {
-                    // Nếu không xóa được, chỉ đánh dấu payment failed
-                    payment.setPaymentStatus(PaymentStatus.FAILED);
-                    if (transactionId != null) {
-                        payment.setTransactionId(transactionId);
+                // User cancel (24) hoặc user quit (null/empty)
+                if (isCancellationFeePayment) {
+                    // Với phí hủy, chỉ redirect về trang lịch sử với thông báo hủy
+                    String redirectUrl = "/vaccination-history?error=" + 
+                        java.net.URLEncoder.encode("Bạn đã hủy thanh toán phí hủy.", StandardCharsets.UTF_8);
+                    return ResponseEntity.status(HttpStatus.FOUND)
+                        .header("Location", redirectUrl)
+                        .build();
+                } else {
+                    // Với payment thông thường, xóa appointment
+                    Long appointmentId = appointment.getId();
+                    
+                    try {
+                        // Xóa appointment (sẽ rollback slot và xóa payment)
+                        appointmentService.deleteAppointmentWhenPaymentFailed(appointmentId);
+                    } catch (Exception e) {
+                        // Nếu không xóa được, chỉ đánh dấu payment failed
+                        payment.setPaymentStatus(PaymentStatus.FAILED);
+                        if (transactionId != null) {
+                            payment.setTransactionId(transactionId);
+                        }
+                        paymentRepository.save(payment);
                     }
-                    paymentRepository.save(payment);
+                    
+                    // Redirect to error page
+                    String redirectUrl = "/payment-result?success=false&message=" + 
+                        java.net.URLEncoder.encode("Bạn đã hủy thanh toán. Lịch hẹn đã được hủy.", StandardCharsets.UTF_8);
+                    return ResponseEntity.status(HttpStatus.FOUND)
+                        .header("Location", redirectUrl)
+                        .build();
                 }
-                
-                // Redirect to error page
-                String redirectUrl = "/payment-result?success=false&message=" + 
-                    java.net.URLEncoder.encode("Bạn đã hủy thanh toán. Lịch hẹn đã được hủy.", StandardCharsets.UTF_8);
-                return ResponseEntity.status(HttpStatus.FOUND)
-                    .header("Location", redirectUrl)
-                    .build();
             } else {
-                // Payment failed (các mã lỗi khác) - Xóa appointment và payment
-                Long appointmentId = appointment.getId();
-                
-                try {
-                    // Xóa appointment (sẽ rollback slot và xóa payment)
-                    appointmentService.deleteAppointmentWhenPaymentFailed(appointmentId);
-                } catch (Exception e) {
-                    // Nếu không xóa được, chỉ đánh dấu payment failed
-                    payment.setPaymentStatus(PaymentStatus.FAILED);
-                    if (transactionId != null) {
-                        payment.setTransactionId(transactionId);
+                // Payment failed (các mã lỗi khác)
+                if (isCancellationFeePayment) {
+                    // Với phí hủy, chỉ redirect về trang lịch sử với thông báo lỗi
+                    String redirectUrl = "/vaccination-history?error=" + 
+                        java.net.URLEncoder.encode("Thanh toán phí hủy thất bại. Vui lòng thử lại.", StandardCharsets.UTF_8);
+                    return ResponseEntity.status(HttpStatus.FOUND)
+                        .header("Location", redirectUrl)
+                        .build();
+                } else {
+                    // Với payment thông thường, xóa appointment và payment
+                    Long appointmentId = appointment.getId();
+                    
+                    try {
+                        // Xóa appointment (sẽ rollback slot và xóa payment)
+                        appointmentService.deleteAppointmentWhenPaymentFailed(appointmentId);
+                    } catch (Exception e) {
+                        // Nếu không xóa được, chỉ đánh dấu payment failed
+                        payment.setPaymentStatus(PaymentStatus.FAILED);
+                        if (transactionId != null) {
+                            payment.setTransactionId(transactionId);
+                        }
+                        paymentRepository.save(payment);
                     }
-                    paymentRepository.save(payment);
+                    
+                    // Redirect to error page
+                    String redirectUrl = "/payment-result?success=false&message=" + 
+                        java.net.URLEncoder.encode("Thanh toán thất bại. Mã lỗi: " + responseCode + ". Lịch hẹn đã được hủy.", StandardCharsets.UTF_8);
+                    return ResponseEntity.status(HttpStatus.FOUND)
+                        .header("Location", redirectUrl)
+                        .build();
                 }
-                
-                // Redirect to error page
-                String redirectUrl = "/payment-result?success=false&message=" + 
-                    java.net.URLEncoder.encode("Thanh toán thất bại. Mã lỗi: " + responseCode + ". Lịch hẹn đã được hủy.", StandardCharsets.UTF_8);
-                return ResponseEntity.status(HttpStatus.FOUND)
-                    .header("Location", redirectUrl)
-                    .build();
             }
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();

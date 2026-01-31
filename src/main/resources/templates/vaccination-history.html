@@ -323,6 +323,34 @@
         </div>
     </div>
 
+    <!-- Modal Xác nhận hủy lịch hẹn -->
+    <div id="cancelAppointmentModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm overflow-y-auto p-4">
+        <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-2xl max-w-md w-full">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold text-[#111813] dark:text-white">Xác nhận hủy lịch hẹn</h2>
+                    <button onclick="closeCancelModal()" class="p-2 hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] rounded-lg transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                
+                <div id="cancelModalContent" class="space-y-4">
+                    <!-- Content will be inserted here -->
+                </div>
+                
+                <div class="flex gap-3 mt-6">
+                    <button onclick="closeCancelModal()" class="flex-1 bg-gray-100 dark:bg-[#2d3f33] hover:bg-gray-200 dark:hover:bg-[#3d4f43] text-[#111813] dark:text-white px-6 py-3 rounded-xl font-bold transition-all">
+                        Hủy
+                    </button>
+                    <button id="confirmCancelBtn" onclick="proceedWithCancellation()" class="flex-1 bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+                        <span id="confirmCancelBtnText">Xác nhận hủy</span>
+                        <span id="confirmCancelBtnSpinner" class="hidden material-symbols-outlined animate-spin">sync</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Load dữ liệu khi trang load
         document.addEventListener('DOMContentLoaded', async () => {
@@ -919,8 +947,25 @@
                             <p class="font-semibold">${apt.createdAt ? formatDateTime(apt.createdAt) : 'N/A'}</p>
                         </div>
                     </div>
-                    ${apt.status === 'PENDING' ? `
-                    <div class="pt-4 border-t border-[#e2e8f0] dark:border-[#2d3f33]">
+                    ${(apt.status === 'PENDING' || apt.status === 'CONFIRMED') ? `
+                    <div class="pt-4 border-t border-[#e2e8f0] dark:border-[#2d3f33] space-y-4">
+                        <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-800 rounded-xl">
+                            <div class="flex items-start gap-2">
+                                <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-lg">info</span>
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-yellow-800 dark:text-yellow-300 mb-1">Lưu ý về phí hủy lịch:</p>
+                                    <ul class="text-xs text-yellow-700 dark:text-yellow-400 space-y-1 list-disc list-inside">
+                                        <li>Hủy trước <strong>≥ 24 giờ</strong>: Miễn phí</li>
+                                        <li>Hủy trong <strong>12-24 giờ</strong>: Phí hủy 20% giá vaccine</li>
+                                        <li>Hủy trong <strong>6-12 giờ</strong>: Phí hủy 50% giá vaccine</li>
+                                        <li>Hủy trong <strong>&lt; 6 giờ</strong>: Không thể hủy</li>
+                                    </ul>
+                                    <p class="text-xs text-yellow-700 dark:text-yellow-400 mt-2">
+                                        <strong>Lưu ý:</strong> Phí hủy phải được thanh toán bằng VNPay để đặt lịch mới.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                         <button onclick="cancelAppointmentFromModal(${apt.id})" class="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all">
                             Hủy lịch hẹn
                         </button>
@@ -930,20 +975,217 @@
             `;
         }
 
+        // Store current cancellation data
+        let currentCancellationData = null;
+
         // Hủy lịch hẹn từ modal
         window.cancelAppointmentFromModal = async function(appointmentId) {
-            if (!confirm('Bạn có chắc chắn muốn hủy lịch hẹn này?')) {
+            try {
+                // Lấy thông tin phí hủy trước
+                const feeResponse = await fetch(`/api/appointments/${appointmentId}/cancellation-fee`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (!feeResponse.ok) {
+                    const error = await feeResponse.json();
+                    alert(error.error || 'Không thể lấy thông tin phí hủy');
+                    return;
+                }
+                
+                const feeInfo = await feeResponse.json();
+                
+                if (!feeInfo.canCancel) {
+                    alert(feeInfo.message || 'Không thể hủy lịch hẹn này');
+                    return;
+                }
+                
+                // Lưu thông tin để sử dụng sau
+                currentCancellationData = {
+                    appointmentId: appointmentId,
+                    feeInfo: feeInfo
+                };
+                
+                // Hiển thị modal xác nhận hủy với thông tin phí hủy
+                showCancelConfirmationModal(feeInfo);
+                
+            } catch (error) {
+                console.error('Error loading cancellation fee:', error);
+                alert('Có lỗi xảy ra khi tải thông tin phí hủy');
+            }
+        };
+
+        // Hiển thị modal xác nhận hủy
+        function showCancelConfirmationModal(feeInfo) {
+            const modal = document.getElementById('cancelAppointmentModal');
+            const content = document.getElementById('cancelModalContent');
+            const confirmBtn = document.getElementById('confirmCancelBtn');
+            const confirmBtnText = document.getElementById('confirmCancelBtnText');
+            const confirmBtnSpinner = document.getElementById('confirmCancelBtnSpinner');
+            
+            // Reset button state
+            confirmBtn.disabled = false;
+            confirmBtnText.textContent = feeInfo.cancellationFee && feeInfo.cancellationFee > 0 ? 'Xác nhận và thanh toán' : 'Xác nhận hủy';
+            confirmBtnSpinner.classList.add('hidden');
+            
+            let html = '';
+            
+            if (feeInfo.cancellationFee && feeInfo.cancellationFee > 0) {
+                const feeAmount = new Intl.NumberFormat('vi-VN').format(feeInfo.cancellationFee);
+                const feePercentage = feeInfo.feePercentage || 0;
+                const hoursLeft = feeInfo.hoursUntilAppointment || 0;
+                
+                // Xác định mức phí dựa trên số giờ
+                let feeLevel = '';
+                let feeLevelColor = '';
+                if (hoursLeft >= 24) {
+                    feeLevel = 'Miễn phí';
+                    feeLevelColor = 'text-green-600 dark:text-green-400';
+                } else if (hoursLeft >= 12) {
+                    feeLevel = 'Phí 20%';
+                    feeLevelColor = 'text-yellow-600 dark:text-yellow-400';
+                } else if (hoursLeft >= 6) {
+                    feeLevel = 'Phí 50%';
+                    feeLevelColor = 'text-orange-600 dark:text-orange-400';
+                }
+                
+                html = `
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl">
+                            <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-2xl">warning</span>
+                            <div class="flex-1">
+                                <p class="font-bold text-red-900 dark:text-red-200">Bạn có chắc chắn muốn hủy lịch hẹn này?</p>
+                                <p class="text-sm text-red-700 dark:text-red-300 mt-1">Sau khi hủy, bạn sẽ cần thanh toán phí hủy để đặt lịch mới.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-sm font-semibold text-yellow-900 dark:text-yellow-200">Phí hủy lịch hẹn</span>
+                                <span class="text-lg font-black text-red-600 dark:text-red-400">${feeAmount} VNĐ</span>
+                            </div>
+                            <div class="space-y-2 text-xs text-yellow-800 dark:text-yellow-300">
+                                <div class="flex items-center justify-between">
+                                    <span>Mức phí:</span>
+                                    <span class="font-bold ${feeLevelColor}">${feeLevel}</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span>Tỷ lệ:</span>
+                                    <span class="font-bold">${feePercentage}% giá vaccine</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span>Thời gian còn lại:</span>
+                                    <span class="font-bold">${hoursLeft} giờ</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                            <p class="text-xs text-blue-800 dark:text-blue-300 flex items-start gap-2">
+                                <span class="material-symbols-outlined text-sm">info</span>
+                                <span>Sau khi xác nhận, bạn sẽ được chuyển đến VNPay để thanh toán phí hủy ngay lập tức.</span>
+                            </p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html = `
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-xl">
+                            <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-2xl">check_circle</span>
+                            <div class="flex-1">
+                                <p class="font-bold text-green-900 dark:text-green-200">Hủy lịch hẹn miễn phí</p>
+                                <p class="text-sm text-green-700 dark:text-green-300 mt-1">Bạn đang hủy trước ≥ 24 giờ, không mất phí.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+                            <p class="text-sm text-gray-700 dark:text-gray-300">Bạn có chắc chắn muốn hủy lịch hẹn này?</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            content.innerHTML = html;
+            modal.classList.remove('hidden');
+        }
+
+        // Đóng modal hủy
+        function closeCancelModal() {
+            document.getElementById('cancelAppointmentModal').classList.add('hidden');
+            currentCancellationData = null;
+        }
+
+        // Tiến hành hủy lịch hẹn
+        async function proceedWithCancellation() {
+            if (!currentCancellationData) {
                 return;
             }
-
+            
+            const confirmBtn = document.getElementById('confirmCancelBtn');
+            const confirmBtnText = document.getElementById('confirmCancelBtnText');
+            const confirmBtnSpinner = document.getElementById('confirmCancelBtnSpinner');
+            
+            // Disable button và hiển thị loading
+            confirmBtn.disabled = true;
+            confirmBtnText.textContent = 'Đang xử lý...';
+            confirmBtnSpinner.classList.remove('hidden');
+            
             try {
+                const appointmentId = currentCancellationData.appointmentId;
+                
+                // Hủy lịch hẹn
                 const response = await fetch(`/api/appointments/${appointmentId}/cancel`, {
                     method: 'PUT',
                     credentials: 'include'
                 });
+                
                 if (response.ok) {
-                    alert('Hủy lịch hẹn thành công');
+                    const result = await response.json();
+                    
+                    // Đóng modal chi tiết và modal hủy
                     document.getElementById('appointmentDetailModal').classList.add('hidden');
+                    closeCancelModal();
+                    
+                    if (result.hasCancellationFee && result.cancellationFee > 0 && !result.cancellationFeePaid) {
+                        // Có phí hủy và chưa thanh toán - tự động redirect đến VNPay
+                        try {
+                            // Tạo URL thanh toán phí hủy
+                            const paymentResponse = await fetch('/api/payment/create-cancellation-fee-url', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                credentials: 'include',
+                                body: JSON.stringify({ appointmentId: appointmentId })
+                            });
+                            
+                            if (paymentResponse.ok) {
+                                const paymentResult = await paymentResponse.json();
+                                if (paymentResult.paymentUrl) {
+                                    // Redirect to VNPay ngay lập tức
+                                    window.location.href = paymentResult.paymentUrl;
+                                    return;
+                                }
+                            }
+                            
+                            // Nếu không tạo được URL, hiển thị thông báo và reload
+                            alert('Không thể tạo link thanh toán VNPay. Vui lòng thử lại sau.');
+                        } catch (error) {
+                            console.error('Error creating cancellation fee payment URL:', error);
+                            alert('Có lỗi xảy ra khi tạo link thanh toán. Vui lòng thử lại sau.');
+                        }
+                    } else {
+                        // Không có phí hủy hoặc đã thanh toán
+                        // Hiển thị thông báo thành công tạm thời
+                        const successMsg = document.createElement('div');
+                        successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 flex items-center gap-2';
+                        successMsg.innerHTML = '<span class="material-symbols-outlined">check_circle</span><span>Hủy lịch hẹn thành công!</span>';
+                        document.body.appendChild(successMsg);
+                        setTimeout(() => successMsg.remove(), 3000);
+                    }
+                    
+                    // Reload data
                     await Promise.all([
                         loadUpcomingAppointments(),
                         loadAllAppointments(),
@@ -952,26 +1194,119 @@
                 } else {
                     const error = await response.json();
                     alert(error.error || 'Không thể hủy lịch hẹn');
+                    
+                    // Reset button
+                    confirmBtn.disabled = false;
+                    confirmBtnText.textContent = currentCancellationData.feeInfo.cancellationFee && currentCancellationData.feeInfo.cancellationFee > 0 ? 'Xác nhận và thanh toán' : 'Xác nhận hủy';
+                    confirmBtnSpinner.classList.add('hidden');
                 }
             } catch (error) {
                 console.error('Error cancelling appointment:', error);
-                alert('Có lỗi xảy ra');
+                alert('Có lỗi xảy ra khi hủy lịch hẹn');
+                
+                // Reset button
+                confirmBtn.disabled = false;
+                confirmBtnText.textContent = currentCancellationData.feeInfo.cancellationFee && currentCancellationData.feeInfo.cancellationFee > 0 ? 'Xác nhận và thanh toán' : 'Xác nhận hủy';
+                confirmBtnSpinner.classList.add('hidden');
             }
-        };
+        }
 
         // Hủy lịch hẹn
         window.cancelAppointment = async function(appointmentId) {
-            if (!confirm('Bạn có chắc chắn muốn hủy lịch hẹn này?')) {
-                return;
-            }
-
             try {
+                // Lấy thông tin phí hủy trước
+                const feeResponse = await fetch(`/api/appointments/${appointmentId}/cancellation-fee`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (!feeResponse.ok) {
+                    const error = await feeResponse.json();
+                    alert(error.error || 'Không thể lấy thông tin phí hủy');
+                    return;
+                }
+                
+                const feeInfo = await feeResponse.json();
+                
+                if (!feeInfo.canCancel) {
+                    alert(feeInfo.message || 'Không thể hủy lịch hẹn này');
+                    return;
+                }
+                
+                // Hiển thị modal cảnh báo phí hủy
+                let confirmMessage = 'Bạn có chắc chắn muốn hủy lịch hẹn này?';
+                if (feeInfo.cancellationFee && feeInfo.cancellationFee > 0) {
+                    const feeAmount = new Intl.NumberFormat('vi-VN').format(feeInfo.cancellationFee);
+                    const feePercentage = feeInfo.feePercentage || 0;
+                    const hoursLeft = feeInfo.hoursUntilAppointment || 0;
+                    
+                    // Xác định mức phí dựa trên số giờ
+                    let feeLevel = '';
+                    if (hoursLeft >= 24) {
+                        feeLevel = 'Miễn phí';
+                    } else if (hoursLeft >= 12) {
+                        feeLevel = 'Phí 20%';
+                    } else if (hoursLeft >= 6) {
+                        feeLevel = 'Phí 50%';
+                    }
+                    
+                    confirmMessage = `Bạn có chắc chắn muốn hủy lịch hẹn này?\n\n` +
+                        `⚠️ Phí hủy: ${feeAmount} VNĐ (${feePercentage}% giá vaccine - ${feeLevel})\n` +
+                        `⏰ Còn lại: ${hoursLeft} giờ trước giờ hẹn\n\n` +
+                        `Bạn sẽ cần thanh toán phí này bằng VNPay để đặt lịch mới.`;
+                } else {
+                    confirmMessage += '\n\n✅ Hủy miễn phí (≥ 24 giờ trước giờ hẹn)';
+                }
+                
+                if (!confirm(confirmMessage)) {
+                    return;
+                }
+
                 const response = await fetch(`/api/appointments/${appointmentId}/cancel`, {
                     method: 'PUT',
                     credentials: 'include'
                 });
+                
                 if (response.ok) {
-                    alert('Hủy lịch hẹn thành công');
+                    const result = await response.json();
+                    
+                    if (result.hasCancellationFee && result.cancellationFee > 0 && !result.cancellationFeePaid) {
+                        // Có phí hủy và chưa thanh toán - tự động redirect đến VNPay
+                        const feeAmount = new Intl.NumberFormat('vi-VN').format(result.cancellationFee);
+                        const confirmPay = confirm(`Hủy lịch hẹn thành công!\n\n⚠️ Phí hủy: ${feeAmount} VNĐ\n\nBạn sẽ được chuyển đến VNPay để thanh toán phí này.`);
+                        
+                        if (confirmPay) {
+                            try {
+                                // Tạo URL thanh toán phí hủy
+                                const paymentResponse = await fetch('/api/payment/create-cancellation-fee-url', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    credentials: 'include',
+                                    body: JSON.stringify({ appointmentId: appointmentId })
+                                });
+                                
+                                if (paymentResponse.ok) {
+                                    const paymentResult = await paymentResponse.json();
+                                    if (paymentResult.paymentUrl) {
+                                        // Redirect to VNPay
+                                        window.location.href = paymentResult.paymentUrl;
+                                        return;
+                                    }
+                                }
+                                
+                                alert('Không thể tạo link thanh toán VNPay. Vui lòng thử lại sau.');
+                            } catch (error) {
+                                console.error('Error creating cancellation fee payment URL:', error);
+                                alert('Có lỗi xảy ra khi tạo link thanh toán. Vui lòng thử lại sau.');
+                            }
+                        }
+                    } else {
+                        // Không có phí hủy hoặc đã thanh toán
+                        alert('Hủy lịch hẹn thành công!');
+                    }
+                    
                     await Promise.all([
                         loadUpcomingAppointments(),
                         loadAllAppointments(),

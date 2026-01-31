@@ -25,5 +25,18 @@ public interface AdverseReactionRepository extends JpaRepository<AdverseReaction
      * Tìm tất cả phản ứng phụ đã được xử lý bởi một user cụ thể
      */
     List<AdverseReaction> findByHandledById(Long handledById);
+    
+    /**
+     * Tìm tất cả phản ứng phụ với các relationships được load (eager fetch)
+     */
+    @Query("SELECT DISTINCT ar FROM AdverseReaction ar " +
+           "LEFT JOIN FETCH ar.vaccinationRecord vr " +
+           "LEFT JOIN FETCH vr.user " +
+           "LEFT JOIN FETCH vr.vaccine " +
+           "LEFT JOIN FETCH vr.appointment a " +
+           "LEFT JOIN FETCH a.center " +
+           "LEFT JOIN FETCH ar.handledBy " +
+           "ORDER BY ar.occurredAt DESC")
+    List<AdverseReaction> findAllWithRelationships();
 }
 

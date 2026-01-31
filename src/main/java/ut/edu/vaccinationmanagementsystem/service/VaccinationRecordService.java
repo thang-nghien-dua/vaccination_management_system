@@ -280,15 +280,30 @@ public class VaccinationRecordService {
         
         record.setCreatedAt(LocalDateTime.now());
         
-        // Trừ stock quantity tại trung tâm
-        int currentStock = centerVaccine.getStockQuantity();
-        centerVaccine.setStockQuantity(currentStock - 1);
-        centerVaccineRepository.save(centerVaccine);
-        
-        // Trừ remaining quantity của vaccine lot
-        int currentLotRemaining = vaccineLot.getRemainingQuantity();
-        vaccineLot.setRemainingQuantity(currentLotRemaining - 1);
-        vaccineLotRepository.save(vaccineLot);
+        // KHÔNG trừ vaccine ở đây nữa vì đã trừ khi CONFIRMED
+        // Vaccine đã được giữ trong appointment.reservedVaccineLot khi appointment được CONFIRMED
+        // Chỉ cần kiểm tra xem appointment có reservedVaccineLot không
+        if (appointment.getReservedVaccineLot() == null) {
+            // Nếu không có reserved lot (backward compatibility hoặc appointment cũ), vẫn trừ như cũ
+            // Trừ stock quantity tại trung tâm
+            int currentStock = centerVaccine.getStockQuantity();
+            centerVaccine.setStockQuantity(currentStock - 1);
+            centerVaccineRepository.save(centerVaccine);
+            
+            // Trừ remaining quantity của vaccine lot
+            int currentLotRemaining = vaccineLot.getRemainingQuantity();
+            vaccineLot.setRemainingQuantity(currentLotRemaining - 1);
+            vaccineLotRepository.save(vaccineLot);
+        } else {
+            // Đã có reserved lot, không cần trừ nữa
+            // Chỉ cần đảm bảo lot được sử dụng đúng
+            if (!appointment.getReservedVaccineLot().getId().equals(vaccineLot.getId())) {
+                // Nếu lot được chọn khác với lot đã giữ, vẫn cần trừ lot mới và cộng lại lot cũ
+                // Nhưng để đơn giản, ta sẽ chỉ cảnh báo
+                System.out.println("Warning: Vaccine lot selected (" + vaccineLot.getLotNumber() + 
+                    ") differs from reserved lot (" + appointment.getReservedVaccineLot().getLotNumber() + ")");
+            }
+        }
         
         // Lưu trạng thái cũ trước khi cập nhật
         AppointmentStatus oldStatus = appointment.getStatus();

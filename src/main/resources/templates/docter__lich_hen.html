@@ -3,7 +3,7 @@
 <html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Danh sách Lịch hẹn Cần khám - Hệ thống Tiêm chủng</title>
+<title>Danh sách Lịch hẹn Cần khám - VacciCare</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -14,7 +14,9 @@
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#13ec5b",
+                        "primary": "#0f766e",
+                        "primary-light": "#14b8a6",
+                        "primary-dark": "#134e4a",
                         "background-light": "#f6f8f6",
                         "background-dark": "#102216",
                     },
@@ -26,6 +28,8 @@
             },
         }
     </script>
+    <link href="/css/ux-enhancements.css" rel="stylesheet"/>
+    <script src="/js/sidebar.js"></script>
 <style>
         body {
             font-family: 'Manrope', sans-serif;
@@ -37,10 +41,12 @@
 </head>
 <body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white antialiased">
 <div class="flex min-h-screen">
+<!-- Sidebar Overlay (mobile) -->
+<div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden"></div>
 <!-- Sidebar Fragment -->
 <div th:replace="~{fragments/doctor-sidebar :: sidebar}"></div>
 <!-- Main Content -->
-<main class="flex-1 ml-64 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
+<main class="flex-1 lg:ml-72 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
 <!-- Top Navigation Bar -->
 <header class="sticky top-0 z-10 flex items-center justify-between bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
 <div class="flex flex-1 items-center gap-4">
@@ -53,15 +59,6 @@
 </div>
 </label>
 </div>
-<div class="flex items-center gap-4 pl-4">
-<button class="relative p-2 rounded-lg bg-[#f0f4f2] dark:bg-white/5 text-[#111813] dark:text-white">
-<span class="material-symbols-outlined text-[20px]">notifications</span>
-<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-background-dark"></span>
-</button>
-<button class="p-2 rounded-lg bg-[#f0f4f2] dark:bg-white/5 text-[#111813] dark:text-white">
-<span class="material-symbols-outlined text-[20px]">help</span>
-</button>
-</div>
 </header>
 <!-- Page Heading -->
 <section class="px-8 pt-8">
@@ -72,26 +69,59 @@
 </section>
 <!-- Filters Section -->
 <section class="px-8 pt-6">
-<div class="bg-white dark:bg-white/5 p-4 rounded-xl border border-[#f0f4f2] dark:border-white/10 flex flex-wrap items-center gap-3">
+<div class="bg-white dark:bg-white/5 p-4 rounded-xl border border-[#f0f4f2] dark:border-white/10">
+<div class="flex flex-wrap items-center gap-3 mb-3">
 <div class="flex items-center gap-2">
 <span class="text-xs font-bold text-[#61896f] uppercase px-1">Lọc theo:</span>
 </div>
-<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-background-light dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 text-sm font-semibold">
+<!-- Date Filter -->
+<div class="relative">
+<button id="dateFilterBtn" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-background-light dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 text-sm font-semibold hover:bg-[#f0f4f2] dark:hover:bg-white/5 transition-colors">
 <span class="material-symbols-outlined text-[18px]">calendar_today</span>
-<span>Hôm nay: 24/05/2024</span>
+<span id="dateFilterText">Hôm nay: <span id="currentDate"></span></span>
 <span class="material-symbols-outlined text-[18px]">expand_more</span>
 </button>
-<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 border border-primary/20 text-[#111813] dark:text-white text-sm font-semibold">
-<span class="material-symbols-outlined text-[18px]">pending_actions</span>
-<span>Trạng thái: PENDING</span>
-<span class="material-symbols-outlined text-[18px]">close</span>
+<div id="dateFilterDropdown" class="hidden absolute top-full left-0 mt-2 bg-white dark:bg-sidebar-dark rounded-lg shadow-lg border border-[#f0f4f2] dark:border-white/10 z-50 min-w-[200px]">
+<button class="date-filter-option w-full text-left px-4 py-2 text-sm hover:bg-[#f0f4f2] dark:hover:bg-white/5" data-value="today">Hôm nay</button>
+<button class="date-filter-option w-full text-left px-4 py-2 text-sm hover:bg-[#f0f4f2] dark:hover:bg-white/5" data-value="week">Tuần này</button>
+<button class="date-filter-option w-full text-left px-4 py-2 text-sm hover:bg-[#f0f4f2] dark:hover:bg-white/5" data-value="month">Tháng này</button>
+<button class="date-filter-option w-full text-left px-4 py-2 text-sm hover:bg-[#f0f4f2] dark:hover:bg-white/5" data-value="all">Tất cả</button>
+</div>
+</div>
+<!-- Status Filter -->
+<div class="relative">
+<button id="statusFilterBtn" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-background-light dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 text-sm font-semibold hover:bg-[#f0f4f2] dark:hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+<span id="statusFilterText">Trạng thái: Tất cả</span>
+<span class="material-symbols-outlined text-[18px]">expand_more</span>
 </button>
-<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 border border-primary/20 text-[#111813] dark:text-white text-sm font-semibold">
-<span class="material-symbols-outlined text-[18px]">medical_information</span>
-<span>SCREENING_PENDING</span>
-<span class="material-symbols-outlined text-[18px]">close</span>
+<div id="statusFilterDropdown" class="hidden absolute top-full left-0 mt-2 bg-white dark:bg-sidebar-dark rounded-lg shadow-lg border border-[#f0f4f2] dark:border-white/10 z-50 min-w-[200px]">
+<button class="status-filter-option w-full text-left px-4 py-2 text-sm hover:bg-[#f0f4f2] dark:hover:bg-white/5" data-value="all">Tất cả</button>
+<button class="status-filter-option w-full text-left px-4 py-2 text-sm hover:bg-[#f0f4f2] dark:hover:bg-white/5" data-value="CONFIRMED">Đã xác nhận</button>
+<button class="status-filter-option w-full text-left px-4 py-2 text-sm hover:bg-[#f0f4f2] dark:hover:bg-white/5" data-value="CHECKED_IN">Đã check-in</button>
+<button class="status-filter-option w-full text-left px-4 py-2 text-sm hover:bg-[#f0f4f2] dark:hover:bg-white/5" data-value="SCREENING">Đang khám</button>
+</div>
+</div>
+<!-- Vaccine Filter -->
+<div class="relative">
+<button id="vaccineFilterBtn" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-background-light dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 text-sm font-semibold hover:bg-[#f0f4f2] dark:hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-[18px]">vaccines</span>
+<span id="vaccineFilterText">Vaccine: Tất cả</span>
+<span class="material-symbols-outlined text-[18px]">expand_more</span>
 </button>
-<button class="ml-auto text-primary text-sm font-bold hover:underline">Xóa tất cả bộ lọc</button>
+<div id="vaccineFilterDropdown" class="hidden absolute top-full left-0 mt-2 bg-white dark:bg-sidebar-dark rounded-lg shadow-lg border border-[#f0f4f2] dark:border-white/10 z-50 min-w-[250px] max-h-[300px] overflow-y-auto">
+<button class="vaccine-filter-option w-full text-left px-4 py-2 text-sm hover:bg-[#f0f4f2] dark:hover:bg-white/5" data-value="all">Tất cả</button>
+<div id="vaccineFilterOptions">
+<!-- Vaccine options will be populated dynamically -->
+</div>
+</div>
+</div>
+<button id="clearFiltersBtn" class="ml-auto text-primary text-sm font-bold hover:underline hidden">Xóa tất cả bộ lọc</button>
+</div>
+<!-- Active Filters Display -->
+<div id="activeFilters" class="flex flex-wrap items-center gap-2 mt-2 hidden">
+<span class="text-xs font-bold text-[#61896f] uppercase">Bộ lọc đang áp dụng:</span>
+</div>
 </div>
 </section>
 <!-- Table Section -->
@@ -115,17 +145,9 @@
 </table>
 <!-- Pagination -->
 <div class="px-6 py-4 border-t border-[#f0f4f2] dark:border-white/10 flex items-center justify-between">
-<p class="text-xs text-[#61896f] font-medium">Hiển thị 1-10 trong tổng số 42 lịch hẹn</p>
-<div class="flex items-center gap-2">
-<button class="p-2 rounded-lg border border-[#f0f4f2] dark:border-white/10 hover:bg-[#f0f4f2] dark:hover:bg-white/5 disabled:opacity-50">
-<span class="material-symbols-outlined text-[18px]">chevron_left</span>
-</button>
-<button class="w-8 h-8 rounded-lg bg-primary text-[#111813] text-xs font-bold">1</button>
-<button class="w-8 h-8 rounded-lg text-xs font-bold hover:bg-[#f0f4f2] dark:hover:bg-white/5">2</button>
-<button class="w-8 h-8 rounded-lg text-xs font-bold hover:bg-[#f0f4f2] dark:hover:bg-white/5">3</button>
-<button class="p-2 rounded-lg border border-[#f0f4f2] dark:border-white/10 hover:bg-[#f0f4f2] dark:hover:bg-white/5">
-<span class="material-symbols-outlined text-[18px]">chevron_right</span>
-</button>
+<p id="paginationText" class="text-xs text-[#61896f] font-medium">Đang tải...</p>
+<div id="paginationButtons" class="flex items-center gap-2">
+<!-- Pagination buttons will be generated dynamically -->
 </div>
 </div>
 </div>
@@ -137,24 +159,107 @@
         /*<![CDATA[*/
         (function() {
             let allAppointments = []; // Lưu tất cả dữ liệu để filter
+            let filteredAppointments = []; // Dữ liệu sau khi filter
+            let currentPage = 1;
+            const itemsPerPage = 10;
+            
+            // Filter states - mặc định chỉ hiển thị lịch hôm nay
+            let activeFilters = {
+                date: 'today', // Mặc định: chỉ hiển thị hôm nay
+                status: 'all', // Tất cả trạng thái
+                vaccine: 'all', // Tất cả vaccine
+                search: '' // Không tìm kiếm
+            };
+            
+            // Set current date
+            function setCurrentDate() {
+                const today = new Date();
+                const dateStr = today.toLocaleDateString('vi-VN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+                const dateElement = document.getElementById('currentDate');
+                if (dateElement) {
+                    dateElement.textContent = dateStr;
+                }
+            }
             
             async function loadAppointments() {
                 try {
                     const response = await fetch('/api/doctor/appointments/pending');
-                    if (!response.ok) throw new Error('Failed to load appointments');
-                    allAppointments = await response.json();
                     
-                    displayAppointments(allAppointments);
+                    if (!response.ok) {
+                        // Try to get error message from response
+                        let errorMessage = 'Lỗi khi tải dữ liệu';
+                        try {
+                            const errorData = await response.json();
+                            if (errorData.error) {
+                                errorMessage = errorData.error;
+                            }
+                        } catch (e) {
+                            // If can't parse error, use default message
+                            errorMessage = `Lỗi ${response.status}: ${response.statusText}`;
+                        }
+                        
+                        console.error('API Error:', errorMessage);
+                        const tbody = document.getElementById('appointmentsTableBody');
+                        if (tbody) {
+                            tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">${errorMessage}</td></tr>`;
+                        }
+                        updatePagination(0);
+                        return;
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Check if response is an error object
+                    if (data.error) {
+                        console.error('API returned error:', data.error);
+                        const tbody = document.getElementById('appointmentsTableBody');
+                        if (tbody) {
+                            tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">${data.error}</td></tr>`;
+                        }
+                        updatePagination(0);
+                        return;
+                    }
+                    
+                    // Ensure data is an array
+                    allAppointments = Array.isArray(data) ? data : [];
+                    
+                    // Populate vaccine filter options (only if we have appointments)
+                    try {
+                        if (allAppointments.length > 0) {
+                            populateVaccineFilter();
+                        }
+                    } catch (e) {
+                        console.error('Error populating vaccine filter:', e);
+                    }
+                    
+                    // Mặc định chỉ hiển thị lịch hôm nay (filter date = 'today' đã được set ở trên)
+                    // Apply filters để lọc theo ngày hôm nay
+                    try {
+                        applyAllFilters();
+                    } catch (e) {
+                        console.error('Error applying filters:', e);
+                        // Fallback: just display all appointments
+                        currentPage = 1;
+                        const start = 0;
+                        const end = itemsPerPage;
+                        const paginatedAppointments = allAppointments.slice(start, end);
+                        displayAppointments(paginatedAppointments, true);
+                    }
                 } catch (error) {
                     console.error('Error loading appointments:', error);
                     const tbody = document.getElementById('appointmentsTableBody');
                     if (tbody) {
-                        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Lỗi khi tải dữ liệu</td></tr>';
+                        tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Lỗi khi tải dữ liệu: ${error.message || 'Unknown error'}</td></tr>`;
                     }
+                    updatePagination(0);
                 }
             }
             
-            function displayAppointments(appointments) {
+            function displayAppointments(appointments, isPaginated = false) {
                 const tbody = document.getElementById('appointmentsTableBody');
                 if (!tbody) return;
                 
@@ -162,7 +267,7 @@
                 
                 if (appointments.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">Không có lịch hẹn nào</td></tr>';
-                    updatePagination(appointments.length);
+                    updatePagination(0);
                     return;
                 }
                 
@@ -178,12 +283,16 @@
                     const centerName = apt.centerName || 'N/A';
                     
                     let statusBadge = '';
-                    if (apt.status === 'PENDING') {
-                        statusBadge = '<span class="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-bold text-xs"><span class="w-2 h-2 rounded-full bg-blue-500"></span>PENDING</span>';
+                    if (apt.status === 'CONFIRMED') {
+                        statusBadge = '<span class="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-bold text-xs"><span class="w-2 h-2 rounded-full bg-blue-500"></span>Đã xác nhận</span>';
                     } else if (apt.status === 'CHECKED_IN') {
-                        statusBadge = '<span class="flex items-center gap-1.5 text-green-600 dark:text-green-400 font-bold text-xs"><span class="w-2 h-2 rounded-full bg-green-500"></span>CHECKED_IN</span>';
+                        statusBadge = '<span class="flex items-center gap-1.5 text-green-600 dark:text-green-400 font-bold text-xs"><span class="w-2 h-2 rounded-full bg-green-500"></span>Đã check-in</span>';
                     } else if (apt.status === 'SCREENING') {
-                        statusBadge = '<span class="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-bold text-xs"><span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>SCREENING</span>';
+                        statusBadge = '<span class="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-bold text-xs"><span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>Đang khám</span>';
+                    } else if (apt.status === 'PENDING') {
+                        statusBadge = '<span class="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 font-bold text-xs"><span class="w-2 h-2 rounded-full bg-gray-500"></span>Chờ xử lý</span>';
+                    } else {
+                        statusBadge = '<span class="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 font-bold text-xs"><span class="w-2 h-2 rounded-full bg-gray-500"></span>' + (apt.status || 'N/A') + '</span>';
                     }
                     
                     const row = document.createElement('tr');
@@ -213,7 +322,7 @@
                         </td>
                         <td class="px-6 py-4">${statusBadge}</td>
                         <td class="px-6 py-4 text-right">
-                            <a href="/doctor/screening/${apt.id}" class="bg-primary hover:bg-primary/90 text-[#111813] text-sm font-extrabold px-4 py-2 rounded-lg shadow-sm shadow-primary/20 transition-all inline-block">
+                            <a href="/doctor/screening/${apt.id}" class="bg-primary hover:bg-primary-dark text-white text-sm font-extrabold px-4 py-2 rounded-lg shadow-sm shadow-primary/20 transition-all inline-block">
                                 Khám sàng lọc
                             </a>
                         </td>
@@ -221,42 +330,490 @@
                     tbody.appendChild(row);
                 });
                 
-                updatePagination(appointments.length);
+                // Update pagination với tổng số appointments (filteredAppointments.length) và currentPage
+                updatePagination(filteredAppointments.length, currentPage);
             }
             
-            function updatePagination(total) {
-                const paginationText = document.querySelector('.px-6.py-4.border-t p');
-                if (paginationText) {
-                    paginationText.textContent = `Hiển thị 1-${Math.min(total, 10)} trong tổng số ${total} lịch hẹn`;
-                }
-            }
-            
-            function filterAppointments(searchQuery) {
-                if (!searchQuery || searchQuery.trim() === '') {
-                    displayAppointments(allAppointments);
+            function updatePagination(total, currentPage = 1) {
+                const paginationText = document.getElementById('paginationText');
+                const paginationButtons = document.getElementById('paginationButtons');
+                
+                if (!paginationText || !paginationButtons) return;
+                
+                const start = (currentPage - 1) * itemsPerPage + 1;
+                const end = Math.min(currentPage * itemsPerPage, total);
+                paginationText.textContent = `Hiển thị ${start}-${end} trong tổng số ${total} lịch hẹn`;
+                
+                // Generate pagination buttons
+                const totalPages = Math.ceil(total / itemsPerPage);
+                if (totalPages <= 1) {
+                    paginationButtons.innerHTML = '';
                     return;
                 }
                 
-                const query = searchQuery.toLowerCase().trim();
-                const filtered = allAppointments.filter(apt => {
+                let buttonsHTML = '';
+                
+                // Previous button
+                buttonsHTML += `
+                    <button onclick="goToPage(${currentPage - 1})" 
+                            class="p-2 rounded-lg border border-[#f0f4f2] dark:border-white/10 hover:bg-[#f0f4f2] dark:hover:bg-white/5 disabled:opacity-50"
+                            ${currentPage === 1 ? 'disabled' : ''}>
+                        <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+                    </button>
+                `;
+                
+                // Page number buttons
+                const maxVisiblePages = 5;
+                let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                
+                if (endPage - startPage < maxVisiblePages - 1) {
+                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                }
+                
+                if (startPage > 1) {
+                    buttonsHTML += `<button onclick="goToPage(1)" class="w-8 h-8 rounded-lg text-xs font-bold hover:bg-[#f0f4f2] dark:hover:bg-white/5">1</button>`;
+                    if (startPage > 2) {
+                        buttonsHTML += `<span class="text-[#61896f]">...</span>`;
+                    }
+                }
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    buttonsHTML += `
+                        <button onclick="goToPage(${i})" 
+                                class="w-8 h-8 rounded-lg text-xs font-bold ${i === currentPage ? 'bg-primary text-[#111813]' : 'hover:bg-[#f0f4f2] dark:hover:bg-white/5'}">
+                            ${i}
+                        </button>
+                    `;
+                }
+                
+                if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                        buttonsHTML += `<span class="text-[#61896f]">...</span>`;
+                    }
+                    buttonsHTML += `<button onclick="goToPage(${totalPages})" class="w-8 h-8 rounded-lg text-xs font-bold hover:bg-[#f0f4f2] dark:hover:bg-white/5">${totalPages}</button>`;
+                }
+                
+                // Next button
+                buttonsHTML += `
+                    <button onclick="goToPage(${currentPage + 1})" 
+                            class="p-2 rounded-lg border border-[#f0f4f2] dark:border-white/10 hover:bg-[#f0f4f2] dark:hover:bg-white/5"
+                            ${currentPage === totalPages ? 'disabled' : ''}>
+                        <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                    </button>
+                `;
+                
+                paginationButtons.innerHTML = buttonsHTML;
+            }
+            
+            function goToPage(page) {
+                const totalPages = Math.ceil(filteredAppointments.length / itemsPerPage);
+                if (page < 1 || page > totalPages) return;
+                
+                currentPage = page;
+                const start = (page - 1) * itemsPerPage;
+                const end = start + itemsPerPage;
+                const paginatedAppointments = filteredAppointments.slice(start, end);
+                
+                displayAppointments(paginatedAppointments, true);
+            }
+            
+            // Populate vaccine filter options from appointments
+            function populateVaccineFilter() {
+                const vaccineFilterOptions = document.getElementById('vaccineFilterOptions');
+                if (!vaccineFilterOptions) return;
+                
+                if (!allAppointments || !Array.isArray(allAppointments) || allAppointments.length === 0) {
+                    vaccineFilterOptions.innerHTML = '';
+                    return;
+                }
+                
+                // Get unique vaccines from appointments
+                const vaccines = new Map();
+                allAppointments.forEach(apt => {
+                    try {
+                        if (apt && apt.vaccineInfo && apt.vaccineInfo.id != null && apt.vaccineInfo.name) {
+                            const vaccineId = apt.vaccineInfo.id;
+                            if (!vaccines.has(vaccineId)) {
+                                vaccines.set(vaccineId, apt.vaccineInfo.name);
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error processing vaccine for filter:', e, apt);
+                    }
+                });
+                
+                // Sort vaccines by name
+                const sortedVaccines = Array.from(vaccines.entries()).sort((a, b) => 
+                    a[1].localeCompare(b[1], 'vi')
+                );
+                
+                // Populate options
+                vaccineFilterOptions.innerHTML = sortedVaccines.map(([id, name]) => {
+                    const safeId = id != null ? String(id) : '';
+                    return `<button class="vaccine-filter-option w-full text-left px-4 py-2 text-sm hover:bg-[#f0f4f2] dark:hover:bg-white/5" data-value="${safeId}">${name}</button>`;
+                }).join('');
+            }
+            
+            // Apply all filters
+            function applyAllFilters() {
+                if (!allAppointments || !Array.isArray(allAppointments)) {
+                    console.error('allAppointments is not an array');
+                    filteredAppointments = [];
+                    displayAppointments([], true);
+                    return;
+                }
+                
+                let filtered = [...allAppointments];
+                
+                // Filter by date
+                if (activeFilters.date && activeFilters.date !== 'all') {
+                    try {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        
+                        filtered = filtered.filter(apt => {
+                            if (!apt || !apt.appointmentDate) return false;
+                            try {
+                                const aptDate = new Date(apt.appointmentDate);
+                                aptDate.setHours(0, 0, 0, 0);
+                                
+                                if (activeFilters.date === 'today') {
+                                    return aptDate.getTime() === today.getTime();
+                                } else if (activeFilters.date === 'week') {
+                                    const weekStart = new Date(today);
+                                    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ...
+                                    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Days to go back to Monday
+                                    weekStart.setDate(today.getDate() - daysToMonday);
+                                    const weekEnd = new Date(weekStart);
+                                    weekEnd.setDate(weekStart.getDate() + 6); // Sunday
+                                    return aptDate >= weekStart && aptDate <= weekEnd;
+                                } else if (activeFilters.date === 'month') {
+                                    return aptDate.getMonth() === today.getMonth() && 
+                                           aptDate.getFullYear() === today.getFullYear();
+                                }
+                            } catch (e) {
+                                console.error('Error filtering by date:', e, apt);
+                                return false;
+                            }
+                            return true;
+                        });
+                    } catch (e) {
+                        console.error('Error in date filter:', e);
+                    }
+                }
+                
+                // Filter by status
+                if (activeFilters.status && activeFilters.status !== 'all') {
+                    filtered = filtered.filter(apt => apt && apt.status === activeFilters.status);
+                }
+                
+                // Filter by vaccine
+                if (activeFilters.vaccine && activeFilters.vaccine !== 'all') {
+                    try {
+                        filtered = filtered.filter(apt => {
+                            if (!apt || !apt.vaccineInfo || apt.vaccineInfo.id == null) return false;
+                            const vaccineId = apt.vaccineInfo.id;
+                            const filterVaccineId = activeFilters.vaccine;
+                            // Compare as strings, handling both number and string types
+                            return String(vaccineId) === String(filterVaccineId);
+                        });
+                    } catch (e) {
+                        console.error('Error filtering by vaccine:', e);
+                    }
+                }
+                
+                // Filter by search query
+                if (activeFilters.search && activeFilters.search.trim() !== '') {
+                    const query = activeFilters.search.toLowerCase().trim();
+                    filtered = filtered.filter(apt => {
                     const patientName = (apt.patientInfo?.fullName || '').toLowerCase();
                     const bookingCode = (apt.bookingCode || '').toLowerCase();
                     const phone = (apt.patientInfo?.phoneNumber || '').toLowerCase();
                     const vaccineName = (apt.vaccineInfo?.name || '').toLowerCase();
                     const centerName = (apt.centerName || '').toLowerCase();
+                        const age = apt.patientInfo?.dateOfBirth ? 
+                            Math.floor((new Date() - new Date(apt.patientInfo.dateOfBirth)) / (365.25 * 24 * 60 * 60 * 1000)).toString() : '';
                     
                     return patientName.includes(query) || 
                            bookingCode.includes(query) || 
                            phone.includes(query) ||
                            vaccineName.includes(query) ||
-                           centerName.includes(query);
-                });
+                               centerName.includes(query) ||
+                               age.includes(query);
+                    });
+                }
                 
-                displayAppointments(filtered);
+                filteredAppointments = filtered;
+                currentPage = 1;
+                const start = 0;
+                const end = itemsPerPage;
+                const paginatedAppointments = filteredAppointments.slice(start, end);
+                displayAppointments(paginatedAppointments, true);
+                
+                // Update active filters display
+                updateActiveFiltersDisplay();
+            }
+            
+            // Update active filters display
+            function updateActiveFiltersDisplay() {
+                const activeFiltersContainer = document.getElementById('activeFilters');
+                const clearBtn = document.getElementById('clearFiltersBtn');
+                
+                if (!activeFiltersContainer || !clearBtn) return;
+                
+                const hasActiveFilters = activeFilters.date !== 'today' || 
+                                        activeFilters.status !== 'all' || 
+                                        activeFilters.vaccine !== 'all' || 
+                                        (activeFilters.search && activeFilters.search.trim() !== '');
+                
+                if (hasActiveFilters) {
+                    activeFiltersContainer.classList.remove('hidden');
+                    clearBtn.classList.remove('hidden');
+                    
+                    let filtersHTML = '<span class="text-xs font-bold text-[#61896f] uppercase">Bộ lọc đang áp dụng:</span>';
+                    
+                    if (activeFilters.date !== 'today') {
+                        const dateLabels = { 'week': 'Tuần này', 'month': 'Tháng này', 'all': 'Tất cả' };
+                        filtersHTML += `<span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center gap-1">
+                            <span>${dateLabels[activeFilters.date] || 'Ngày'}</span>
+                            <button onclick="removeDateFilter()" class="ml-1 hover:text-primary-dark">
+                                <span class="material-symbols-outlined text-sm">close</span>
+                            </button>
+                        </span>`;
+                    }
+                    
+                    if (activeFilters.status !== 'all') {
+                        const statusLabels = { 'CONFIRMED': 'Đã xác nhận', 'CHECKED_IN': 'Đã check-in', 'SCREENING': 'Đang khám' };
+                        filtersHTML += `<span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center gap-1">
+                            <span>${statusLabels[activeFilters.status] || activeFilters.status}</span>
+                            <button onclick="removeStatusFilter()" class="ml-1 hover:text-primary-dark">
+                                <span class="material-symbols-outlined text-sm">close</span>
+                            </button>
+                        </span>`;
+                    }
+                    
+                    if (activeFilters.vaccine && activeFilters.vaccine !== 'all') {
+                        const vaccine = allAppointments.find(apt => {
+                            if (!apt || !apt.vaccineInfo || apt.vaccineInfo.id == null) return false;
+                            return String(apt.vaccineInfo.id) === String(activeFilters.vaccine);
+                        });
+                        const vaccineName = vaccine?.vaccineInfo?.name || 'Vaccine';
+                        filtersHTML += `<span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center gap-1">
+                            <span>${vaccineName}</span>
+                            <button onclick="removeVaccineFilter()" class="ml-1 hover:text-primary-dark">
+                                <span class="material-symbols-outlined text-sm">close</span>
+                            </button>
+                        </span>`;
+                    }
+                    
+                    if (activeFilters.search && activeFilters.search.trim() !== '') {
+                        filtersHTML += `<span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center gap-1">
+                            <span>Tìm: "${activeFilters.search}"</span>
+                            <button onclick="removeSearchFilter()" class="ml-1 hover:text-primary-dark">
+                                <span class="material-symbols-outlined text-sm">close</span>
+                            </button>
+                        </span>`;
+                    }
+                    
+                    activeFiltersContainer.innerHTML = filtersHTML;
+                } else {
+                    activeFiltersContainer.classList.add('hidden');
+                    clearBtn.classList.add('hidden');
+                }
+            }
+            
+            function filterAppointments(searchQuery) {
+                activeFilters.search = searchQuery || '';
+                applyAllFilters();
+            }
+            
+            // Filter removal functions
+            window.removeDateFilter = function() {
+                activeFilters.date = 'today';
+                updateDateFilterText('today');
+                applyAllFilters();
+            };
+            
+            window.removeStatusFilter = function() {
+                activeFilters.status = 'all';
+                updateStatusFilterText('all');
+                applyAllFilters();
+            };
+            
+            window.removeVaccineFilter = function() {
+                activeFilters.vaccine = 'all';
+                updateVaccineFilterText('all');
+                applyAllFilters();
+            };
+            
+            window.removeSearchFilter = function() {
+                activeFilters.search = '';
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.value = '';
+                }
+                applyAllFilters();
+            };
+            
+            // Update filter button texts
+            function updateDateFilterText(value) {
+                const dateFilterText = document.getElementById('dateFilterText');
+                if (!dateFilterText) return;
+                
+                const labels = {
+                    'today': `Hôm nay: ${new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}`,
+                    'week': 'Tuần này',
+                    'month': 'Tháng này',
+                    'all': 'Tất cả ngày'
+                };
+                dateFilterText.textContent = labels[value] || labels.today;
+            }
+            
+            function updateStatusFilterText(value) {
+                const statusFilterText = document.getElementById('statusFilterText');
+                if (!statusFilterText) return;
+                
+                const labels = {
+                    'all': 'Trạng thái: Tất cả',
+                    'CONFIRMED': 'Trạng thái: Đã xác nhận',
+                    'CHECKED_IN': 'Trạng thái: Đã check-in',
+                    'SCREENING': 'Trạng thái: Đang khám'
+                };
+                statusFilterText.textContent = labels[value] || labels.all;
+            }
+            
+            function updateVaccineFilterText(value) {
+                const vaccineFilterText = document.getElementById('vaccineFilterText');
+                if (!vaccineFilterText) return;
+                
+                if (!value || value === 'all') {
+                    vaccineFilterText.textContent = 'Vaccine: Tất cả';
+                } else {
+                    const vaccine = allAppointments.find(apt => {
+                        if (!apt.vaccineInfo || !apt.vaccineInfo.id) return false;
+                        return String(apt.vaccineInfo.id) === String(value);
+                    });
+                    const vaccineName = vaccine?.vaccineInfo?.name || 'Vaccine';
+                    vaccineFilterText.textContent = `Vaccine: ${vaccineName}`;
+                }
+            }
+            
+            // Make goToPage accessible globally
+            window.goToPage = goToPage;
+            
+            // Clear filters function
+            function clearFilters() {
+                activeFilters = {
+                    date: 'today',
+                    status: 'all',
+                    vaccine: 'all',
+                    search: ''
+                };
+                
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.value = '';
+                }
+                
+                updateDateFilterText('today');
+                updateStatusFilterText('all');
+                updateVaccineFilterText('all');
+                
+                applyAllFilters();
+            }
+            
+            // Setup filter dropdowns
+            function setupFilterDropdowns() {
+                // Date filter
+                const dateFilterBtn = document.getElementById('dateFilterBtn');
+                const dateFilterDropdown = document.getElementById('dateFilterDropdown');
+                if (dateFilterBtn && dateFilterDropdown) {
+                    dateFilterBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        dateFilterDropdown.classList.toggle('hidden');
+                    });
+                    
+                    document.querySelectorAll('.date-filter-option').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const value = btn.getAttribute('data-value');
+                            activeFilters.date = value;
+                            updateDateFilterText(value);
+                            dateFilterDropdown.classList.add('hidden');
+                            applyAllFilters();
+                        });
+                    });
+                }
+                
+                // Status filter
+                const statusFilterBtn = document.getElementById('statusFilterBtn');
+                const statusFilterDropdown = document.getElementById('statusFilterDropdown');
+                if (statusFilterBtn && statusFilterDropdown) {
+                    statusFilterBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        statusFilterDropdown.classList.toggle('hidden');
+                    });
+                    
+                    document.querySelectorAll('.status-filter-option').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const value = btn.getAttribute('data-value');
+                            activeFilters.status = value;
+                            updateStatusFilterText(value);
+                            statusFilterDropdown.classList.add('hidden');
+                            applyAllFilters();
+                        });
+                    });
+                }
+                
+                // Vaccine filter
+                const vaccineFilterBtn = document.getElementById('vaccineFilterBtn');
+                const vaccineFilterDropdown = document.getElementById('vaccineFilterDropdown');
+                if (vaccineFilterBtn && vaccineFilterDropdown) {
+                    vaccineFilterBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        vaccineFilterDropdown.classList.toggle('hidden');
+                    });
+                    
+                    // Use event delegation for dynamically added options
+                    vaccineFilterDropdown.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('vaccine-filter-option')) {
+                            e.stopPropagation();
+                            const value = e.target.getAttribute('data-value');
+                            activeFilters.vaccine = value;
+                            updateVaccineFilterText(value);
+                            vaccineFilterDropdown.classList.add('hidden');
+                            applyAllFilters();
+                        }
+                    });
+                }
+                
+                // Close dropdowns when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!dateFilterBtn?.contains(e.target) && !dateFilterDropdown?.contains(e.target)) {
+                        dateFilterDropdown?.classList.add('hidden');
+                    }
+                    if (!statusFilterBtn?.contains(e.target) && !statusFilterDropdown?.contains(e.target)) {
+                        statusFilterDropdown?.classList.add('hidden');
+                    }
+                    if (!vaccineFilterBtn?.contains(e.target) && !vaccineFilterDropdown?.contains(e.target)) {
+                        vaccineFilterDropdown?.classList.add('hidden');
+                    }
+                });
             }
             
             document.addEventListener('DOMContentLoaded', function() {
+                // Initialize sidebar - đợi một chút để đảm bảo sidebar fragment đã được render
+                setTimeout(function() {
+                    if (typeof setupSidebar === 'function') {
+                        setupSidebar();
+                    }
+                }, 100);
+                
+                setCurrentDate();
                 loadAppointments();
+                setupFilterDropdowns();
                 
                 // Thêm event listener cho search input
                 const searchInput = document.getElementById('searchInput');
@@ -264,6 +821,12 @@
                     searchInput.addEventListener('input', function(e) {
                         filterAppointments(e.target.value);
                     });
+                }
+                
+                // Clear filters button
+                const clearBtn = document.getElementById('clearFiltersBtn');
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', clearFilters);
                 }
             });
         })();
