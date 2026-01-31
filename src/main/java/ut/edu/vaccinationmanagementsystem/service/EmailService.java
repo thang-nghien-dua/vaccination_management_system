@@ -31,18 +31,18 @@ public class EmailService {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
             message.setTo(token.getUser().getEmail());
-            message.setSubject("Xác thực email đăng ký tài khoản - Hệ thống Tiêm chủng Quốc gia");
+            message.setSubject("Xác thực email đăng ký tài khoản - Hệ thống Tiêm chủng VacciCare");
             
             String verificationUrl = baseUrl + "/api/auth/verify-email?token=" + token.getToken();
             
             String emailContent = "Xin chào " + token.getUser().getFullName() + ",\n\n" +
-                    "Cảm ơn bạn đã đăng ký tài khoản tại Hệ thống Tiêm chủng Quốc gia.\n\n" +
+                    "Cảm ơn bạn đã đăng ký tài khoản tại Hệ thống Tiêm chủng VacciCare.\n\n" +
                     "Vui lòng click vào link sau để xác thực email của bạn:\n" +
                     verificationUrl + "\n\n" +
                     "Link này sẽ hết hạn sau 24 giờ.\n\n" +
                     "Nếu bạn không đăng ký tài khoản này, vui lòng bỏ qua email này.\n\n" +
                     "Trân trọng,\n" +
-                    "Hệ thống Tiêm chủng Quốc gia";
+                    "Hệ thống Tiêm chủng VacciCare";
             
             message.setText(emailContent);
             
@@ -69,18 +69,18 @@ public class EmailService {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
             message.setTo(token.getUser().getEmail());
-            message.setSubject("Đặt lại mật khẩu - Hệ thống Tiêm chủng Quốc gia");
+            message.setSubject("Đặt lại mật khẩu - Hệ thống Tiêm chủng VacciCare");
             
             String resetUrl = baseUrl + "/reset-password?token=" + token.getToken();
             
             String emailContent = "Xin chào " + token.getUser().getFullName() + ",\n\n" +
-                    "Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản tại Hệ thống Tiêm chủng Quốc gia.\n\n" +
+                    "Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản tại Hệ thống Tiêm chủng VacciCare.\n\n" +
                     "Vui lòng click vào link sau để đặt lại mật khẩu:\n" +
                     resetUrl + "\n\n" +
                     "Link này sẽ hết hạn sau 1 giờ.\n\n" +
                     "Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này và mật khẩu của bạn sẽ không thay đổi.\n\n" +
                     "Trân trọng,\n" +
-                    "Hệ thống Tiêm chủng Quốc gia";
+                    "Hệ thống Tiêm chủng VacciCare";
             
             message.setText(emailContent);
             
@@ -88,6 +88,24 @@ public class EmailService {
         } catch (Exception e) {
             // Log error nhưng không throw exception
             System.err.println("Failed to send password reset email: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Gửi email đơn giản
+     */
+    public void sendEmail(String toEmail, String subject, String content) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(toEmail);
+            message.setSubject(subject);
+            message.setText(content);
+            mailSender.send(message);
+        } catch (Exception e) {
+            // Log error nhưng không throw exception
+            System.err.println("Failed to send email: " + e.getMessage());
             e.printStackTrace();
         }
     }

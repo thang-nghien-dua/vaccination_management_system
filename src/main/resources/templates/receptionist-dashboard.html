@@ -1,0 +1,2062 @@
+<!DOCTYPE html>
+<html class="light" lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Dashboard Lễ tân - VacciCare</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="/js/sidebar.js"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0f766e",
+                        "primary-light": "#14b8a6",
+                        "primary-dark": "#134e4a",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav {
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.1) 0%, rgba(15, 118, 110, 0.05) 100%);
+            border-left: 4px solid #0f766e;
+            color: #0f766e;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .stat-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        .dark .stat-card {
+            background: linear-gradient(135deg, rgba(26, 46, 33, 0.9) 0%, rgba(26, 46, 33, 0.7) 100%);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass-effect {
+            background: rgba(26, 46, 33, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        }
+        .sidebar-nav-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar-nav-item:hover {
+            transform: translateX(4px);
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.1) 0%, rgba(15, 118, 110, 0.05) 100%);
+        }
+        /* Ensure hidden modals don't block interactions */
+        #walkInModal.hidden,
+        #appointmentDetailModal.hidden,
+        #sidebarOverlay.hidden {
+            display: none !important;
+            pointer-events: none !important;
+            visibility: hidden !important;
+        }
+        #walkInModal:not(.hidden),
+        #appointmentDetailModal:not(.hidden) {
+            pointer-events: auto;
+        }
+        /* Ensure form elements in modal are interactive */
+        #walkInModal:not(.hidden) #walkInModalContentWrapper,
+        #walkInModal:not(.hidden) #walkInModalContent,
+        #walkInModal:not(.hidden) input,
+        #walkInModal:not(.hidden) select,
+        #walkInModal:not(.hidden) textarea,
+        #walkInModal:not(.hidden) button {
+            pointer-events: auto !important;
+        }
+        /* Ensure sidebar overlay doesn't block when hidden */
+        #sidebarOverlay.hidden {
+            opacity: 0 !important;
+            z-index: -1 !important;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen text-[#111813] dark:text-white font-display">
+<div class="flex min-h-screen">
+    <!-- Sidebar Overlay (mobile) -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-72 bg-white dark:bg-[#1a2e21] border-r border-[#f0f4f2] dark:border-[#2d3f33] fixed h-screen z-50 transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out flex flex-col overflow-hidden shadow-xl lg:shadow-none">
+        <div class="p-6 flex items-center gap-3 flex-shrink-0">
+            <button id="sidebarToggleBtn" class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors flex-shrink-0" title="Menu">
+                <span class="material-symbols-outlined text-xl">menu</span>
+            </button>
+            <h1 id="sidebarLogoText" class="text-xl font-bold tracking-tight flex-1 lg:block">VacciCare</h1>
+            <button id="sidebarCloseBtn" class="lg:hidden p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors flex-shrink-0" title="Đóng sidebar">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div id="sidebarUserProfile" class="px-4 mb-6 flex-shrink-0" th:if="${isAuthenticated}">
+            <div class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark rounded-xl">
+                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 bg-primary/20 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0" th:if="${currentUser?.fullName != null}">
+                    <span th:text="${#strings.substring(currentUser.fullName, 0, 1)}"></span>
+                </div>
+                <div class="flex flex-col overflow-hidden min-w-0 lg:block">
+                    <p id="sidebarUserName" class="text-sm font-bold truncate" th:text="${currentUser?.fullName ?: currentUser?.email}">Tên người dùng</p>
+                    <p id="sidebarUserRole" class="text-xs text-[#61896f] truncate">Lễ tân</p>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 px-3 py-3 space-y-2 overflow-y-auto min-h-0">
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl active-nav text-primary font-bold" href="/receptionist/dashboard">
+                <span class="material-symbols-outlined text-xl">dashboard</span>
+                <span class="text-sm font-semibold">Dashboard</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium" href="/receptionist/profile">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">person</span>
+                <span class="text-sm">Thông tin cá nhân</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium relative" href="/receptionist/notifications">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">notifications</span>
+                <span class="text-sm">Thông báo</span>
+                <span id="notificationBadge" class="hidden absolute top-1.5 right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">0</span>
+            </a>
+        </nav>
+        <div class="mt-auto p-4 border-t border-[#f0f4f2] dark:border-[#2d3f33] flex-shrink-0">
+            <form th:action="@{/api/auth/logout}" method="post" class="w-full">
+                <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span class="text-sm font-medium">Đăng xuất</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-72">
+        <header class="sticky top-0 z-50 glass-effect border-b border-white/20 dark:border-white/10 px-6 lg:px-8 py-6 backdrop-blur-xl shadow-lg shadow-black/5">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <button id="mobileMenuBtn" class="lg:hidden p-2.5 rounded-xl hover:bg-white/20 dark:hover:bg-white/10 transition-all hover:scale-110 active:scale-95">
+                        <span class="material-symbols-outlined text-xl">menu</span>
+                    </button>
+                    <div>
+                        <h1 class="text-3xl font-extrabold bg-gradient-to-r from-primary via-primary-light to-primary bg-clip-text text-transparent">Dashboard Lễ tân</h1>
+                        <p id="dateDisplay" class="text-sm text-[#61896f] dark:text-gray-400 mt-1.5 font-medium">Quản lý lịch hẹn và khách hàng</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="refreshBtn" class="p-2.5 rounded-xl hover:bg-white/20 dark:hover:bg-white/10 transition-all hover:scale-110 active:scale-95 hover:rotate-180" title="Làm mới">
+                        <span class="material-symbols-outlined text-xl">refresh</span>
+                    </button>
+                    <button id="createWalkInBtn" class="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95">
+                        <span class="material-symbols-outlined text-lg">person_add</span>
+                        <span>Đăng ký Walk-in</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
+            <!-- Dashboard Content -->
+            <div id="dashboardContent" class="space-y-6">
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 fade-in">
+                    <div class="stat-card rounded-3xl shadow-xl border-2 border-primary/30 dark:border-primary/40 p-6 group relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div class="relative flex items-center justify-between">
+                            <div class="flex-1">
+                                <p id="statTotalLabel" class="text-xs font-semibold text-[#61896f] dark:text-primary-light/70 mb-2 uppercase tracking-wide">Tổng lịch hôm nay</p>
+                                <p id="statTotal" class="text-3xl font-extrabold bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent group-hover:scale-110 transition-transform duration-300">0</p>
+                            </div>
+                            <div class="size-14 bg-gradient-to-br from-primary/20 to-primary-light/10 rounded-2xl flex items-center justify-center group-hover:from-primary/30 group-hover:to-primary-light/20 transition-all duration-300 shadow-lg shadow-primary/20">
+                                <span class="material-symbols-outlined text-primary text-3xl">calendar_today</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card rounded-3xl shadow-xl border-2 border-green-500/30 dark:border-green-500/40 p-6 group relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div class="relative flex items-center justify-between">
+                            <div class="flex-1">
+                                <p class="text-xs font-semibold text-[#61896f] dark:text-green-400/70 mb-2 uppercase tracking-wide">Đã check-in</p>
+                                <p id="statCheckedIn" class="text-3xl font-extrabold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent group-hover:scale-110 transition-transform duration-300">0</p>
+                            </div>
+                            <div class="size-14 bg-gradient-to-br from-green-500/20 to-green-600/10 rounded-2xl flex items-center justify-center group-hover:from-green-500/30 group-hover:to-green-600/20 transition-all duration-300 shadow-lg shadow-green-500/20">
+                                <span class="material-symbols-outlined text-green-500 text-3xl">check_circle</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card rounded-3xl shadow-xl border-2 border-yellow-500/30 dark:border-yellow-500/40 p-6 group relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div class="relative flex items-center justify-between">
+                            <div class="flex-1">
+                                <p class="text-xs font-semibold text-[#61896f] dark:text-yellow-400/70 mb-2 uppercase tracking-wide">Chờ xác nhận</p>
+                                <p id="statPending" class="text-3xl font-extrabold bg-gradient-to-r from-yellow-600 to-yellow-500 bg-clip-text text-transparent group-hover:scale-110 transition-transform duration-300">0</p>
+                            </div>
+                            <div class="size-14 bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 rounded-2xl flex items-center justify-center group-hover:from-yellow-500/30 group-hover:to-yellow-600/20 transition-all duration-300 shadow-lg shadow-yellow-500/20">
+                                <span class="material-symbols-outlined text-yellow-500 text-3xl">schedule</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card rounded-3xl shadow-xl border-2 border-blue-500/30 dark:border-blue-500/40 p-6 group relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div class="relative flex items-center justify-between">
+                            <div class="flex-1">
+                                <p class="text-xs font-semibold text-[#61896f] dark:text-blue-400/70 mb-2 uppercase tracking-wide">Hoàn thành</p>
+                                <p id="statCompleted" class="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent group-hover:scale-110 transition-transform duration-300">0</p>
+                            </div>
+                            <div class="size-14 bg-gradient-to-br from-blue-500/20 to-blue-600/10 rounded-2xl flex items-center justify-center group-hover:from-blue-500/30 group-hover:to-blue-600/20 transition-all duration-300 shadow-lg shadow-blue-500/20">
+                                <span class="material-symbols-outlined text-blue-500 text-3xl">done_all</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Section -->
+                <div class="glass-effect rounded-3xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300 fade-in">
+                    <h3 class="text-xl font-extrabold mb-6 flex items-center gap-3">
+                        <span class="size-10 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30">
+                            <span class="material-symbols-outlined text-white text-lg">search</span>
+                        </span>
+                        <span class="bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">Tìm kiếm lịch hẹn</span>
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold mb-2 text-[#61896f] dark:text-gray-400">Số điện thoại</label>
+                            <input type="tel" id="searchPhone" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white shadow-sm hover:shadow-md" placeholder="Nhập số điện thoại" onkeypress="if(event.key==='Enter') document.getElementById('searchBtn').click()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-2 text-[#61896f] dark:text-gray-400">Mã booking</label>
+                            <input type="text" id="searchBookingCode" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white shadow-sm hover:shadow-md" placeholder="Nhập mã booking" onkeypress="if(event.key==='Enter') document.getElementById('searchBtn').click()">
+                        </div>
+                        <div class="flex items-end gap-2">
+                            <button id="searchBtn" class="flex-1 bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95" title="Tìm kiếm (Enter)">
+                                <span class="material-symbols-outlined">search</span>
+                                <span>Tìm kiếm</span>
+                            </button>
+                            <button id="clearSearchBtn" class="px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all hover:scale-105 active:scale-95" title="Xóa tìm kiếm">
+                                <span class="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date Filter -->
+                <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-primary/20 dark:border-primary/30 p-6">
+                    <label class="block text-sm font-semibold mb-3">Chọn ngày xem lịch hẹn</label>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <button class="date-tab px-4 py-2 rounded-xl font-medium transition-all active bg-primary text-white" data-date="today">
+                            <span class="material-symbols-outlined text-sm mr-1">today</span>
+                            Hôm nay
+                        </button>
+                        <button class="date-tab px-4 py-2 rounded-xl font-medium transition-all text-[#61896f]" data-date="tomorrow">
+                            <span class="material-symbols-outlined text-sm mr-1">event</span>
+                            Ngày mai
+                        </button>
+                        <div class="flex-1 min-w-[200px]">
+                            <input type="date" id="datePicker" class="w-full px-4 py-2 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-primary/20 dark:border-primary/30 p-6">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex-1 min-w-[200px]">
+                            <label class="block text-sm font-semibold mb-2">Lọc theo trạng thái</label>
+                            <div class="flex gap-2 flex-wrap">
+                                <button class="status-tab px-4 py-2 rounded-xl font-medium transition-all active bg-primary text-white" data-status="">Tất cả</button>
+                                <button class="status-tab px-4 py-2 rounded-xl font-medium transition-all text-[#61896f]" data-status="PENDING">Chờ xác nhận</button>
+                                <button class="status-tab px-4 py-2 rounded-xl font-medium transition-all text-[#61896f]" data-status="CONFIRMED">Đã xác nhận</button>
+                                <button class="status-tab px-4 py-2 rounded-xl font-medium transition-all text-[#61896f]" data-status="CHECKED_IN">Đã check-in</button>
+                                <button class="status-tab px-4 py-2 rounded-xl font-medium transition-all text-[#61896f]" data-status="SCREENING">Đang khám</button>
+                                <button class="status-tab px-4 py-2 rounded-xl font-medium transition-all text-[#61896f]" data-status="COMPLETED">Hoàn thành</button>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-[200px]">
+                            <label class="block text-sm font-semibold mb-2">Lọc theo thanh toán</label>
+                            <div class="flex gap-2">
+                                <button class="payment-filter-btn px-4 py-2 rounded-xl font-medium transition-all active bg-primary text-white" data-filter="all">Tất cả</button>
+                                <button class="payment-filter-btn px-4 py-2 rounded-xl font-medium transition-all text-[#61896f]" data-filter="paid">Đã thanh toán</button>
+                                <button class="payment-filter-btn px-4 py-2 rounded-xl font-medium transition-all text-[#61896f]" data-filter="unpaid">Chưa thanh toán</button>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-[200px]">
+                            <label class="block text-sm font-semibold mb-2">Lọc theo trung tâm</label>
+                            <select id="centerFilter" class="w-full px-4 py-2 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white text-sm">
+                                <option value="">Tất cả trung tâm</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appointments List -->
+                <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-primary/20 dark:border-primary/30 p-6 hover:shadow-xl transition-all duration-300">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold flex items-center gap-2">
+                            <span class="size-8 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center shadow-md">
+                                <span class="material-symbols-outlined text-white text-sm">event</span>
+                            </span>
+                            Danh sách lịch hẹn
+                        </h3>
+                        <div class="flex items-center gap-4">
+                            <select id="sortAppointments" class="px-3 py-2 rounded-lg border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white text-sm" title="Sắp xếp danh sách">
+                                <option value="time">Sắp xếp theo giờ</option>
+                                <option value="name">Sắp xếp theo tên</option>
+                            </select>
+                            <div id="appointmentCount" class="text-sm text-[#61896f] font-semibold">0 lịch hẹn</div>
+                        </div>
+                    </div>
+                    <div id="appointmentsList" class="space-y-4">
+                        <div class="text-center py-12 text-[#61896f]">
+                            <span class="material-symbols-outlined text-6xl mb-4 block animate-pulse">event_busy</span>
+                            <p>Đang tải danh sách lịch hẹn...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Walk-in Modal -->
+<div id="walkInModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0" id="walkInModalContentWrapper">
+        <div class="bg-white dark:bg-[#1a2e21] border-b border-[#e2e8f0] dark:border-[#2d3f33] p-6 flex items-center justify-between">
+            <h3 class="text-xl font-bold flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">person_add</span>
+                Đăng ký Walk-in
+            </h3>
+            <button id="closeWalkInModalBtn" class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div id="walkInModalContent" class="p-6">
+            <p class="text-center text-[#61896f]">Đang tải form...</p>
+        </div>
+        <div class="bg-white dark:bg-[#1a2e21] border-t border-[#e2e8f0] dark:border-[#2d3f33] p-6 flex gap-4">
+            <button id="cancelWalkInBtn" class="flex-1 bg-[#f0f4f2] dark:bg-[#2d3f33] hover:bg-[#e2e8f0] dark:hover:bg-[#3d4f43] text-[#111813] dark:text-white px-6 py-3 rounded-xl font-bold transition-all">
+                Hủy
+            </button>
+            <button id="confirmWalkInBtn" class="flex-1 bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                <span id="confirmWalkInBtnText">Tạo lịch hẹn</span>
+                <span id="confirmWalkInBtnSpinner" class="hidden">
+                    <span class="material-symbols-outlined animate-spin">refresh</span>
+                </span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Appointment Detail Modal -->
+<div id="appointmentDetailModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0" id="appointmentDetailModalWrapper">
+        <div class="bg-white dark:bg-[#1a2e21] border-b border-[#e2e8f0] dark:border-[#2d3f33] p-6 flex items-center justify-between">
+            <h3 class="text-xl font-bold flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">info</span>
+                Chi tiết lịch hẹn
+            </h3>
+            <button id="closeDetailModalBtn" class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div id="appointmentDetailContent" class="p-6">
+            <p class="text-center text-[#61896f]">Đang tải thông tin...</p>
+        </div>
+        <div id="appointmentDetailFooter" class="bg-white dark:bg-[#1a2e21] border-t border-[#e2e8f0] dark:border-[#2d3f33] p-6 flex gap-4">
+            <button id="closeDetailModalBtn2" class="flex-1 bg-[#f0f4f2] dark:bg-[#2d3f33] hover:bg-[#e2e8f0] dark:hover:bg-[#3d4f43] text-[#111813] dark:text-white px-6 py-3 rounded-xl font-bold transition-all">
+                Đóng
+            </button>
+            <button id="printInvoiceBtn" class="flex-1 bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">print</span>
+                <span>In hóa đơn</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Message Toast -->
+<div id="messageToast" class="hidden fixed top-4 right-4 z-50 bg-white dark:bg-[#1a2e21] rounded-xl shadow-2xl border-2 border-primary/20 dark:border-primary/30 p-4 min-w-[300px]">
+    <div class="flex items-center gap-3">
+        <span id="messageIcon" class="material-symbols-outlined text-2xl"></span>
+        <p id="messageText" class="flex-1 font-medium"></p>
+        <button id="closeMessageBtn" class="p-1 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors">
+            <span class="material-symbols-outlined text-sm">close</span>
+        </button>
+    </div>
+</div>
+
+<script>
+    // Global state
+    let allAppointments = [];
+    let currentStatusFilter = '';
+    let currentPaymentFilter = 'all';
+    let currentCenterFilter = '';
+    let currentAppointmentDetail = null;
+    let walkInData = { vaccines: [], centers: [] };
+    let currentDate = null; // null = today, or specific date string YYYY-MM-DD
+    let allCenters = []; // Store centers for filtering
+
+    // Status mapping
+    const statusMap = {
+        'PENDING': { text: 'Chờ xác nhận', color: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400' },
+        'CONFIRMED': { text: 'Đã xác nhận', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400' },
+        'CHECKED_IN': { text: 'Đã check-in', color: 'bg-green-500/10 text-green-600 dark:text-green-400' },
+        'SCREENING': { text: 'Đang khám sàng lọc', color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400' },
+        'APPROVED': { text: 'Đủ điều kiện tiêm', color: 'bg-teal-500/10 text-teal-600 dark:text-teal-400' },
+        'REJECTED': { text: 'Không đủ điều kiện', color: 'bg-red-500/10 text-red-600 dark:text-red-400' },
+        'INJECTING': { text: 'Đang tiêm', color: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' },
+        'MONITORING': { text: 'Đang theo dõi', color: 'bg-orange-500/10 text-orange-600 dark:text-orange-400' },
+        'COMPLETED': { text: 'Hoàn thành', color: 'bg-green-500/10 text-green-600 dark:text-green-400' },
+        'CANCELLED': { text: 'Đã hủy', color: 'bg-gray-500/10 text-gray-600 dark:text-gray-400' },
+        'RESCHEDULED': { text: 'Đã đổi lịch', color: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400' }
+    };
+
+    // Utility functions
+    function formatDateTime(dateStr) {
+        if (!dateStr) return '-';
+        const date = new Date(dateStr);
+        return date.toLocaleString('vi-VN', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        try {
+            // Handle LocalDate format (YYYY-MM-DD)
+            if (typeof dateStr === 'string' && dateStr.includes('T')) {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            } else if (typeof dateStr === 'string') {
+                // Direct date string YYYY-MM-DD
+                const [year, month, day] = dateStr.split('-');
+                return `${day}/${month}/${year}`;
+            }
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return '-';
+            return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        } catch (error) {
+            console.error('Error formatting date:', dateStr, error);
+            return '-';
+        }
+    }
+
+    function formatTime(timeStr) {
+        if (!timeStr) return '-';
+        try {
+            // Handle LocalTime format (HH:mm:ss or HH:mm)
+            if (typeof timeStr === 'string') {
+                return timeStr.substring(0, 5);
+            }
+            return '-';
+        } catch (error) {
+            console.error('Error formatting time:', timeStr, error);
+            return '-';
+        }
+    }
+
+    function formatCurrency(amount) {
+        if (!amount) return '0 ₫';
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+    }
+
+    function showMessage(message, type = 'info') {
+        const toast = document.getElementById('messageToast');
+        const icon = document.getElementById('messageIcon');
+        const text = document.getElementById('messageText');
+        
+        toast.classList.remove('hidden');
+        text.textContent = message;
+        
+        switch(type) {
+            case 'success':
+                icon.textContent = 'check_circle';
+                icon.className = 'material-symbols-outlined text-2xl text-green-500';
+                break;
+            case 'error':
+                icon.textContent = 'error';
+                icon.className = 'material-symbols-outlined text-2xl text-red-500';
+                break;
+            default:
+                icon.textContent = 'info';
+                icon.className = 'material-symbols-outlined text-2xl text-blue-500';
+        }
+        
+        setTimeout(() => {
+            toast.classList.add('hidden');
+        }, 5000);
+    }
+
+    // Load appointments by date
+    async function loadAppointmentsByDate(date = null, status = null) {
+        try {
+            let url = '/api/appointments/today';
+            const params = [];
+            
+            if (date) {
+                params.push(`date=${date}`);
+            }
+            if (status) {
+                params.push(`status=${status}`);
+            }
+            
+            if (params.length > 0) {
+                url += '?' + params.join('&');
+            }
+            
+            const listContainer = document.getElementById('appointmentsList');
+            if (listContainer) {
+                listContainer.innerHTML = `
+                    <div class="text-center py-12 text-[#61896f]">
+                        <span class="material-symbols-outlined text-6xl mb-4 block animate-spin">refresh</span>
+                        <p>Đang tải danh sách lịch hẹn...</p>
+                    </div>
+                `;
+            }
+            
+            const response = await fetch(url, { credentials: 'include' });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result && result.appointments) {
+                // Ensure appointments is an array
+                allAppointments = Array.isArray(result.appointments) ? result.appointments : [];
+                const displayDate = result.date || (date || new Date().toISOString().split('T')[0]);
+                
+                // Extract unique centers from appointments for filter
+                const centersSet = new Set();
+                allAppointments.forEach(apt => {
+                    if (apt.center && apt.center.id) {
+                        centersSet.add(JSON.stringify({ id: apt.center.id, name: apt.center.name }));
+                    }
+                });
+                allCenters = Array.from(centersSet).map(c => JSON.parse(c));
+                updateCenterFilter();
+                
+                // Update date display
+                updateDateDisplay(displayDate);
+                
+                applyFilters();
+                updateStatistics();
+            } else {
+                allAppointments = [];
+                allCenters = [];
+                updateCenterFilter();
+                applyFilters();
+                updateStatistics();
+            }
+        } catch (error) {
+            allAppointments = [];
+            applyFilters();
+            updateStatistics();
+            const listContainer = document.getElementById('appointmentsList');
+            if (listContainer) {
+                listContainer.innerHTML = `
+                    <div class="text-center py-12 text-red-500">
+                        <span class="material-symbols-outlined text-6xl mb-4 block">error</span>
+                        <p>Có lỗi xảy ra khi tải danh sách lịch hẹn</p>
+                        <p class="text-sm mt-2">Vui lòng thử lại sau</p>
+                        <p class="text-xs mt-1 text-gray-500">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    }
+    
+    // Load today's appointments (backward compatibility)
+    async function loadTodayAppointments(status = null) {
+        await loadAppointmentsByDate(null, status);
+    }
+    
+    // Update date display
+    function updateDateDisplay(dateStr) {
+        if (!dateStr) {
+            dateStr = new Date().toISOString().split('T')[0];
+        }
+        
+        const date = new Date(dateStr + 'T00:00:00');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        const selectedDate = new Date(date);
+        selectedDate.setHours(0, 0, 0, 0);
+        
+        let dateText = '';
+        let statLabel = 'Tổng lịch';
+        if (selectedDate.getTime() === today.getTime()) {
+            dateText = 'Hôm nay';
+            statLabel = 'Tổng lịch hôm nay';
+        } else if (selectedDate.getTime() === tomorrow.getTime()) {
+            dateText = 'Ngày mai';
+            statLabel = 'Tổng lịch ngày mai';
+        } else {
+            dateText = date.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            statLabel = `Tổng lịch ${date.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric' })}`;
+        }
+        
+        // Update date display in header
+        const dateDisplay = document.getElementById('dateDisplay');
+        if (dateDisplay) {
+            dateDisplay.textContent = `Quản lý lịch hẹn và khách hàng - ${dateText}`;
+        }
+        
+        // Update statistics label
+        const statTotalLabel = document.getElementById('statTotalLabel');
+        if (statTotalLabel) {
+            statTotalLabel.textContent = statLabel;
+        }
+    }
+
+    // Apply filters
+    function applyFilters() {
+        let filtered = [...allAppointments];
+        
+        // Status filter
+        if (currentStatusFilter) {
+            filtered = filtered.filter(apt => apt.status === currentStatusFilter);
+        }
+        
+        // Payment filter
+        if (currentPaymentFilter === 'paid') {
+            filtered = filtered.filter(apt => apt.payment && apt.payment.paymentStatus === 'PAID');
+        } else if (currentPaymentFilter === 'unpaid') {
+            filtered = filtered.filter(apt => !apt.payment || apt.payment.paymentStatus !== 'PAID');
+        }
+        
+        // Center filter
+        if (currentCenterFilter) {
+            filtered = filtered.filter(apt => apt.center && apt.center.id == currentCenterFilter);
+        }
+        
+        // Sort appointments
+        const sortSelect = document.getElementById('sortAppointments');
+        const sortBy = sortSelect ? sortSelect.value : 'time';
+        filtered.sort((a, b) => {
+            switch(sortBy) {
+                case 'name':
+                    const nameA = getPatientInfo(a).fullName.toLowerCase();
+                    const nameB = getPatientInfo(b).fullName.toLowerCase();
+                    return nameA.localeCompare(nameB, 'vi');
+                case 'time':
+                default:
+                    // Sắp xếp theo ngày trước, sau đó theo giờ
+                    const dateA = a.appointmentDate || '';
+                    const dateB = b.appointmentDate || '';
+                    if (dateA !== dateB) {
+                        return dateA.localeCompare(dateB);
+                    }
+                    const timeA = a.appointmentTime || '';
+                    const timeB = b.appointmentTime || '';
+                    return timeA.localeCompare(timeB);
+            }
+        });
+        
+        renderAppointments(filtered);
+        
+        // Update count display
+        const countEl = document.getElementById('appointmentCount');
+        if (countEl) {
+            countEl.textContent = `${filtered.length} lịch hẹn`;
+        }
+    }
+
+    // Helper function to get patient info from appointment
+    function getPatientInfo(apt) {
+        if (!apt) {
+            return {
+                fullName: 'N/A',
+                phoneNumber: 'N/A',
+                email: null,
+                dayOfBirth: null,
+                gender: null
+            };
+        }
+        
+        // Check if patient info is already mapped (from /detail endpoint)
+        if (apt.patient) {
+            return {
+                fullName: apt.patient.fullName || 'N/A',
+                phoneNumber: apt.patient.phoneNumber || 'N/A',
+                email: apt.patient.email || null,
+                dayOfBirth: apt.patient.dayOfBirth || null,
+                gender: apt.patient.gender ? (typeof apt.patient.gender === 'string' ? apt.patient.gender : apt.patient.gender.name || apt.patient.gender.toString()) : null
+            };
+        }
+        
+        // Check familyMember FIRST (ưu tiên cao nhất - đây là người thân sẽ được tiêm)
+        if (apt.familyMember) {
+            return {
+                fullName: apt.familyMember.fullName || 'N/A',
+                phoneNumber: apt.familyMember.phoneNumber || 'N/A',
+                email: null,
+                dayOfBirth: apt.familyMember.dateOfBirth || null,
+                gender: apt.familyMember.gender ? (typeof apt.familyMember.gender === 'string' ? apt.familyMember.gender : apt.familyMember.gender.name || apt.familyMember.gender.toString()) : null
+            };
+        }
+        
+        // Check bookedForUser (from /today and /search endpoints)
+        if (apt.bookedForUser) {
+            return {
+                fullName: apt.bookedForUser.fullName || 'N/A',
+                phoneNumber: apt.bookedForUser.phoneNumber || 'N/A',
+                email: apt.bookedForUser.email || null,
+                dayOfBirth: apt.bookedForUser.dayOfBirth || null,
+                gender: apt.bookedForUser.gender ? (typeof apt.bookedForUser.gender === 'string' ? apt.bookedForUser.gender : apt.bookedForUser.gender.name || apt.bookedForUser.gender.toString()) : null
+            };
+        }
+        
+        // Guest info
+        if (apt.guestFullName || apt.consultationPhone || apt.guestEmail) {
+            return {
+                fullName: apt.guestFullName || 'Khách vãng lai',
+                phoneNumber: apt.consultationPhone || 'N/A',
+                email: apt.guestEmail || null,
+                dayOfBirth: apt.guestDayOfBirth || null,
+                gender: apt.guestGender ? (typeof apt.guestGender === 'string' ? apt.guestGender : apt.guestGender.name || apt.guestGender.toString()) : null
+            };
+        }
+        
+        // No patient info available - use booking code or notes as fallback
+        return {
+            fullName: apt.bookingCode ? `Lịch hẹn ${apt.bookingCode}` : 'Không có thông tin',
+            phoneNumber: apt.consultationPhone || 'N/A',
+            email: null,
+            dayOfBirth: null,
+            gender: null
+        };
+    }
+
+    // Update center filter dropdown
+    function updateCenterFilter() {
+        const centerFilter = document.getElementById('centerFilter');
+        if (!centerFilter) return;
+        
+        const currentValue = centerFilter.value;
+        centerFilter.innerHTML = '<option value="">Tất cả trung tâm</option>';
+        
+        allCenters.forEach(center => {
+            const option = document.createElement('option');
+            option.value = center.id;
+            option.textContent = center.name || `Trung tâm ${center.id}`;
+            centerFilter.appendChild(option);
+        });
+        
+        if (currentValue) {
+            centerFilter.value = currentValue;
+        }
+    }
+    
+    // Render appointments
+    function renderAppointments(appointments) {
+        const container = document.getElementById('appointmentsList');
+        
+        if (appointments.length === 0) {
+            const hasFilters = currentStatusFilter || currentPaymentFilter !== 'all' || currentCenterFilter;
+            container.innerHTML = `
+                <div class="text-center py-12 text-[#61896f]">
+                    <span class="material-symbols-outlined text-6xl mb-4 block">event_busy</span>
+                    <p class="text-lg font-semibold mb-2">${hasFilters ? 'Không tìm thấy lịch hẹn phù hợp' : 'Không có lịch hẹn nào'}</p>
+                    ${hasFilters ? '<p class="text-sm">Thử thay đổi bộ lọc để xem thêm kết quả</p>' : ''}
+                </div>
+            `;
+            return;
+        }
+        
+        const today = new Date().toISOString().split('T')[0];
+        container.innerHTML = appointments.map(apt => {
+            const statusInfo = statusMap[apt.status] || { text: apt.status || 'N/A', color: 'bg-gray-500/10 text-gray-600' };
+            const paymentStatus = apt.payment ? apt.payment.paymentStatus : null;
+            const isPaid = paymentStatus === 'PAID';
+            const paymentMethod = apt.payment ? apt.payment.paymentMethod : null;
+            const canMarkPaid = paymentMethod === 'CASH' && !isPaid && apt.status !== 'CANCELLED';
+            const patient = getPatientInfo(apt);
+            // Chỉ cho phép check-in khi status là PENDING hoặc CONFIRMED và ngày hẹn là hôm nay
+            const canCheckIn = (apt.status === 'PENDING' || apt.status === 'CONFIRMED') && 
+                              apt.appointmentDate === today &&
+                              apt.status !== 'CHECKED_IN' && 
+                              apt.status !== 'COMPLETED' && 
+                              apt.status !== 'CANCELLED';
+            
+            return `
+                <div class="card-hover bg-gradient-to-br from-white/80 to-[#f0f4f2]/80 dark:from-[#1a2e21]/80 dark:to-[#2d3f33]/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-transparent hover:border-primary/40 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:via-primary/3 group-hover:to-primary/5 transition-all duration-300"></div>
+                    <div class="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-3">
+                                <span class="px-3 py-1 rounded-lg text-xs font-bold ${statusInfo.color}">${statusInfo.text}</span>
+                                ${paymentStatus ? `
+                                    <span class="px-3 py-1 rounded-lg text-xs font-bold ${isPaid ? 'bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}">
+                                        ${isPaid ? 'Đã thanh toán' : 'Chưa thanh toán'}
+                                    </span>
+                                ` : ''}
+                                ${apt.queueNumber ? `<span class="px-3 py-1 rounded-lg text-xs font-bold bg-primary/10 text-primary">Số thứ tự: ${apt.queueNumber}</span>` : ''}
+                            </div>
+                            <h4 class="font-bold text-lg mb-2">${patient.fullName}</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-[#61896f]">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-base">phone</span>
+                                    <span>${patient.phoneNumber}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-base">calendar_today</span>
+                                    <span>${formatDate(apt.appointmentDate)} ${formatTime(apt.appointmentTime)}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-base">vaccines</span>
+                                    <span>${apt.vaccine && apt.vaccine.name ? apt.vaccine.name : 'N/A'}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-base">location_on</span>
+                                    <span>${apt.center && apt.center.name ? apt.center.name : 'N/A'}</span>
+                                </div>
+                            </div>
+                            ${apt.payment && apt.payment.amount ? `
+                                <div class="mt-3 pt-3 border-t border-[#e2e8f0] dark:border-[#2d3f33]">
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-[#61896f]">Thanh toán:</span>
+                                        <span class="font-bold">${formatCurrency(apt.payment.amount)}</span>
+                                    </div>
+                                    <div class="text-xs text-[#61896f] mt-1">
+                                        Phương thức: ${paymentMethod === 'CASH' ? 'Tiền mặt' : paymentMethod === 'VNPAY' ? 'VNPay' : 'N/A'}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="flex flex-col gap-2 md:w-auto w-full">
+                            ${canCheckIn ? `
+                                <button onclick="checkInAppointment(${apt.id})" class="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95">
+                                    <span class="material-symbols-outlined text-base">check_circle</span>
+                                    <span>Check-in</span>
+                                </button>
+                            ` : ''}
+                            ${apt.status === 'PENDING' ? `
+                                <button onclick="confirmAppointment(${apt.id})" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:scale-105 active:scale-95" title="Xác nhận lịch hẹn">
+                                    <span class="material-symbols-outlined text-base">done</span>
+                                    <span>Xác nhận</span>
+                                </button>
+                            ` : ''}
+                            ${(apt.status === 'PENDING' || apt.status === 'CONFIRMED') && apt.status !== 'CANCELLED' ? `
+                                <button onclick="cancelAppointmentByReceptionist(${apt.id})" class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 hover:scale-105 active:scale-95" title="Hủy lịch hẹn">
+                                    <span class="material-symbols-outlined text-base">cancel</span>
+                                    <span>Hủy</span>
+                                </button>
+                            ` : ''}
+                            ${canMarkPaid ? `
+                                <button onclick="markPaymentAsPaid(${apt.id})" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 hover:scale-105 active:scale-95">
+                                    <span class="material-symbols-outlined text-base">payments</span>
+                                    <span>Đã thanh toán</span>
+                                </button>
+                            ` : ''}
+                            <button onclick="viewAppointmentDetails(${apt.id})" class="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-[#111813] dark:text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95">
+                                <span class="material-symbols-outlined text-base">info</span>
+                                <span>Chi tiết</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Update statistics
+    function updateStatistics() {
+        const total = allAppointments.length;
+        const checkedIn = allAppointments.filter(apt => apt.status === 'CHECKED_IN').length;
+        const pending = allAppointments.filter(apt => apt.status === 'PENDING').length;
+        const completed = allAppointments.filter(apt => apt.status === 'COMPLETED').length;
+        
+        const statTotal = document.getElementById('statTotal');
+        const statCheckedIn = document.getElementById('statCheckedIn');
+        const statPending = document.getElementById('statPending');
+        const statCompleted = document.getElementById('statCompleted');
+        
+        if (statTotal) statTotal.textContent = total;
+        if (statCheckedIn) statCheckedIn.textContent = checkedIn;
+        if (statPending) statPending.textContent = pending;
+        if (statCompleted) statCompleted.textContent = completed;
+    }
+
+    // Check-in appointment
+    async function checkInAppointment(appointmentId) {
+        if (!confirm('Xác nhận check-in cho lịch hẹn này?')) return;
+        
+        try {
+            const response = await fetch(`/api/appointments/${appointmentId}/check-in`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                const errorResult = await response.json().catch(() => ({}));
+                throw new Error(errorResult.error || `HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result) {
+                showMessage('Check-in thành công', 'success');
+                loadAppointmentsByDate(currentDate, currentStatusFilter || null);
+            } else {
+                showMessage('Có lỗi xảy ra khi check-in', 'error');
+            }
+        } catch (error) {
+            console.error('Error checking in:', error);
+            showMessage(error.message || 'Có lỗi xảy ra khi check-in', 'error');
+        }
+    }
+
+    // Mark payment as paid
+    async function markPaymentAsPaid(appointmentId) {
+        if (!confirm('Xác nhận đã thanh toán tiền mặt cho lịch hẹn này?')) return;
+        
+        try {
+            const response = await fetch(`/api/payment/${appointmentId}/mark-paid-cash`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                const errorResult = await response.json().catch(() => ({}));
+                throw new Error(errorResult.error || `HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result) {
+                showMessage('Đã đánh dấu thanh toán thành công', 'success');
+                // Reload appointment detail if modal is open
+                if (currentAppointmentDetail && currentAppointmentDetail.id === appointmentId) {
+                    await viewAppointmentDetails(appointmentId);
+                }
+                // Reload appointments list
+                loadAppointmentsByDate(currentDate, currentStatusFilter || null);
+            } else {
+                showMessage('Có lỗi xảy ra', 'error');
+            }
+        } catch (error) {
+            console.error('Error marking payment:', error);
+            showMessage(error.message || 'Có lỗi xảy ra', 'error');
+        }
+    }
+    
+    // Confirm appointment (by receptionist)
+    async function confirmAppointment(appointmentId) {
+        if (!confirm('Xác nhận lịch hẹn này?')) return;
+        
+        try {
+            const response = await fetch(`/api/appointments/${appointmentId}/confirm`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                const errorResult = await response.json().catch(() => ({}));
+                throw new Error(errorResult.error || `HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result) {
+                showMessage('Đã xác nhận lịch hẹn thành công', 'success');
+                // Reload appointment detail if modal is open
+                if (currentAppointmentDetail && currentAppointmentDetail.id === appointmentId) {
+                    await viewAppointmentDetails(appointmentId);
+                }
+                // Reload appointments list
+                loadAppointmentsByDate(currentDate, currentStatusFilter || null);
+            } else {
+                showMessage('Có lỗi xảy ra', 'error');
+            }
+        } catch (error) {
+            console.error('Error confirming appointment:', error);
+            showMessage(error.message || 'Có lỗi xảy ra khi xác nhận lịch hẹn', 'error');
+        }
+    }
+    
+    // Cancel appointment (by receptionist)
+    async function cancelAppointmentByReceptionist(appointmentId) {
+        const reason = prompt('Nhập lý do hủy lịch hẹn (tùy chọn):');
+        if (reason === null) return; // User cancelled
+        
+        if (!confirm('Xác nhận hủy lịch hẹn này?')) return;
+        
+        try {
+            const response = await fetch(`/api/appointments/${appointmentId}/cancel-by-receptionist`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ reason: reason || null })
+            });
+            
+            if (!response.ok) {
+                const errorResult = await response.json().catch(() => ({}));
+                throw new Error(errorResult.error || `HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result) {
+                showMessage('Đã hủy lịch hẹn thành công', 'success');
+                // Reload appointment detail if modal is open
+                if (currentAppointmentDetail && currentAppointmentDetail.id === appointmentId) {
+                    await viewAppointmentDetails(appointmentId);
+                }
+                // Reload appointments list
+                loadAppointmentsByDate(currentDate, currentStatusFilter || null);
+            } else {
+                showMessage('Có lỗi xảy ra', 'error');
+            }
+        } catch (error) {
+            console.error('Error cancelling appointment:', error);
+            showMessage(error.message || 'Có lỗi xảy ra khi hủy lịch hẹn', 'error');
+        }
+    }
+
+    // View appointment details
+    async function viewAppointmentDetails(appointmentId) {
+        try {
+            const response = await fetch(`/api/appointments/${appointmentId}/detail`, {
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result) {
+                // API returns appointment data directly, not wrapped in 'appointment' key
+                currentAppointmentDetail = result;
+                renderAppointmentDetail(result);
+                const modal = document.getElementById('appointmentDetailModal');
+                const wrapper = document.getElementById('appointmentDetailModalWrapper');
+                if (modal) {
+                    // Re-enable modal interactions (it is disabled on page load)
+                    modal.style.display = 'flex';
+                    modal.style.pointerEvents = 'auto';
+                    modal.style.visibility = 'visible';
+                    modal.classList.remove('hidden');
+                }
+                setTimeout(() => {
+                    if (wrapper) {
+                        wrapper.style.pointerEvents = 'auto';
+                        // Prevent clicks inside wrapper from closing the modal
+                        wrapper.addEventListener('click', (e) => e.stopPropagation(), { once: true });
+                        wrapper.classList.remove('scale-95', 'opacity-0');
+                        wrapper.classList.add('scale-100', 'opacity-100');
+                    }
+                }, 10);
+            } else {
+                showMessage('Không tìm thấy thông tin chi tiết', 'error');
+            }
+        } catch (error) {
+            console.error('Error loading details:', error);
+            showMessage('Có lỗi xảy ra khi tải thông tin chi tiết', 'error');
+        }
+    }
+
+    // Render appointment detail
+    function renderAppointmentDetail(apt) {
+        const container = document.getElementById('appointmentDetailContent');
+        const statusInfo = statusMap[apt.status] || { text: apt.status || 'N/A', color: 'bg-gray-500/10 text-gray-600' };
+        const patient = getPatientInfo(apt);
+        
+        container.innerHTML = `
+            <div class="space-y-6">
+                <div class="bg-[#f0f4f2] dark:bg-[#2d3f33] rounded-xl p-6">
+                    <h4 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">person</span>
+                        Thông tin khách hàng
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Họ tên</p>
+                            <p class="font-semibold">${patient.fullName}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Số điện thoại</p>
+                            <p class="font-semibold">${patient.phoneNumber}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Email</p>
+                            <p class="font-semibold">${patient.email || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Ngày sinh</p>
+                            <p class="font-semibold">${formatDate(patient.dayOfBirth)}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Giới tính</p>
+                            <p class="font-semibold">${patient.gender ? (patient.gender === 'MALE' ? 'Nam' : patient.gender === 'FEMALE' ? 'Nữ' : 'N/A') : 'N/A'}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-[#f0f4f2] dark:bg-[#2d3f33] rounded-xl p-6">
+                    <h4 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">event</span>
+                        Thông tin lịch hẹn
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Mã booking</p>
+                            <p class="font-semibold">${apt.bookingCode || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Trạng thái</p>
+                            <span class="px-3 py-1 rounded-lg text-xs font-bold ${statusInfo.color}">${statusInfo.text}</span>
+                        </div>
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Ngày hẹn</p>
+                            <p class="font-semibold">${formatDate(apt.appointmentDate)}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Giờ hẹn</p>
+                            <p class="font-semibold">${formatTime(apt.appointmentTime)}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Vaccine</p>
+                            <p class="font-semibold">${apt.vaccine && apt.vaccine.name ? apt.vaccine.name : 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Mũi tiêm</p>
+                            <p class="font-semibold">Mũi ${apt.doseNumber || 1}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Trung tâm</p>
+                            <p class="font-semibold">${apt.center && apt.center.name ? apt.center.name : 'N/A'}</p>
+                        </div>
+                        ${apt.room && apt.room.roomNumber ? `
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Phòng</p>
+                            <p class="font-semibold">${apt.room.roomNumber}</p>
+                        </div>
+                        ` : ''}
+                        ${apt.queueNumber ? `
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Số thứ tự</p>
+                            <p class="font-semibold">${apt.queueNumber}</p>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                ${apt.payment && apt.payment.amount ? `
+                <div class="bg-[#f0f4f2] dark:bg-[#2d3f33] rounded-xl p-6">
+                    <h4 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">payments</span>
+                        Thông tin thanh toán
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Số tiền</p>
+                            <p class="font-semibold text-lg text-primary">${formatCurrency(apt.payment.amount)}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Phương thức</p>
+                            <p class="font-semibold">${apt.payment.paymentMethod === 'CASH' ? 'Tiền mặt' : apt.payment.paymentMethod === 'VNPAY' ? 'VNPay' : 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Trạng thái</p>
+                            <span class="px-3 py-1 rounded-lg text-xs font-bold ${apt.payment.paymentStatus === 'PAID' ? 'bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}">
+                                ${apt.payment.paymentStatus === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán'}
+                            </span>
+                        </div>
+                        ${apt.payment.paidAt ? `
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Thời gian thanh toán</p>
+                            <p class="font-semibold">${formatDateTime(apt.payment.paidAt)}</p>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+                ` : ''}
+                
+                ${apt.histories && Array.isArray(apt.histories) && apt.histories.length > 0 ? `
+                <div class="bg-[#f0f4f2] dark:bg-[#2d3f33] rounded-xl p-6">
+                    <h4 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">history</span>
+                        Lịch sử thay đổi
+                    </h4>
+                    <div class="space-y-3">
+                        ${apt.histories.map(h => `
+                            <div class="border-l-4 border-primary pl-4 py-2">
+                                <p class="font-semibold">${statusMap[h.newStatus] ? statusMap[h.newStatus].text : h.newStatus || 'N/A'}</p>
+                                <p class="text-sm text-[#61896f]">${formatDateTime(h.changedAt)}</p>
+                                ${h.changedBy ? `<p class="text-sm text-[#61896f]">Bởi: ${h.changedBy}</p>` : ''}
+                                ${h.reason ? `<p class="text-sm mt-1">${h.reason}</p>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+        `;
+        
+        // Update footer buttons based on appointment status
+        const footer = document.getElementById('appointmentDetailFooter');
+        if (footer) {
+            const canMarkPaid = apt.payment && 
+                                 apt.payment.paymentMethod === 'CASH' && 
+                                 apt.payment.paymentStatus === 'UNPAID' &&
+                                 apt.status !== 'CANCELLED';
+            
+            if (canMarkPaid) {
+                // Check if button already exists
+                let markPaidBtn = document.getElementById('markPaidDetailBtn');
+                if (!markPaidBtn) {
+                    markPaidBtn = document.createElement('button');
+                    markPaidBtn.id = 'markPaidDetailBtn';
+                    markPaidBtn.className = 'flex-1 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2';
+                    markPaidBtn.innerHTML = `
+                        <span class="material-symbols-outlined">payments</span>
+                        <span>Đã thanh toán</span>
+                    `;
+                    markPaidBtn.onclick = () => markPaymentAsPaid(apt.id);
+                    footer.insertBefore(markPaidBtn, footer.firstChild);
+                }
+            } else {
+                // Remove button if exists
+                const markPaidBtn = document.getElementById('markPaidDetailBtn');
+                if (markPaidBtn) {
+                    markPaidBtn.remove();
+                }
+            }
+        }
+    }
+
+    // Print invoice
+    function printInvoice() {
+        if (!currentAppointmentDetail || !currentAppointmentDetail.payment) {
+            showMessage('Không có thông tin thanh toán để in', 'error');
+            return;
+        }
+        
+        const apt = currentAppointmentDetail;
+        const patient = getPatientInfo(apt);
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Hóa đơn - ${apt.bookingCode || 'N/A'}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    .header { text-align: center; margin-bottom: 30px; }
+                    .info { margin-bottom: 20px; }
+                    .info-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+                    .total { font-size: 18px; font-weight: bold; margin-top: 20px; text-align: right; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #f2f2f2; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>VacciCare</h1>
+                    <h2>HÓA ĐƠN THANH TOÁN</h2>
+                </div>
+                <div class="info">
+                    <div class="info-row"><strong>Mã booking:</strong> ${apt.bookingCode || 'N/A'}</div>
+                    <div class="info-row"><strong>Số hóa đơn:</strong> ${apt.payment.invoiceNumber || 'N/A'}</div>
+                    <div class="info-row"><strong>Ngày:</strong> ${formatDateTime(new Date().toISOString())}</div>
+                    <div class="info-row"><strong>Khách hàng:</strong> ${patient.fullName}</div>
+                    <div class="info-row"><strong>SĐT:</strong> ${patient.phoneNumber}</div>
+                </div>
+                <table>
+                    <tr>
+                        <th>Dịch vụ</th>
+                        <th>Số lượng</th>
+                        <th>Đơn giá</th>
+                        <th>Thành tiền</th>
+                    </tr>
+                    <tr>
+                        <td>${apt.vaccine && apt.vaccine.name ? apt.vaccine.name : 'N/A'}</td>
+                        <td>1</td>
+                        <td>${formatCurrency(apt.payment.amount)}</td>
+                        <td>${formatCurrency(apt.payment.amount)}</td>
+                    </tr>
+                </table>
+                <div class="total">
+                    <div>Tổng cộng: ${formatCurrency(apt.payment.amount)}</div>
+                    <div>Phương thức: ${apt.payment.paymentMethod === 'CASH' ? 'Tiền mặt' : apt.payment.paymentMethod === 'VNPAY' ? 'VNPay' : 'N/A'}</div>
+                    <div>Trạng thái: ${apt.payment.paymentStatus === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán'}</div>
+                </div>
+                <div style="margin-top: 40px; text-align: center; font-size: 12px; color: #666;">
+                    Cảm ơn quý khách đã sử dụng dịch vụ!
+                </div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+    }
+
+    // Walk-in functions
+    async function loadWalkInData() {
+        try {
+            const [vaccinesRes, centersRes] = await Promise.all([
+                fetch('/api/vaccines', { credentials: 'include' }),
+                fetch('/api/centers', { credentials: 'include' })
+            ]);
+            
+            if (vaccinesRes.ok) {
+                const vaccines = await vaccinesRes.json();
+                walkInData.vaccines = Array.isArray(vaccines) ? vaccines : [];
+                console.log('Loaded vaccines:', walkInData.vaccines.length);
+            } else {
+                console.error('Failed to load vaccines:', vaccinesRes.status);
+                walkInData.vaccines = [];
+            }
+            
+            if (centersRes.ok) {
+                const centers = await centersRes.json();
+                walkInData.centers = Array.isArray(centers) ? centers : [];
+                console.log('Loaded centers:', walkInData.centers.length);
+            } else {
+                console.error('Failed to load centers:', centersRes.status);
+                walkInData.centers = [];
+            }
+            
+            // Show error if no data
+            if (walkInData.vaccines.length === 0) {
+                console.warn('No vaccines available');
+            }
+            if (walkInData.centers.length === 0) {
+                console.warn('No centers available');
+            }
+        } catch (error) {
+            console.error('Error loading walk-in data:', error);
+            walkInData.vaccines = [];
+            walkInData.centers = [];
+        }
+    }
+
+    async function loadAvailableSlots(centerId, date) {
+        try {
+            const response = await fetch(`/api/appointment-slots/available/center/${centerId}/date/${date}`, {
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                const slots = await response.json();
+                const select = document.getElementById('walkInSlot');
+                const container = document.getElementById('walkInSlotsContainer');
+                
+                select.innerHTML = '<option value="">Chọn khung giờ</option>';
+                
+                if (slots.length > 0) {
+                    container.innerHTML = '';
+                    select.classList.remove('hidden');
+                    slots.forEach(slot => {
+                        const option = document.createElement('option');
+                        option.value = slot.id;
+                        option.textContent = `${slot.startTime.substring(0, 5)} - ${slot.endTime.substring(0, 5)}`;
+                        option.dataset.startTime = slot.startTime;
+                        select.appendChild(option);
+                    });
+                } else {
+                    select.classList.add('hidden');
+                    container.innerHTML = '<p class="text-sm text-red-600">Không có khung giờ trống cho ngày này.</p>';
+                }
+            } else {
+                document.getElementById('walkInSlotsContainer').innerHTML = '<p class="text-sm text-red-600">Lỗi khi tải khung giờ.</p>';
+            }
+        } catch (error) {
+            console.error('Error loading slots:', error);
+            document.getElementById('walkInSlotsContainer').innerHTML = '<p class="text-sm text-red-600">Có lỗi xảy ra khi tải khung giờ</p>';
+        }
+    }
+
+    async function openWalkInModal() {
+        // Show loading state
+        const content = document.getElementById('walkInModalContent');
+        content.innerHTML = '<div class="text-center py-12"><span class="material-symbols-outlined animate-spin text-4xl text-primary mb-4 block">refresh</span><p class="text-[#61896f]">Đang tải dữ liệu...</p></div>';
+        const modal = document.getElementById('walkInModal');
+        const wrapper = document.getElementById('walkInModalContentWrapper');
+
+        console.log('Modal elements:', { modal, wrapper });
+
+        // Force show modal immediately
+        modal.style.display = 'flex';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.zIndex = '9999';
+        modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+        modal.style.pointerEvents = 'auto'; // Enable interactions
+        modal.style.visibility = 'visible'; // Make visible
+        modal.classList.remove('hidden');
+
+        console.log('Modal forced visible');
+
+        setTimeout(() => {
+            if (wrapper) {
+                wrapper.style.transform = 'scale(1)';
+                wrapper.style.opacity = '1';
+                wrapper.style.display = 'block';
+                wrapper.style.position = 'relative';
+                wrapper.style.zIndex = '10000';
+                wrapper.style.background = 'white';
+                wrapper.style.borderRadius = '1rem';
+                wrapper.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.25)';
+                wrapper.style.maxWidth = '800px';
+                wrapper.style.width = '100%';
+                wrapper.style.maxHeight = '90vh';
+                wrapper.style.overflowY = 'auto';
+                wrapper.style.pointerEvents = 'auto'; // Enable interactions on wrapper
+                
+                // Prevent clicks on wrapper from closing modal
+                wrapper.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+
+                wrapper.classList.remove('scale-95', 'opacity-0');
+                wrapper.classList.add('scale-100', 'opacity-100');
+            }
+            
+            // Ensure content is interactive
+            if (content) {
+                content.style.pointerEvents = 'auto';
+                content.style.position = 'relative';
+                content.style.zIndex = '10001';
+            }
+
+            console.log('Modal animation applied');
+        }, 10);
+        
+        await loadWalkInData();
+        
+        const today = new Date().toISOString().split('T')[0];
+        content.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                    <h4 class="font-bold mb-3">Thông tin khách hàng</h4>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Họ tên <span class="text-red-500">*</span></label>
+                    <input type="text" id="walkInFullName" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Số điện thoại <span class="text-red-500">*</span></label>
+                    <input type="tel" id="walkInPhone" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Email</label>
+                    <input type="email" id="walkInEmail" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Ngày sinh</label>
+                    <input type="date" id="walkInDob" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Giới tính</label>
+                    <select id="walkInGender" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                        <option value="">Chọn giới tính</option>
+                        <option value="MALE">Nam</option>
+                        <option value="FEMALE">Nữ</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <h4 class="font-bold mb-3 mt-4">Thông tin lịch hẹn</h4>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Vaccine <span class="text-red-500">*</span></label>
+                    <select id="walkInVaccine" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white" required>
+                        <option value="">Chọn vaccine</option>
+                        ${walkInData.vaccines && walkInData.vaccines.length > 0 ? walkInData.vaccines.map(v => `<option value="${v.id}">${v.name || 'N/A'}${v.price ? ` - ${formatCurrency(v.price)}` : ''}</option>`).join('') : '<option value="" disabled>Đang tải danh sách vaccine...</option>'}
+                    </select>
+                    ${walkInData.vaccines && walkInData.vaccines.length === 0 ? '<p class="text-xs text-red-500 mt-1">Không có vaccine nào. Vui lòng liên hệ quản trị viên.</p>' : ''}
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Trung tâm <span class="text-red-500">*</span></label>
+                    <select id="walkInCenter" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white" required>
+                        <option value="">Chọn trung tâm</option>
+                        ${walkInData.centers && walkInData.centers.length > 0 ? walkInData.centers.map(c => `<option value="${c.id}">${c.name || 'N/A'}${c.address ? ` - ${c.address}` : ''}</option>`).join('') : '<option value="" disabled>Đang tải danh sách trung tâm...</option>'}
+                    </select>
+                    ${walkInData.centers && walkInData.centers.length === 0 ? '<p class="text-xs text-red-500 mt-1">Không có trung tâm nào. Vui lòng liên hệ quản trị viên.</p>' : ''}
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Ngày hẹn <span class="text-red-500">*</span></label>
+                    <input type="date" id="walkInDate" min="${today}" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Khung giờ có sẵn <span class="text-red-500">*</span></label>
+                    <div id="walkInSlotsContainer" class="mb-2">
+                        <p class="text-sm text-[#61896f]">Vui lòng chọn trung tâm và ngày để xem khung giờ có sẵn</p>
+                    </div>
+                    <select id="walkInSlot" class="hidden w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white" required>
+                        <option value="">Chọn khung giờ</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Mũi tiêm</label>
+                    <input type="number" id="walkInDose" min="1" value="1" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Phương thức thanh toán <span class="text-red-500">*</span></label>
+                    <select id="walkInPayment" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white" required>
+                        <option value="">Chọn phương thức</option>
+                        <option value="CASH">Tiền mặt</option>
+                        <option value="VNPAY">VNPay</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold mb-2">Ghi chú</label>
+                    <textarea id="walkInNotes" rows="2" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white"></textarea>
+                </div>
+            </div>
+        `;
+        
+        // Ensure content and wrapper are interactive after setting innerHTML
+        if (content) {
+            content.style.pointerEvents = 'auto';
+            content.style.position = 'relative';
+            content.style.zIndex = '10001';
+        }
+        if (wrapper) {
+            wrapper.style.pointerEvents = 'auto';
+        }
+        
+        // Ensure all form elements are interactive
+        setTimeout(() => {
+            const formElements = content.querySelectorAll('input, select, textarea, button');
+            formElements.forEach(el => {
+                el.style.pointerEvents = 'auto';
+                el.style.cursor = el.tagName === 'BUTTON' ? 'pointer' : 'text';
+            });
+        }, 50);
+        
+        // Setup event listeners for center and date
+        setTimeout(() => {
+            const centerSelect = document.getElementById('walkInCenter');
+            const dateInput = document.getElementById('walkInDate');
+            
+            if (centerSelect && dateInput) {
+                const updateSlots = () => {
+                    const centerId = centerSelect.value;
+                    const date = dateInput.value;
+                    if (centerId && date) {
+                        loadAvailableSlots(parseInt(centerId), date);
+                    }
+                };
+                
+                centerSelect.addEventListener('change', updateSlots);
+                dateInput.addEventListener('change', updateSlots);
+            }
+        }, 100);
+    }
+
+    function closeWalkInModal() {
+        const modal = document.getElementById('walkInModal');
+        const wrapper = document.getElementById('walkInModalContentWrapper');
+        if (wrapper) {
+            wrapper.classList.remove('scale-100', 'opacity-100');
+            wrapper.classList.add('scale-95', 'opacity-0');
+        }
+        setTimeout(() => {
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }, 300);
+    }
+
+    async function confirmWalkIn() {
+        console.log('confirmWalkIn called');
+
+        const fullName = document.getElementById('walkInFullName').value.trim();
+        const phone = document.getElementById('walkInPhone').value.trim();
+        const email = document.getElementById('walkInEmail').value.trim();
+        const dob = document.getElementById('walkInDob').value;
+        const gender = document.getElementById('walkInGender').value;
+        const vaccineId = document.getElementById('walkInVaccine').value;
+        const centerId = document.getElementById('walkInCenter').value;
+        const date = document.getElementById('walkInDate').value;
+        const slotId = document.getElementById('walkInSlot').value;
+        const slotSelect = document.getElementById('walkInSlot');
+        const dose = document.getElementById('walkInDose').value || 1;
+        const payment = document.getElementById('walkInPayment').value;
+        const notes = document.getElementById('walkInNotes').value.trim();
+
+        console.log('Form values:', {
+            fullName, phone, email, dob, gender, vaccineId, centerId, date, slotId, dose, payment, notes
+        });
+
+        if (!fullName || !phone || !vaccineId || !centerId || !date || !slotId || !payment) {
+            console.log('Validation failed - missing required fields');
+            showMessage('Vui lòng điền đầy đủ thông tin bắt buộc', 'error');
+            return;
+        }
+
+        console.log('Validation passed, proceeding...');
+        
+        // Validate phone
+        const phoneValidation = validatePhone(phone);
+        if (!phoneValidation.valid) {
+            showMessage(phoneValidation.message, 'error');
+            return;
+        }
+        
+        // Validate email if provided
+        if (email) {
+            const emailValidation = validateEmail(email);
+            if (!emailValidation.valid) {
+                showMessage(emailValidation.message, 'error');
+                return;
+            }
+        }
+        
+        const selectedOption = slotSelect.options[slotSelect.selectedIndex];
+        const startTime = selectedOption ? selectedOption.dataset.startTime : null;
+
+        console.log('Slot selection:', {
+            slotSelect,
+            selectedIndex: slotSelect.selectedIndex,
+            selectedOption,
+            startTime
+        });
+
+        if (!startTime) {
+            console.log('No startTime found for selected slot');
+            showMessage('Không tìm thấy thông tin khung giờ. Vui lòng chọn lại khung giờ.', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('confirmWalkInBtn');
+        const btnText = document.getElementById('confirmWalkInBtnText');
+        const btnSpinner = document.getElementById('confirmWalkInBtnSpinner');
+        
+        btn.disabled = true;
+        btnText.textContent = 'Đang tạo...';
+        btnSpinner.classList.remove('hidden');
+
+        const requestData = {
+            fullName,
+            phoneNumber: phoneValidation.cleaned || phone,
+            email: email || null,
+            dayOfBirth: dob || null,
+            gender: gender || null,
+            vaccineId: parseInt(vaccineId),
+            centerId: parseInt(centerId),
+            slotId: parseInt(slotId),
+            appointmentDate: date,
+            appointmentTime: startTime,
+            doseNumber: parseInt(dose),
+            paymentMethod: payment,
+            notes: notes || null
+        };
+
+        console.log('Sending API request:', requestData);
+
+        try {
+            const response = await fetch('/api/appointments/walk-in', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(requestData)
+            });
+
+            console.log('API response status:', response.status, response.statusText);
+
+            const result = await response.json();
+            console.log('API response data:', result);
+
+            if (response.ok) {
+                console.log('API call successful, closing modal');
+                showMessage('Tạo lịch hẹn walk-in thành công', 'success');
+                // Close modal and reset form
+                closeWalkInModal();
+                // Wait a bit to ensure data is saved, then reload appointments list
+                setTimeout(async () => {
+                    await loadAppointmentsByDate(currentDate, currentStatusFilter || null);
+                }, 500);
+            } else {
+                console.log('API call failed:', result.error || 'Unknown error');
+                showMessage(result.error || 'Có lỗi xảy ra khi tạo lịch hẹn', 'error');
+            }
+        } catch (error) {
+            console.error('Error creating walk-in:', error);
+            showMessage('Có lỗi xảy ra khi tạo lịch hẹn', 'error');
+        } finally {
+            btn.disabled = false;
+            btnText.textContent = 'Tạo lịch hẹn';
+            btnSpinner.classList.add('hidden');
+        }
+    }
+
+    // Validate phone number
+    function validatePhone(phone) {
+        if (!phone) return { valid: false, message: 'Số điện thoại không được để trống' };
+        // Vietnamese phone number format: 10-11 digits, may start with 0 or +84
+        const phoneRegex = /^(0|\+84)[1-9][0-9]{8,9}$/;
+        const cleanedPhone = phone.replace(/\s+/g, '');
+        if (!phoneRegex.test(cleanedPhone)) {
+            return { valid: false, message: 'Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại Việt Nam (10-11 chữ số)' };
+        }
+        return { valid: true, cleaned: cleanedPhone };
+    }
+    
+    // Validate email
+    function validateEmail(email) {
+        if (!email) return { valid: true }; // Email is optional
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return { valid: false, message: 'Email không hợp lệ' };
+        }
+        return { valid: true };
+    }
+    
+    // Search appointments
+    async function searchAppointments() {
+        const phone = document.getElementById('searchPhone').value.trim();
+        const bookingCode = document.getElementById('searchBookingCode').value.trim();
+
+        if (!phone && !bookingCode) {
+            showMessage('Vui lòng nhập số điện thoại hoặc mã booking', 'error');
+            return;
+        }
+        
+        // Validate phone if provided
+        if (phone) {
+            const phoneValidation = validatePhone(phone);
+            if (!phoneValidation.valid) {
+                showMessage(phoneValidation.message, 'error');
+                return;
+            }
+        }
+
+        try {
+            let url = '/api/appointments/search?';
+            if (phone) url += `phone=${encodeURIComponent(phone)}`;
+            if (bookingCode) {
+                if (phone) url += '&';
+                url += `bookingCode=${encodeURIComponent(bookingCode)}`;
+            }
+
+            const response = await fetch(url, { credentials: 'include' });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+
+            if (result && result.appointments) {
+                allAppointments = result.appointments || [];
+                currentStatusFilter = '';
+                document.querySelectorAll('.status-tab').forEach(t => {
+                    t.classList.remove('active', 'bg-primary', 'text-white');
+                    t.classList.add('text-[#61896f]');
+                });
+                const allTab = document.querySelector('.status-tab[data-status=""]');
+                if (allTab) {
+                    allTab.classList.add('active', 'bg-primary', 'text-white');
+                    allTab.classList.remove('text-[#61896f]');
+                }
+                applyFilters();
+                showMessage(`Tìm thấy ${result.count || allAppointments.length} lịch hẹn`, 'success');
+            } else {
+                allAppointments = [];
+                applyFilters();
+                showMessage('Không tìm thấy lịch hẹn', 'info');
+            }
+        } catch (error) {
+            console.error('Error searching:', error);
+            allAppointments = [];
+            applyFilters();
+            showMessage('Có lỗi xảy ra khi tìm kiếm', 'error');
+        }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        // Force close all modals and overlays immediately
+        const walkInModal = document.getElementById('walkInModal');
+        const appointmentDetailModal = document.getElementById('appointmentDetailModal');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const messageToast = document.getElementById('messageToast');
+        
+        if (walkInModal) {
+            walkInModal.style.display = 'none';
+            walkInModal.style.pointerEvents = 'none';
+            walkInModal.classList.add('hidden');
+        }
+        if (appointmentDetailModal) {
+            appointmentDetailModal.style.display = 'none';
+            appointmentDetailModal.style.pointerEvents = 'none';
+            appointmentDetailModal.classList.add('hidden');
+        }
+        if (sidebarOverlay) {
+            sidebarOverlay.style.display = 'none';
+            sidebarOverlay.style.pointerEvents = 'none';
+            sidebarOverlay.classList.add('hidden');
+        }
+        if (messageToast) {
+            messageToast.classList.add('hidden');
+        }
+        // Date tabs
+        document.querySelectorAll('.date-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.date-tab').forEach(t => {
+                    t.classList.remove('active', 'bg-primary', 'text-white');
+                    t.classList.add('text-[#61896f]');
+                });
+                tab.classList.add('active', 'bg-primary', 'text-white');
+                tab.classList.remove('text-[#61896f]');
+                
+                const dateValue = tab.dataset.date;
+                const datePicker = document.getElementById('datePicker');
+                
+                if (dateValue === 'today') {
+                    currentDate = null;
+                    if (datePicker) datePicker.value = '';
+                } else if (dateValue === 'tomorrow') {
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    currentDate = tomorrow.toISOString().split('T')[0];
+                    if (datePicker) datePicker.value = currentDate;
+                }
+                
+                loadAppointmentsByDate(currentDate, currentStatusFilter || null);
+            });
+        });
+        
+        // Date picker
+        const datePicker = document.getElementById('datePicker');
+        if (datePicker) {
+            datePicker.addEventListener('change', (e) => {
+                const selectedDate = e.target.value;
+                if (selectedDate) {
+                    currentDate = selectedDate;
+                    // Update active tab
+                    document.querySelectorAll('.date-tab').forEach(t => {
+                        t.classList.remove('active', 'bg-primary', 'text-white');
+                        t.classList.add('text-[#61896f]');
+                    });
+                    loadAppointmentsByDate(currentDate, currentStatusFilter || null);
+                }
+            });
+        }
+        
+        // Status tabs
+        document.querySelectorAll('.status-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.status-tab').forEach(t => {
+                    t.classList.remove('active', 'bg-primary', 'text-white');
+                    t.classList.add('text-[#61896f]');
+                });
+                tab.classList.add('active', 'bg-primary', 'text-white');
+                tab.classList.remove('text-[#61896f]');
+                
+                currentStatusFilter = tab.dataset.status || '';
+                loadAppointmentsByDate(currentDate, currentStatusFilter || null);
+            });
+        });
+
+        // Payment filter buttons
+        document.querySelectorAll('.payment-filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.payment-filter-btn').forEach(b => {
+                    b.classList.remove('active', 'bg-primary', 'text-white');
+                    b.classList.add('text-[#61896f]');
+                });
+                btn.classList.add('active', 'bg-primary', 'text-white');
+                btn.classList.remove('text-[#61896f]');
+                
+                currentPaymentFilter = btn.dataset.filter;
+                applyFilters();
+            });
+        });
+        
+        // Center filter
+        const centerFilter = document.getElementById('centerFilter');
+        if (centerFilter) {
+            centerFilter.addEventListener('change', (e) => {
+                currentCenterFilter = e.target.value || '';
+                applyFilters();
+            });
+        }
+
+        // Search button
+        const searchBtn = document.getElementById('searchBtn');
+        if (searchBtn) {
+            searchBtn.addEventListener('click', searchAppointments);
+        }
+        
+        // Clear search button
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', () => {
+                document.getElementById('searchPhone').value = '';
+                document.getElementById('searchBookingCode').value = '';
+                loadAppointmentsByDate(currentDate, currentStatusFilter || null);
+            });
+        }
+
+        // Refresh button
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                loadAppointmentsByDate(currentDate, currentStatusFilter || null);
+            });
+        }
+        
+        // Sort appointments dropdown
+        const sortSelect = document.getElementById('sortAppointments');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', () => {
+                applyFilters();
+            });
+        }
+
+        // Walk-in modal
+        const createWalkInBtn = document.getElementById('createWalkInBtn');
+        const closeWalkInModalBtn = document.getElementById('closeWalkInModalBtn');
+        const cancelWalkInBtn = document.getElementById('cancelWalkInBtn');
+        const confirmWalkInBtn = document.getElementById('confirmWalkInBtn');
+        
+        if (createWalkInBtn) createWalkInBtn.addEventListener('click', openWalkInModal);
+        if (closeWalkInModalBtn) closeWalkInModalBtn.addEventListener('click', closeWalkInModal);
+        if (cancelWalkInBtn) cancelWalkInBtn.addEventListener('click', closeWalkInModal);
+        if (confirmWalkInBtn) confirmWalkInBtn.addEventListener('click', confirmWalkIn);
+
+        // Add debug function to check form elements
+        window.debugWalkInForm = function() {
+            console.log('Debug: Checking walk-in form elements');
+            const elements = [
+                'walkInFullName', 'walkInPhone', 'walkInEmail', 'walkInDob', 'walkInGender',
+                'walkInVaccine', 'walkInCenter', 'walkInDate', 'walkInSlot', 'walkInDose',
+                'walkInPayment', 'walkInNotes', 'confirmWalkInBtn'
+            ];
+
+            elements.forEach(id => {
+                const el = document.getElementById(id);
+                console.log(`${id}:`, {
+                    exists: !!el,
+                    value: el ? el.value : 'N/A',
+                    disabled: el ? el.disabled : 'N/A',
+                    type: el ? el.type : 'N/A'
+                });
+            });
+        };
+
+        // Detail modal
+        const closeDetailModal = () => {
+            const modal = document.getElementById('appointmentDetailModal');
+            const wrapper = document.getElementById('appointmentDetailModalWrapper');
+            if (wrapper) {
+                wrapper.classList.remove('scale-100', 'opacity-100');
+                wrapper.classList.add('scale-95', 'opacity-0');
+            }
+            setTimeout(() => {
+                if (modal) {
+                    modal.classList.add('hidden');
+                    modal.style.display = 'none';
+                    modal.style.pointerEvents = 'none';
+                    modal.style.visibility = 'hidden';
+                }
+            }, 300);
+        };
+        const closeDetailModalBtn = document.getElementById('closeDetailModalBtn');
+        const closeDetailModalBtn2 = document.getElementById('closeDetailModalBtn2');
+        const printInvoiceBtn = document.getElementById('printInvoiceBtn');
+        
+        if (closeDetailModalBtn) closeDetailModalBtn.addEventListener('click', closeDetailModal);
+        if (closeDetailModalBtn2) closeDetailModalBtn2.addEventListener('click', closeDetailModal);
+        if (printInvoiceBtn) printInvoiceBtn.addEventListener('click', printInvoice);
+
+        // Message toast close
+        const closeMessageBtn = document.getElementById('closeMessageBtn');
+        if (closeMessageBtn) {
+            closeMessageBtn.addEventListener('click', () => {
+                const messageToast = document.getElementById('messageToast');
+                if (messageToast) messageToast.classList.add('hidden');
+            });
+        }
+
+        // Close modals when clicking on overlay
+        // Note: walkInModal, appointmentDetailModal, messageToast, sidebarOverlay already declared above
+        const walkInModalForOverlay = walkInModal;
+        if (walkInModalForOverlay) {
+            walkInModalForOverlay.addEventListener('click', (e) => {
+                if (e.target.id === 'walkInModal') {
+                    closeWalkInModal();
+                }
+            });
+        }
+        
+        const appointmentDetailModalForOverlay = appointmentDetailModal;
+        if (appointmentDetailModalForOverlay) {
+            appointmentDetailModalForOverlay.addEventListener('click', (e) => {
+                if (e.target.id === 'appointmentDetailModal') {
+                    const modal = document.getElementById('appointmentDetailModal');
+                    const wrapper = document.getElementById('appointmentDetailModalWrapper');
+                    if (wrapper) {
+                        wrapper.classList.remove('scale-100', 'opacity-100');
+                        wrapper.classList.add('scale-95', 'opacity-0');
+                    }
+                    setTimeout(() => {
+                        if (modal) modal.classList.add('hidden');
+                    }, 300);
+                }
+            });
+        }
+
+        // Load initial data
+        loadAppointmentsByDate(currentDate, currentStatusFilter || null);
+        
+        // Auto refresh every 30 seconds
+        setInterval(() => {
+            loadAppointmentsByDate(currentDate, currentStatusFilter || null);
+        }, 30000);
+    });
+</script>
+</body>
+</html>

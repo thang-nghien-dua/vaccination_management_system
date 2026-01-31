@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import ut.edu.vaccinationmanagementsystem.entity.VaccinationRecord;
 import ut.edu.vaccinationmanagementsystem.entity.Vaccine;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -60,6 +61,28 @@ public interface VaccinationRecordRepository extends JpaRepository<VaccinationRe
            "WHERE vr.user.id = :userId " +
            "ORDER BY vr.injectionDate DESC, vr.injectionTime DESC")
     List<VaccinationRecord> findByUserIdOrderByInjectionDateDesc(@Param("userId") Long userId);
+    
+    /**
+     * Đếm số lượng vaccination records của một nurse trong một ngày cụ thể
+     */
+    @Query("SELECT COUNT(vr) FROM VaccinationRecord vr " +
+           "WHERE vr.nurse.id = :nurseId AND vr.injectionDate = :date")
+    long countByNurseIdAndInjectionDate(@Param("nurseId") Long nurseId, @Param("date") LocalDate date);
+    
+    /**
+     * Tìm tất cả vaccination records trong một ngày cụ thể
+     */
+    List<VaccinationRecord> findByInjectionDate(LocalDate injectionDate);
+    
+    /**
+     * Kiểm tra xem đã có VaccinationRecord cho appointment này chưa
+     */
+    boolean existsByAppointment(ut.edu.vaccinationmanagementsystem.entity.Appointment appointment);
+    
+    /**
+     * Tìm các vaccination records trong một ngày cụ thể cho một trung tâm
+     */
+    List<VaccinationRecord> findByInjectionDateAndAppointmentCenterId(LocalDate injectionDate, Long centerId);
 }
 
 

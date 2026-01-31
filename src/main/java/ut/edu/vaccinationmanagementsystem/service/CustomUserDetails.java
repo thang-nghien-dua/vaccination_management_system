@@ -23,6 +23,12 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // Trả về role của user
+        if (user.getRole() == null) {
+            // Nếu role null, trả về role CUSTOMER mặc định
+            return Collections.singletonList(
+                new SimpleGrantedAuthority("ROLE_CUSTOMER")
+            );
+        }
         return Collections.singletonList(
             new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
         );

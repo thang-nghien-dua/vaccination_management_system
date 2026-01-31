@@ -8,17 +8,24 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import ut.edu.vaccinationmanagementsystem.entity.User;
+import ut.edu.vaccinationmanagementsystem.repository.StaffInfoRepository;
 import ut.edu.vaccinationmanagementsystem.service.CustomOAuth2User;
 import ut.edu.vaccinationmanagementsystem.service.CustomUserDetails;
 import ut.edu.vaccinationmanagementsystem.service.UserService;
+
+import java.util.Optional;
+
+import java.util.Optional;
 
 @Controller
 public class HomeController {
     
     private final UserService userService;
+    private final StaffInfoRepository staffInfoRepository;
     
-    public HomeController(UserService userService) {
+    public HomeController(UserService userService, StaffInfoRepository staffInfoRepository) {
         this.userService = userService;
+        this.staffInfoRepository = staffInfoRepository;
     }
     
     /**
@@ -70,6 +77,24 @@ public class HomeController {
         if (authentication != null && authentication.isAuthenticated() && !authentication.getName().equals("anonymousUser")) {
             try {
                 User currentUser = getCurrentUser(authentication);
+                
+                // Nếu là DOCTOR, redirect về trang doctor
+                if (currentUser.getRole() == ut.edu.vaccinationmanagementsystem.entity.enums.Role.DOCTOR) {
+                    return "redirect:/doctor/home";
+                }
+                // Nếu là ADMIN, redirect về trang admin
+                if (currentUser.getRole() == ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN) {
+                    return "redirect:/admin/home";
+                }
+                // Nếu là NURSE, redirect về trang nurse dashboard
+                if (currentUser.getRole() == ut.edu.vaccinationmanagementsystem.entity.enums.Role.NURSE) {
+                    return "redirect:/nurse/dashboard";
+                }
+                // Nếu là RECEPTIONIST, redirect về trang receptionist dashboard
+                if (currentUser.getRole() == ut.edu.vaccinationmanagementsystem.entity.enums.Role.RECEPTIONIST) {
+                    return "redirect:/receptionist/dashboard";
+                }
+                
                 model.addAttribute("currentUser", currentUser);
                 model.addAttribute("isAuthenticated", true);
             } catch (Exception e) {
@@ -109,9 +134,14 @@ public class HomeController {
      * Trang đăng nhập
      */
     @GetMapping("/login")
-    public String login(@RequestParam(required = false) String registered, Model model) {
+    public String login(@RequestParam(required = false) String registered, 
+                       @RequestParam(required = false) String locked,
+                       Model model) {
         if (registered != null) {
             model.addAttribute("registered", true);
+        }
+        if (locked != null) {
+            model.addAttribute("locked", true);
         }
         return "login";
     }
@@ -235,19 +265,46 @@ public class HomeController {
         return "vaccines";
     }
     
+    /**
+     * GET /public/vaccines/{id}
+     * Trang chi tiết vaccine công khai (cho trang about)
+     */
+    @GetMapping("/public/vaccines/{id}")
+    public String publicVaccineDetail(@PathVariable Long id, Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        // Cho phép khách vãng lai xem chi tiết vaccine
+        boolean isAuthenticated = authentication != null && authentication.isAuthenticated() && !authentication.getName().equals("anonymousUser");
+        model.addAttribute("isAuthenticated", isAuthenticated);
+        model.addAttribute("vaccineId", id);
+        
+        if (isAuthenticated) {
+            try {
+                User currentUser = getCurrentUser(authentication);
+                model.addAttribute("currentUser", currentUser);
+            } catch (Exception e) {
+                // Nếu có lỗi khi lấy user, vẫn cho phép xem như khách vãng lai
+                model.addAttribute("isAuthenticated", false);
+            }
+        }
+        return "vaccine-detail-public";
+    }
+    
     @GetMapping("/vaccines/{id}")
     public String vaccineDetail(@PathVariable Long id, Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
-            return "redirect:/login";
-        }
-        try {
-            User currentUser = getCurrentUser(authentication);
-            model.addAttribute("currentUser", currentUser);
-            model.addAttribute("isAuthenticated", true);
-            model.addAttribute("vaccineId", id);
-        } catch (Exception e) {
-            return "redirect:/login";
+        // Cho phép khách vãng lai xem chi tiết vaccine
+        boolean isAuthenticated = authentication != null && authentication.isAuthenticated() && !authentication.getName().equals("anonymousUser");
+        model.addAttribute("isAuthenticated", isAuthenticated);
+        model.addAttribute("vaccineId", id);
+        
+        if (isAuthenticated) {
+            try {
+                User currentUser = getCurrentUser(authentication);
+                model.addAttribute("currentUser", currentUser);
+            } catch (Exception e) {
+                // Nếu có lỗi khi lấy user, vẫn cho phép xem như khách vãng lai
+                model.addAttribute("isAuthenticated", false);
+            }
         }
         return "vaccine-detail";
     }
@@ -305,7 +362,7 @@ public class HomeController {
      * Trang thông báo
      */
     @GetMapping("/notifications")
-    public String notifications(Model model) {
+    public String notifications(@RequestParam(required = false) String role, Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
             return "redirect:/login";
@@ -314,10 +371,142 @@ public class HomeController {
             User currentUser = getCurrentUser(authentication);
             model.addAttribute("currentUser", currentUser);
             model.addAttribute("isAuthenticated", true);
+            if (role != null) {
+                model.addAttribute("forcedRole", role);
+            }
+            
+            // Nếu là staff/admin, trả về trang thông báo cho nhân viên
+            if (currentUser.getRole() != null) {
+                String currentRole = currentUser.getRole().name();
+                // Receptionist có trang riêng
+                if (currentRole.equals("RECEPTIONIST")) {
+                    return "redirect:/receptionist/notifications";
+                }
+                // Doctor có trang riêng
+                if (currentRole.equals("DOCTOR")) {
+                    return "redirect:/doctor/notifications";
+                }
+                // Nurse có trang riêng
+                if (currentRole.equals("NURSE")) {
+                    return "redirect:/nurse/notifications";
+                }
+                // Admin dùng trang chung
+                if (currentRole.equals("ADMIN")) {
+                    return "thong_bao_nhan_vien";
+                }
+            }
         } catch (Exception e) {
             return "redirect:/login";
         }
         return "notifications";
+    }
+    
+    /**
+     * GET /receptionist/notifications
+     * Trang thông báo cho Receptionist
+     */
+    @GetMapping("/receptionist/notifications")
+    public String receptionistNotifications(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            // Kiểm tra role
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.RECEPTIONIST && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        return "receptionist-notifications";
+    }
+    
+    /**
+     * GET /doctor/notifications
+     * Trang thông báo cho Doctor
+     */
+    @GetMapping("/doctor/notifications")
+    public String doctorNotifications(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            // Kiểm tra role
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.DOCTOR && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        return "doctor-notifications";
+    }
+    
+    /**
+     * GET /nurse/notifications
+     * Trang thông báo cho Nurse
+     */
+    @GetMapping("/nurse/notifications")
+    public String nurseNotifications(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            // Kiểm tra role
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.NURSE && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        return "nurse-notifications";
+    }
+    
+    /**
+     * GET /notifications/{id}
+     * Trang chi tiết thông báo
+     */
+    @GetMapping("/notifications/{id}")
+    public String notificationDetail(@PathVariable Long id, @RequestParam(required = false) String role, Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        try {
+            User currentUser = getCurrentUser(authentication);
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+            if (role != null) {
+                model.addAttribute("forcedRole", role);
+            }
+            model.addAttribute("notificationId", id);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        return "chi_tiet_thong_bao";
     }
     
     /**
@@ -350,6 +539,415 @@ public class HomeController {
         model.addAttribute("message", message != null ? message : (success != null && success ? "Thanh toán thành công" : "Thanh toán thất bại"));
         
         return "payment-result";
+    }
+    
+    /**
+     * GET /nurse/dashboard
+     * Dashboard cho Nurse - quản lý tiêm vaccine và phản ứng phụ
+     */
+    @GetMapping("/nurse/dashboard")
+    public String nurseDashboard(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            // Kiểm tra role
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.NURSE && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        return "nurse-dashboard";
+    }
+    
+    /**
+     * GET /nurse/profile
+     * Trang profile cho Nurse
+     */
+    @GetMapping("/nurse/profile")
+    public String nurseProfile(@RequestParam(required = false) String returnUrl, Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            // Kiểm tra role
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.NURSE && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            // Refresh từ database để có dữ liệu mới nhất
+            if (currentUser != null && currentUser.getId() != null) {
+                try {
+                    currentUser = userService.getUserById(currentUser.getId());
+                } catch (Exception e) {
+                    // Nếu không refresh được, vẫn dùng user từ session
+                }
+            }
+            
+            // Lấy StaffInfo của nurse
+            Optional<ut.edu.vaccinationmanagementsystem.entity.StaffInfo> staffInfoOpt = staffInfoRepository.findByUser(currentUser);
+            staffInfoOpt.ifPresent(staffInfo -> model.addAttribute("staffInfo", staffInfo));
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+            if (returnUrl != null && !returnUrl.isEmpty()) {
+                model.addAttribute("returnUrl", returnUrl);
+            }
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        return "nurse-profile";
+    }
+    
+    /**
+     * GET /nurse/appointments
+     * Trang quản lý lịch hẹn cho Nurse
+     */
+    @GetMapping("/nurse/appointments")
+    public String nurseAppointments(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.NURSE && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        return "nurse-appointments";
+    }
+    
+    /**
+     * GET /nurse/inject/{id}
+     * Trang thực hiện tiêm vaccine cho Nurse
+     */
+    @GetMapping("/nurse/inject/{id}")
+    public String nurseInject(@PathVariable Long id, Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.NURSE && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+            model.addAttribute("appointmentId", id);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        return "tiem_vaccin";
+    }
+    
+    /**
+     * GET /nurse/vaccines
+     * Trang quản lý vaccine cho Nurse
+     */
+    @GetMapping("/nurse/vaccines")
+    public String nurseVaccines(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.NURSE && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        return "nurse-vaccines";
+    }
+    
+    /**
+     * GET /nurse/vaccination-history
+     * Redirect đến trang lịch sử tiêm mới
+     */
+    @GetMapping("/nurse/vaccination-history")
+    public String nurseVaccinationHistoryRedirect() {
+        return "redirect:/nurse/lich-su-tiem-y-ta";
+    }
+    
+    /**
+     * GET /nurse/lich-su-tiem-y-ta
+     * Trang lịch sử tiêm cho Nurse
+     */
+    @GetMapping("/nurse/lich-su-tiem-y-ta")
+    public String nurseLichSuTiemYTa(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            // Kiểm tra role
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.NURSE && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        return "lich_su_tiem_y_ta";
+    }
+    
+    /**
+     * GET /nurse/lich-su-tiem-y-ta/chi-tiet/{recordId}
+     * Trang chi tiết lịch sử tiêm cho Nurse
+     */
+    @GetMapping("/nurse/lich-su-tiem-y-ta/chi-tiet/{recordId}")
+    public String nurseLichSuTiemYTaChiTiet(@PathVariable Long recordId, Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.NURSE && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            model.addAttribute("recordId", recordId);
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+        } catch (Exception e) {
+            return "redirect:/nurse/lich-su-tiem-y-ta";
+        }
+        
+        return "chi_tiet-lich_su_tiem_y_ta";
+    }
+    
+    /**
+     * GET /nurse/vaccination-history/detail/{recordId}
+     * Xem chi tiết lịch sử tiêm chủng (chỉ đọc)
+     */
+    @GetMapping("/nurse/vaccination-history/detail/{recordId}")
+    public String nurseVaccinationHistoryDetail(@PathVariable Long recordId, Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.NURSE && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            // Truyền recordId để trang có thể load dữ liệu
+            model.addAttribute("recordId", recordId);
+            model.addAttribute("isReadOnly", true); // Đánh dấu là chỉ đọc
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+        } catch (Exception e) {
+            return "redirect:/nurse/history-y-ta";
+        }
+        
+        return "chi_tiet_tiem_chung";
+    }
+    
+    /**
+     * GET /nurse/reactions
+     * Trang quản lý phản ứng phụ cho Nurse
+     */
+    @GetMapping("/nurse/reactions")
+    public String nurseReactions(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.NURSE && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        return "nurse-reactions";
+    }
+    
+    /**
+     * GET /nurse/trace
+     * Trang truy vết vaccine cho Nurse
+     */
+    @GetMapping("/nurse/trace")
+    public String nurseTrace(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.NURSE && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        // Tạm thời redirect về vaccination-history vì chưa có template trace
+        return "redirect:/nurse/vaccination-history";
+    }
+    
+    /**
+     * GET /trace
+     * Trang truy vết vaccine (alias cho /nurse/trace)
+     */
+    @GetMapping("/trace")
+    public String trace(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.NURSE && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            // Redirect về nurse trace
+            return "redirect:/nurse/trace";
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+    }
+    
+    /**
+     * GET /receptionist/dashboard
+     * Dashboard cho Receptionist - quản lý lịch hẹn
+     */
+    @GetMapping("/receptionist/dashboard")
+    public String receptionistDashboard(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            // Kiểm tra role
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.RECEPTIONIST && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("isAuthenticated", true);
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        return "receptionist-dashboard";
+    }
+    
+    /**
+     * GET /receptionist/profile
+     * Trang profile cho Receptionist
+     */
+    @GetMapping("/receptionist/profile")
+    public String receptionistProfile(@RequestParam(required = false) String returnUrl, Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+        try {
+            User currentUser = getCurrentUser(authentication);
+            
+            // Kiểm tra role
+            if (currentUser.getRole() == null || 
+                (currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.RECEPTIONIST && 
+                 currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN)) {
+                return "redirect:/home";
+            }
+            
+            // Refresh từ database để có dữ liệu mới nhất
+            if (currentUser != null && currentUser.getId() != null) {
+                try {
+                    currentUser = userService.getUserById(currentUser.getId());
+                } catch (Exception e) {
+                    // Nếu không refresh được, vẫn dùng user từ session
+                }
+            }
+            
+            // Lấy StaffInfo nếu có
+            ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = null;
+            if (currentUser != null) {
+                staffInfo = staffInfoRepository.findByUser(currentUser).orElse(null);
+            }
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("staffInfo", staffInfo);
+            model.addAttribute("isAuthenticated", true);
+            if (returnUrl != null && !returnUrl.isEmpty()) {
+                model.addAttribute("returnUrl", returnUrl);
+            }
+        } catch (Exception e) {
+            return "redirect:/login";
+        }
+        return "receptionist-profile";
     }
 }
 

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Chi tiết Tiêm chủng - VacciCare Nurse</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0f766e",
+                        "primary-light": "#14b8a6",
+                        "primary-dark": "#134e4a",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="flex min-h-screen">
+<!-- Sidebar Fragment -->
+<div th:replace="~{fragments/nurse-sidebar :: sidebar}"></div>
+<!-- Main Content -->
+<div class="flex-1 ml-64">
+<!-- Top Navigation Bar -->
+<header class="flex items-center justify-between border-b border-solid border-[#dbe6df] bg-white dark:bg-background-dark px-10 py-3 sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4 text-slate-900 dark:text-white">
+<div class="size-6 text-primary">
+<span class="material-symbols-outlined text-3xl">vaccines</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-tight">VacciCare Dashboard</h2>
+</div>
+<nav class="flex items-center gap-9">
+<a class="text-sm font-medium leading-normal hover:text-primary transition-colors" th:href="@{/nurse/dashboard}">Dashboard</a>
+<a class="text-sm font-medium leading-normal hover:text-primary transition-colors" th:href="@{/nurse/vaccines}">Quản lý vaccine</a>
+<a class="text-sm font-medium leading-normal hover:text-primary transition-colors border-b-2 border-primary pb-1" th:href="@{/nurse/lich-su-tiem-y-ta}">Lịch sử</a>
+<a class="text-sm font-medium leading-normal hover:text-primary transition-colors" th:href="@{/nurse/profile}">Cá nhân</a>
+</nav>
+</div>
+<div class="flex flex-1 justify-end gap-6 items-center">
+<div class="flex items-center gap-3 border-l pl-6 border-slate-200 dark:border-slate-700">
+<div class="text-right">
+<p class="text-sm font-bold leading-none" th:text="${currentUser != null ? currentUser.fullName : 'Y tá'}">Y tá</p>
+<p class="text-xs text-slate-500 mt-1">Y tá</p>
+</div>
+<div class="bg-primary/20 rounded-full size-10 border-2 border-primary/30 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary font-bold">person</span>
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-[1200px] mx-auto py-8 px-6">
+<!-- Breadcrumbs -->
+<div class="flex flex-wrap gap-2 mb-6">
+<a class="text-[#61896f] text-sm font-medium hover:underline" th:href="@{/nurse/dashboard}">Dashboard</a>
+<span class="text-[#61896f] text-sm font-medium">/</span>
+<a class="text-[#61896f] text-sm font-medium hover:underline" th:href="@{/nurse/lich-su-tiem-y-ta}">Lịch sử tiêm</a>
+<span class="text-[#61896f] text-sm font-medium">/</span>
+<span class="text-slate-900 dark:text-white text-sm font-bold">Chi tiết Tiêm chủng</span>
+</div>
+
+<!-- Loading State -->
+<div id="loadingState" class="text-center py-12">
+<span class="material-symbols-outlined text-4xl mb-2 animate-spin text-primary">hourglass_empty</span>
+<p class="text-[#61896f]">Đang tải chi tiết...</p>
+</div>
+
+<!-- Content -->
+<div id="contentArea" class="hidden space-y-6">
+<!-- Patient Info Card -->
+<div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-primary/20 dark:border-primary/30 p-6">
+<h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">person</span>
+Thông tin Bệnh nhân
+</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="patientInfo">
+<!-- Will be populated by JavaScript -->
+</div>
+</div>
+
+<!-- Vaccination Info Card -->
+<div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-primary/20 dark:border-primary/30 p-6">
+<h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">vaccines</span>
+Thông tin Tiêm chủng
+</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="vaccinationInfo">
+<!-- Will be populated by JavaScript -->
+</div>
+</div>
+
+<!-- Vaccine Lot Info Card -->
+<div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-primary/20 dark:border-primary/30 p-6">
+<h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">inventory</span>
+Thông tin Lô Vaccine
+</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="vaccineLotInfo">
+<!-- Will be populated by JavaScript -->
+</div>
+</div>
+
+<!-- Back Button -->
+<div class="flex justify-end">
+<button onclick="window.location.href='/nurse/vaccination-history'" class="px-6 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl font-bold flex items-center gap-2 transition-all">
+<span class="material-symbols-outlined">arrow_back</span>
+Quay lại
+</button>
+</div>
+</div>
+</main>
+</div>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    (function() {
+        const recordId = /*[[${recordId}]]*/ null;
+        
+        async function loadRecordDetail() {
+            if (!recordId) {
+                alert('Không tìm thấy ID hồ sơ');
+                window.location.href = '/nurse/lich-su-tiem-y-ta';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/vaccination-records/${recordId}`, {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load record detail');
+                }
+                
+                const record = await response.json();
+                displayRecordDetail(record);
+            } catch (error) {
+                console.error('Error loading record detail:', error);
+                alert('Có lỗi xảy ra khi tải chi tiết hồ sơ');
+                window.location.href = '/nurse/lich-su-tiem-y-ta';
+            }
+        }
+        
+        function displayRecordDetail(record) {
+            // Hide loading, show content
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('contentArea').classList.remove('hidden');
+            
+            // Load patient info (need to fetch from appointment)
+            if (record.appointmentId) {
+                fetch(`/api/appointments/${record.appointmentId}/detail`, {
+                    credentials: 'include'
+                })
+                .then(res => res.json())
+                .then(appointment => {
+                    const patientInfo = appointment.patientInfo || {};
+                    const patientHtml = `
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Họ tên</p>
+                            <p class="font-semibold">${patientInfo.fullName || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Số điện thoại</p>
+                            <p class="font-semibold">${patientInfo.phoneNumber || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Email</p>
+                            <p class="font-semibold">${patientInfo.email || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-[#61896f] mb-1">Ngày sinh</p>
+                            <p class="font-semibold">${patientInfo.dateOfBirth || 'N/A'}</p>
+                        </div>
+                    `;
+                    document.getElementById('patientInfo').innerHTML = patientHtml;
+                })
+                .catch(err => console.error('Error loading patient info:', err));
+            }
+            
+            // Vaccination info
+            const vaccinationHtml = `
+                <div>
+                    <p class="text-sm text-[#61896f] mb-1">Vaccine</p>
+                    <p class="font-semibold">${record.vaccineName || 'N/A'}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-[#61896f] mb-1">Mũi tiêm</p>
+                    <p class="font-semibold">Mũi ${record.doseNumber || 'N/A'}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-[#61896f] mb-1">Ngày tiêm</p>
+                    <p class="font-semibold">${formatDate(record.injectionDate) || 'N/A'}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-[#61896f] mb-1">Giờ tiêm</p>
+                    <p class="font-semibold">${record.injectionTime ? record.injectionTime.substring(0, 5) : 'N/A'}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-[#61896f] mb-1">Vị trí tiêm</p>
+                    <p class="font-semibold">${getInjectionSiteName(record.injectionSite) || 'N/A'}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-[#61896f] mb-1">Y tá thực hiện</p>
+                    <p class="font-semibold">${record.nurseName || 'N/A'}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-[#61896f] mb-1">Mã hẹn</p>
+                    <p class="font-semibold">${record.bookingCode || 'N/A'}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-[#61896f] mb-1">Số chứng nhận</p>
+                    <p class="font-semibold">${record.certificateNumber || 'N/A'}</p>
+                </div>
+            `;
+            document.getElementById('vaccinationInfo').innerHTML = vaccinationHtml;
+            
+            // Vaccine lot info
+            const lotHtml = `
+                <div>
+                    <p class="text-sm text-[#61896f] mb-1">Số lô</p>
+                    <p class="font-semibold">${record.lotNumber || 'N/A'}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-[#61896f] mb-1">Số batch</p>
+                    <p class="font-semibold">${record.batchNumber || 'N/A'}</p>
+                </div>
+            `;
+            document.getElementById('vaccineLotInfo').innerHTML = lotHtml;
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString + 'T00:00:00');
+            return date.toLocaleDateString('vi-VN');
+        }
+        
+        function getInjectionSiteName(site) {
+            if (!site) return 'N/A';
+            const sites = {
+                'LEFT_ARM': 'Tay trái',
+                'RIGHT_ARM': 'Tay phải',
+                'LEFT_THIGH': 'Đùi trái',
+                'RIGHT_THIGH': 'Đùi phải'
+            };
+            return sites[site] || site;
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRecordDetail();
+        });
+    })();
+    /*]]>*/
+</script>
+</body></html>
+

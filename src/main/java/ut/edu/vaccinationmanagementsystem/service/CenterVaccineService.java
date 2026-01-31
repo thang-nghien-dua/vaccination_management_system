@@ -63,11 +63,36 @@ public class CenterVaccineService {
             throw new RuntimeException("Vaccine already exists in this center");
         }
         
+        // Nếu không phải trung tâm tổng (centerId != 1), trừ số lượng từ trung tâm tổng
+        Integer requestedQuantity = dto.getStockQuantity() != null ? dto.getStockQuantity() : 0;
+        if (requestedQuantity > 0 && centerId != 1L) {
+            // Tìm trung tâm tổng (centerId = 1)
+            VaccinationCenter mainCenter = vaccinationCenterRepository.findById(1L).orElse(null);
+            if (mainCenter != null) {
+                Optional<CenterVaccine> mainCenterVaccine = centerVaccineRepository.findByCenterAndVaccine(mainCenter, vaccine);
+                if (mainCenterVaccine.isPresent()) {
+                    CenterVaccine mainCV = mainCenterVaccine.get();
+                    Integer mainStock = mainCV.getStockQuantity() != null ? mainCV.getStockQuantity() : 0;
+                    
+                    if (mainStock < requestedQuantity) {
+                        throw new RuntimeException("Không đủ số lượng vaccine trong kho tổng. Hiện có: " + mainStock + " liều, yêu cầu: " + requestedQuantity + " liều");
+                    }
+                    
+                    // Trừ số lượng từ trung tâm tổng
+                    mainCV.setStockQuantity(mainStock - requestedQuantity);
+                    mainCV.setLastRestocked(java.time.LocalDateTime.now());
+                    centerVaccineRepository.save(mainCV);
+                } else {
+                    throw new RuntimeException("Vaccine chưa có trong kho tổng. Vui lòng thêm vaccine vào kho tổng trước.");
+                }
+            }
+        }
+        
         // Convert DTO sang Entity
         CenterVaccine centerVaccine = new CenterVaccine();
         centerVaccine.setCenter(center);
         centerVaccine.setVaccine(vaccine);
-        centerVaccine.setStockQuantity(dto.getStockQuantity());
+        centerVaccine.setStockQuantity(requestedQuantity);
         centerVaccine.setLastRestocked(java.time.LocalDateTime.now());
         
         try {

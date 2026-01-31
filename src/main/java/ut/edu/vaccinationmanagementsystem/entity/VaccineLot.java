@@ -51,6 +51,7 @@ public class VaccineLot {
     
     // Relationships
     @OneToMany(mappedBy = "vaccineLot")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<VaccinationRecord> vaccinationRecords; // Danh sách lần tiêm sử dụng lô này
     
     // Getters and Setters

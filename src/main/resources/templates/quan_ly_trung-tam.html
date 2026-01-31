@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Quản lý Trung tâm Tiêm chủng - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .status-chip {
+            @apply px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white antialiased">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <main class="flex-1 lg:ml-72 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
+            <header
+                class="sticky top-0 z-10 flex items-center justify-between bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
+                <div class="flex flex-1 items-center gap-4">
+                    <h2 class="text-xl font-bold text-[#111813] dark:text-white">Quản lý Trung tâm</h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="openAddCenterModal()"
+                        class="w-full lg:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-primary text-[#111813] font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
+                        <span class="material-symbols-outlined">add_business</span>
+                        Thêm trung tâm mới
+                    </button>
+                </div>
+            </header>
+            <section class="p-8 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div
+                        class="bg-white dark:bg-white/5 p-6 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm flex items-center gap-4">
+                        <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-600">
+                            <span class="material-symbols-outlined text-3xl">home_work</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-[#61896f] uppercase tracking-wider">Tổng số trung tâm</p>
+                            <h3 id="totalCenters" class="text-2xl font-black">0</h3>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-white/5 p-6 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm flex items-center gap-4">
+                        <div class="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl text-green-600">
+                            <span class="material-symbols-outlined text-3xl">check_circle</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-[#61896f] uppercase tracking-wider">Đang hoạt động</p>
+                            <h3 id="activeCenters" class="text-2xl font-black">0</h3>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-white/5 p-6 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm flex items-center gap-4">
+                        <div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl text-red-600">
+                            <span class="material-symbols-outlined text-3xl">pause_circle</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-[#61896f] uppercase tracking-wider">Tạm dừng</p>
+                            <h3 id="inactiveCenters" class="text-2xl font-black">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="flex flex-col lg:flex-row gap-4 items-center justify-between bg-white dark:bg-white/5 p-4 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
+                    <div class="flex flex-1 flex-wrap gap-3 w-full lg:w-auto">
+                        <div class="relative flex-1 min-w-[320px]">
+                            <span
+                                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#61896f] text-xl">search</span>
+                            <input id="searchInput"
+                                class="w-full pl-10 pr-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all"
+                                placeholder="Tìm tên trung tâm, địa chỉ..." type="text" />
+                        </div>
+                        <select id="statusFilter"
+                            class="px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-medium text-[#61896f] focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer min-w-[180px]">
+                            <option value="">Tất cả Trạng thái</option>
+                            <option value="ACTIVE">Đang hoạt động</option>
+                            <option value="INACTIVE">Tạm dừng</option>
+                        </select>
+                    </div>
+                </div>
+                <div
+                    class="bg-white dark:bg-white/5 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 dark:bg-white/5 border-b border-[#f0f4f2] dark:border-white/10">
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Tên Trung tâm</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Địa chỉ</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Số điện thoại</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Sức chứa</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Trạng thái</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f] text-right">
+                                        Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[#f0f4f2] dark:divide-white/10">
+                                <!-- Dữ liệu sẽ được load từ API và render bằng JavaScript -->
+                                <tr>
+                                    <td colspan="6" class="px-6 py-8 text-center text-[#61896f]">
+                                        <span
+                                            class="material-symbols-outlined animate-spin text-2xl mb-2 inline-block">refresh</span>
+                                        <p>Đang tải dữ liệu...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div
+                        class="px-6 py-4 bg-gray-50 dark:bg-white/5 border-t border-[#f0f4f2] dark:border-white/10 flex items-center justify-end">
+                        <div class="flex gap-2" id="paginationButtons">
+                            <!-- Pagination buttons will be rendered here by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Load danh sách trung tâm từ API
+        let allCenters = [];
+        let filteredCenters = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        // Hàm loại bỏ dấu tiếng Việt
+        function removeVietnameseTones(str) {
+            if (!str) return '';
+            str = str.toLowerCase();
+            str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');
+            str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, 'e');
+            str = str.replace(/ì|í|ị|ỉ|ĩ/g, 'i');
+            str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, 'o');
+            str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u');
+            str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y');
+            str = str.replace(/đ/g, 'd');
+            return str;
+        }
+
+        async function loadCenters() {
+            try {
+                const response = await fetch('/api/centers', { credentials: 'include' });
+                if (response.ok) {
+                    allCenters = await response.json();
+                    filterCenters();
+                } else {
+                    console.error('Failed to load centers');
+                    const tbody = document.querySelector('tbody');
+                    if (tbody) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">Lỗi khi tải dữ liệu</td></tr>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading centers:', error);
+                const tbody = document.querySelector('tbody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">Lỗi khi tải dữ liệu</td></tr>';
+                }
+            }
+        }
+
+        function filterCenters() {
+            const searchInput = document.getElementById('searchInput')?.value || '';
+            const search = removeVietnameseTones(searchInput);
+            const statusFilter = document.getElementById('statusFilter')?.value || '';
+
+            let filtered = allCenters;
+
+            // Filter by search
+            if (search) {
+                filtered = filtered.filter(center => {
+                    const nameNoTone = removeVietnameseTones(center.name || '');
+                    const addressNoTone = removeVietnameseTones(center.address || '');
+                    return nameNoTone.includes(search) || addressNoTone.includes(search);
+                });
+            }
+
+            // Filter by status
+            if (statusFilter) {
+                filtered = filtered.filter(center => center.status === statusFilter);
+            }
+
+            filteredCenters = filtered;
+            currentPage = 1; // Reset về trang đầu khi filter
+            renderCenters();
+            updateStats();
+            updatePagination();
+        }
+
+        function renderCenters() {
+            const tbody = document.querySelector('tbody');
+            if (!tbody) return;
+
+            if (filteredCenters.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-[#61896f]">Không có dữ liệu</td></tr>';
+                return;
+            }
+
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageCenters = filteredCenters.slice(start, end);
+
+            tbody.innerHTML = pageCenters.map(center => `
+                <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                    <td class="px-6 py-4">
+                        <span class="text-sm font-bold text-[#111813] dark:text-white">${center.name || 'N/A'}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-xs font-medium text-[#61896f] max-w-xs block truncate">${center.address || 'N/A'}</span>
+                    </td>
+                    <td class="px-6 py-4 text-xs font-medium text-[#61896f]">${center.phoneNumber || 'N/A'}</td>
+                    <td class="px-6 py-4 text-xs font-medium text-[#61896f]">${center.capacity || 0} lượt/ngày</td>
+                    <td class="px-6 py-4">
+                        <span class="status-chip ${center.status === 'ACTIVE' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}">${center.status === 'ACTIVE' ? 'Đang hoạt động' : 'Tạm dừng'}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex justify-end gap-2">
+                            <button onclick="viewCenter(${center.id})" class="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg text-blue-500 transition-colors" title="Xem chi tiết">
+                                <span class="material-symbols-outlined text-lg">visibility</span>
+                            </button>
+                            <button onclick="editCenter(${center.id})" class="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg text-amber-500 transition-colors" title="Chỉnh sửa">
+                                <span class="material-symbols-outlined text-lg">edit_square</span>
+                            </button>
+                            <button onclick="deleteCenter(${center.id}, '${(center.name || '').replace(/'/g, "\\'")}')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg text-red-500 transition-colors" title="Xóa">
+                                <span class="material-symbols-outlined text-lg">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateStats() {
+            const totalCenters = filteredCenters.length;
+            const activeCenters = filteredCenters.filter(c => c.status === 'ACTIVE').length;
+            const inactiveCenters = totalCenters - activeCenters;
+
+            document.getElementById('totalCenters').textContent = totalCenters;
+            document.getElementById('activeCenters').textContent = activeCenters;
+            document.getElementById('inactiveCenters').textContent = inactiveCenters;
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredCenters.length / itemsPerPage);
+            const paginationContainer = document.getElementById('paginationButtons');
+            if (!paginationContainer) return;
+
+            if (filteredCenters.length === 0) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            paginationContainer.innerHTML = '';
+
+            // Previous button
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors disabled:opacity-50';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.innerHTML = '<span class="material-symbols-outlined text-sm">chevron_left</span>';
+            prevBtn.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderCenters();
+                    updatePagination();
+                }
+            };
+            paginationContainer.appendChild(prevBtn);
+
+            // Page numbers
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+
+            if (endPage - startPage < 4) {
+                if (startPage === 1) {
+                    endPage = Math.min(totalPages, startPage + 4);
+                } else if (endPage === totalPages) {
+                    startPage = Math.max(1, endPage - 4);
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `p-2 rounded-lg font-bold text-xs px-4 transition-colors ${
+                    i === currentPage
+                        ? 'bg-primary text-[#111813]'
+                        : 'bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50'
+                }`;
+                pageBtn.textContent = i.toString();
+                pageBtn.onclick = () => {
+                    currentPage = i;
+                    renderCenters();
+                    updatePagination();
+                };
+                paginationContainer.appendChild(pageBtn);
+            }
+
+            // Next button
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors disabled:opacity-50';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.innerHTML = '<span class="material-symbols-outlined text-sm">chevron_right</span>';
+            nextBtn.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderCenters();
+                    updatePagination();
+                }
+            };
+            paginationContainer.appendChild(nextBtn);
+        }
+
+        function viewCenter(id) {
+            window.location.href = `/admin/centers/${id}/vaccines`;
+        }
+
+        async function editCenter(id) {
+            try {
+                const response = await fetch(`/api/centers/${id}`, { credentials: 'include' });
+                if (!response.ok) throw new Error('Failed to load center details');
+                const center = await response.json();
+                
+                // Populate form fields
+                document.getElementById('centerModalTitle').textContent = 'Chỉnh sửa trung tâm';
+                document.getElementById('centerId').value = center.id;
+                document.getElementById('centerName').value = center.name || '';
+                document.getElementById('centerAddress').value = center.address || '';
+                document.getElementById('centerPhone').value = center.phoneNumber || '';
+                document.getElementById('centerEmail').value = center.email || '';
+                document.getElementById('centerCapacity').value = center.capacity || '';
+                document.getElementById('centerStatus').value = center.status || 'ACTIVE';
+                
+                // Show modal
+                document.getElementById('centerModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading center:', error);
+                alert('Lỗi khi tải thông tin trung tâm: ' + error.message);
+            }
+        }
+
+        function openAddCenterModal() {
+            document.getElementById('centerModalTitle').textContent = 'Thêm trung tâm mới';
+            document.getElementById('centerForm').reset();
+            document.getElementById('centerId').value = '';
+            document.getElementById('centerStatus').value = 'ACTIVE';
+            document.getElementById('centerModal').classList.remove('hidden');
+        }
+
+        function closeCenterModal() {
+            document.getElementById('centerModal').classList.add('hidden');
+            document.getElementById('centerForm').reset();
+        }
+
+        async function saveCenter(e) {
+            e.preventDefault();
+            
+            const centerId = document.getElementById('centerId').value;
+            const formData = {
+                name: document.getElementById('centerName').value.trim(),
+                address: document.getElementById('centerAddress').value.trim(),
+                phoneNumber: document.getElementById('centerPhone').value.trim(),
+                email: document.getElementById('centerEmail').value.trim(),
+                capacity: document.getElementById('centerCapacity').value ? parseInt(document.getElementById('centerCapacity').value) : null,
+                status: document.getElementById('centerStatus').value
+            };
+            
+            // Validation
+            if (!formData.name || !formData.status) {
+                alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+                return;
+            }
+            
+            try {
+                const url = centerId ? `/api/centers/${centerId}` : '/api/centers';
+                const method = centerId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to save center');
+                }
+                
+                alert(centerId ? 'Cập nhật trung tâm thành công!' : 'Tạo trung tâm thành công!');
+                closeCenterModal();
+                loadCenters();
+            } catch (error) {
+                console.error('Error saving center:', error);
+                alert('Lỗi: ' + error.message);
+            }
+        }
+
+        async function deleteCenter(id, name) {
+            if (!confirm(`Bạn có chắc chắn muốn xóa trung tâm "${name}"? Hành động này không thể hoàn tác.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/centers/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    alert('Xóa trung tâm thành công!');
+                    loadCenters();
+                } else {
+                    const error = await response.json();
+                    alert('Lỗi: ' + (error.error || 'Không thể xóa trung tâm'));
+                }
+            } catch (error) {
+                console.error('Error deleting center:', error);
+                alert('Có lỗi xảy ra khi xóa trung tâm');
+            }
+        }
+
+        // Setup search and filter with debounce
+        let searchTimeout;
+        document.getElementById('searchInput')?.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                filterCenters();
+            }, 300);
+        });
+
+        document.getElementById('statusFilter')?.addEventListener('change', function() {
+            filterCenters();
+        });
+
+        // Khởi tạo khi trang load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCenters();
+        });
+    </script>
+
+    <!-- Center Modal (Add/Edit) -->
+    <div id="centerModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-white/10 rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-[#f0f4f2] dark:border-white/10 flex items-center justify-between">
+                <h2 id="centerModalTitle" class="text-xl font-bold">Thêm trung tâm mới</h2>
+                <button onclick="closeCenterModal()"
+                    class="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <form id="centerForm" onsubmit="saveCenter(event)" class="p-6 space-y-4">
+                <input type="hidden" id="centerId" value="">
+                
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Tên trung tâm *</label>
+                    <input id="centerName" type="text" required
+                        class="w-full px-4 py-2 border border-[#f0f4f2] dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary"
+                        placeholder="Trung tâm Y tế Quận 1">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Địa chỉ</label>
+                    <textarea id="centerAddress" rows="2"
+                        class="w-full px-4 py-2 border border-[#f0f4f2] dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary"
+                        placeholder="123 Đường ABC, Phường XYZ, Quận 1, TP.HCM"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Số điện thoại</label>
+                        <input id="centerPhone" type="tel"
+                            class="w-full px-4 py-2 border border-[#f0f4f2] dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary"
+                            placeholder="0901234567">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Email</label>
+                        <input id="centerEmail" type="email"
+                            class="w-full px-4 py-2 border border-[#f0f4f2] dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary"
+                            placeholder="center@example.com">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Sức chứa (lượt/ngày)</label>
+                        <input id="centerCapacity" type="number" min="1"
+                            class="w-full px-4 py-2 border border-[#f0f4f2] dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary"
+                            placeholder="100">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Trạng thái *</label>
+                        <select id="centerStatus" required
+                            class="w-full px-4 py-2 border border-[#f0f4f2] dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary">
+                            <option value="ACTIVE">Đang hoạt động</option>
+                            <option value="INACTIVE">Tạm dừng</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="closeCenterModal()"
+                        class="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-white/20 transition-colors">
+                        Hủy
+                    </button>
+                    <button type="submit"
+                        class="flex-1 px-4 py-2.5 bg-primary text-[#111813] font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
+                        Lưu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</body>
+
+</html>

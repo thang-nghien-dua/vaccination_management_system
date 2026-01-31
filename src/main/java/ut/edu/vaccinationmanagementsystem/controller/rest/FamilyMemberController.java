@@ -24,7 +24,7 @@ import ut.edu.vaccinationmanagementsystem.entity.Appointment;
 import ut.edu.vaccinationmanagementsystem.entity.VaccinationRecord;
 
 @RestController
-@RequestMapping("/api/family-members")
+@RequestMapping("/api")
 public class FamilyMemberController {
     
     @Autowired
@@ -64,7 +64,7 @@ public class FamilyMemberController {
      * GET /api/family-members
      * Lấy danh sách người thân của user hiện tại
      */
-    @GetMapping
+    @GetMapping("/family-members")
     public ResponseEntity<?> getFamilyMembers() {
         try {
             User currentUser = getCurrentUser();
@@ -99,7 +99,7 @@ public class FamilyMemberController {
      * GET /api/family-members/{id}
      * Lấy thông tin một người thân theo ID
      */
-    @GetMapping("/{id}")
+    @GetMapping("/family-members/{id}")
     public ResponseEntity<?> getFamilyMember(@PathVariable Long id) {
         try {
             User currentUser = getCurrentUser();
@@ -131,7 +131,7 @@ public class FamilyMemberController {
      * POST /api/family-members
      * Thêm người thân mới
      */
-    @PostMapping
+    @PostMapping("/family-members")
     public ResponseEntity<?> createFamilyMember(@RequestBody FamilyMemberDTO dto) {
         try {
             User currentUser = getCurrentUser();
@@ -161,10 +161,96 @@ public class FamilyMemberController {
     }
     
     /**
+     * GET /api/users/{userId}/family-members
+     * Xem danh sách người thân của một user cụ thể (cho admin)
+     */
+    @GetMapping("/users/{userId}/family-members")
+    public ResponseEntity<?> getFamilyMembersByUserId(@PathVariable Long userId) {
+        try {
+            User currentUser = getCurrentUser();
+            User targetUser = userService.getUserById(userId);
+            
+            // Kiểm tra quyền: chỉ cho phép xem người thân của chính mình hoặc admin
+            if (!currentUser.getId().equals(userId) && currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "You don't have permission to view this user's family members");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+            }
+            
+            List<FamilyMember> familyMembers = familyMemberService.getFamilyMembersByUser(targetUser);
+            
+            List<Map<String, Object>> result = familyMembers.stream().map(fm -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", fm.getId());
+                map.put("fullName", fm.getFullName());
+                map.put("dateOfBirth", fm.getDateOfBirth());
+                map.put("gender", fm.getGender() != null ? fm.getGender().name() : null);
+                map.put("citizenId", fm.getCitizenId());
+                map.put("phoneNumber", fm.getPhoneNumber());
+                map.put("relationship", fm.getRelationship().name());
+                map.put("createdAt", fm.getCreatedAt());
+                return map;
+            }).collect(Collectors.toList());
+            
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * POST /api/users/{userId}/family-members
+     * Thêm người thân mới cho một user cụ thể
+     */
+    @PostMapping("/users/{userId}/family-members")
+    public ResponseEntity<?> createFamilyMemberForUser(@PathVariable Long userId, @RequestBody FamilyMemberDTO dto) {
+        try {
+            User currentUser = getCurrentUser();
+            User targetUser = userService.getUserById(userId);
+            
+            // Kiểm tra quyền: chỉ cho phép thêm người thân cho chính mình hoặc admin
+            if (!currentUser.getId().equals(userId) && currentUser.getRole() != ut.edu.vaccinationmanagementsystem.entity.enums.Role.ADMIN) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "You don't have permission to add family members for this user");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+            }
+            
+            FamilyMember familyMember = familyMemberService.createFamilyMember(dto, targetUser);
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("id", familyMember.getId());
+            result.put("fullName", familyMember.getFullName());
+            result.put("dateOfBirth", familyMember.getDateOfBirth());
+            result.put("gender", familyMember.getGender() != null ? familyMember.getGender().name() : null);
+            result.put("citizenId", familyMember.getCitizenId());
+            result.put("phoneNumber", familyMember.getPhoneNumber());
+            result.put("relationship", familyMember.getRelationship().name());
+            result.put("createdAt", familyMember.getCreatedAt());
+            result.put("message", "Family member added successfully");
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
      * PUT /api/family-members/{id}
      * Cập nhật thông tin người thân
      */
-    @PutMapping("/{id}")
+    @PutMapping("/family-members/{id}")
     public ResponseEntity<?> updateFamilyMember(@PathVariable Long id, @RequestBody FamilyMemberDTO dto) {
         try {
             User currentUser = getCurrentUser();
@@ -197,7 +283,7 @@ public class FamilyMemberController {
      * DELETE /api/family-members/{id}
      * Xóa người thân
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/family-members/{id}")
     public ResponseEntity<?> deleteFamilyMember(@PathVariable Long id) {
         try {
             User currentUser = getCurrentUser();
@@ -222,7 +308,7 @@ public class FamilyMemberController {
      * GET /api/family-members/{id}/details
      * Lấy thông tin chi tiết của người thân (bao gồm appointments, vaccination records)
      */
-    @GetMapping("/{id}/details")
+    @GetMapping("/family-members/{id}/details")
     public ResponseEntity<?> getFamilyMemberDetails(@PathVariable Long id) {
         try {
             User currentUser = getCurrentUser();

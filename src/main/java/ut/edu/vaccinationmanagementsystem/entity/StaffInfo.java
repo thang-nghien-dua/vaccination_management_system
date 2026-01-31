@@ -33,7 +33,19 @@ public class StaffInfo {
     @Column(nullable = true)
     private String department; // Phòng ban
     
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "center_id", nullable = true)
+    private VaccinationCenter center; // Trung tâm làm việc
+    
     // Getters and Setters
+    public VaccinationCenter getCenter() {
+        return center;
+    }
+    
+    public void setCenter(VaccinationCenter center) {
+        this.center = center;
+    }
+    
     public Long getId() {
         return id;
     }

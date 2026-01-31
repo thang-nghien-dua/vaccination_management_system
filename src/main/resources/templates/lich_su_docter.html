@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Lịch sử Khám Sàng lọc - VaxManager Doctor</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Google Fonts: Manrope -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet" />
+    <!-- Material Symbols -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0f766e",
+                        "primary-light": "#14b8a6",
+                        "primary-dark": "#134e4a",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "neutral-dark": "#111813",
+                        "neutral-muted": "#61896f",
+                        "border-light": "#dbe6df"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <link href="/css/ux-enhancements.css" rel="stylesheet"/>
+    <script src="/js/sidebar.js"></script>
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark min-h-screen text-neutral-dark font-display transition-colors duration-300">
+    <div class="flex min-h-screen">
+        <!-- Sidebar Overlay (mobile) -->
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden"></div>
+        <!-- Sidebar Fragment -->
+        <div th:replace="~{fragments/doctor-sidebar :: sidebar}"></div>
+        <!-- Main Content Area -->
+        <main class="flex-1 lg:ml-72 min-h-screen">
+            <!-- Top Navigation -->
+            <header
+                class="h-20 bg-white dark:bg-sidebar-dark/50 border-b border-gray-200 dark:border-white/10 flex items-center justify-between px-8 sticky top-0 z-40 backdrop-blur-md">
+                <div class="flex items-center gap-4">
+                    <h2 class="text-xl font-bold">Lịch sử Khám Sàng lọc</h2>
+                </div>
+            </header>
+            <div class="p-8">
+                <!-- Breadcrumbs -->
+                <nav class="flex items-center gap-2 mb-4 text-sm font-medium">
+                    <a class="text-neutral-muted hover:text-primary" th:href="@{/doctor/home}">Trang chủ</a>
+                    <span class="text-neutral-muted">/</span>
+                    <span class="text-neutral-dark dark:text-white">Lịch sử khám sàng lọc</span>
+                </nav>
+                <!-- Page Heading -->
+                <div class="mb-8">
+                    <h1 class="text-3xl lg:text-4xl font-black text-neutral-dark dark:text-white tracking-tight mb-2">
+                        Lịch sử Khám Sàng lọc</h1>
+                    <p class="text-neutral-muted">Quản lý và tra cứu hồ sơ khám sàng lọc tiêm chủng của bệnh nhân trong
+                        hệ thống.</p>
+                </div>
+                <!-- Filters Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+                    <div
+                        class="bg-white dark:bg-neutral-dark p-4 rounded-xl border border-border-light dark:border-neutral-800 flex flex-col gap-2">
+                        <label class="text-xs font-bold text-neutral-muted uppercase">Khoảng thời gian</label>
+                        <div class="flex items-center gap-2 text-neutral-dark dark:text-white">
+                            <span class="material-symbols-outlined text-primary">calendar_month</span>
+                            <select id="dateRangeFilter"
+                                class="bg-transparent border-none text-sm font-medium focus:ring-0 w-full cursor-pointer">
+                                <option value="all">Tất cả</option>
+                                <option value="today" id="todayOption">Hôm nay</option>
+                                <option value="week">7 ngày qua</option>
+                                <option value="month">30 ngày qua</option>
+                                <option value="thisMonth">Tháng này</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-neutral-dark p-4 rounded-xl border border-border-light dark:border-neutral-800 flex flex-col gap-2">
+                        <label class="text-xs font-bold text-neutral-muted uppercase">Trạng thái kết quả</label>
+                        <div class="flex items-center gap-2 text-neutral-dark dark:text-white">
+                            <span class="material-symbols-outlined text-primary">filter_list</span>
+                            <select id="resultStatusFilter"
+                                class="bg-transparent border-none text-sm font-medium focus:ring-0 w-full cursor-pointer">
+                                <option value="all">Tất cả kết quả</option>
+                                <option value="APPROVED">Đủ điều kiện (APPROVED)</option>
+                                <option value="REJECTED">Không đủ điều kiện (REJECTED)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-neutral-dark p-4 rounded-xl border border-border-light dark:border-neutral-800 flex flex-col gap-2 md:col-span-1 lg:col-span-2">
+                        <label class="text-xs font-bold text-neutral-muted uppercase">Tìm kiếm nhanh</label>
+                        <div class="flex items-center gap-2 text-neutral-dark dark:text-white">
+                            <span class="material-symbols-outlined text-primary">person_search</span>
+                            <input id="searchInputFilter"
+                                class="bg-transparent border-none text-sm font-medium focus:ring-0 w-full"
+                                placeholder="Nhập tên bệnh nhân, số điện thoại hoặc mã hồ sơ..." type="text" />
+                        </div>
+                    </div>
+                </div>
+                <!-- Data Table Container -->
+                <div
+                    class="bg-white dark:bg-neutral-dark rounded-xl border border-border-light dark:border-neutral-800 overflow-hidden shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="bg-background-light dark:bg-neutral-800/50 border-b border-border-light dark:border-neutral-800">
+                                    <th class="px-6 py-4 text-xs font-bold text-neutral-muted uppercase tracking-wider">
+                                        Ngày khám</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-neutral-muted uppercase tracking-wider">
+                                        Bệnh nhân</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-neutral-muted uppercase tracking-wider">
+                                        Vaccine</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-neutral-muted uppercase tracking-wider">
+                                        Kết quả</th>
+                                    <th
+                                        class="px-6 py-4 text-xs font-bold text-neutral-muted uppercase tracking-wider text-right">
+                                        Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="screeningHistoryBody"
+                                class="divide-y divide-border-light dark:divide-neutral-800">
+                                <!-- Data will be loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination -->
+                    <div
+                        class="px-6 py-4 border-t border-border-light dark:border-neutral-800 flex items-center justify-between">
+                        <p id="paginationText" class="text-xs text-neutral-muted font-medium">Đang tải...</p>
+                        <div id="paginationButtons" class="flex items-center gap-2">
+                            <!-- Pagination buttons will be generated dynamically -->
+                        </div>
+                    </div>
+                </div>
+                <!-- Summary Section -->
+                <div class="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="p-6 bg-primary/10 rounded-xl border border-primary/20">
+                        <p class="text-neutral-muted text-xs font-bold uppercase mb-2">Tổng hồ sơ tháng này</p>
+                        <h4 id="summaryTotalThisMonth" class="text-3xl font-black text-neutral-dark dark:text-white">0</h4>
+                        <p id="summaryTotalChange" class="text-xs text-green-600 font-bold mt-1">-</p>
+                    </div>
+                    <div
+                        class="p-6 bg-white dark:bg-neutral-dark rounded-xl border border-border-light dark:border-neutral-800">
+                        <p class="text-neutral-muted text-xs font-bold uppercase mb-2">Đủ điều kiện (Approved)</p>
+                        <h4 id="summaryApproved" class="text-3xl font-black text-neutral-dark dark:text-white">0</h4>
+                        <p id="summaryApprovedPercent" class="text-xs text-neutral-muted font-medium mt-1">0% tổng số ca</p>
+                    </div>
+                    <div
+                        class="p-6 bg-white dark:bg-neutral-dark rounded-xl border border-border-light dark:border-neutral-800">
+                        <p class="text-neutral-muted text-xs font-bold uppercase mb-2">Không đủ điều kiện (Rejected)</p>
+                        <h4 id="summaryRejected" class="text-3xl font-black text-neutral-dark dark:text-white">0</h4>
+                        <p id="summaryRejectedPercent" class="text-xs text-neutral-muted font-medium mt-1">0% tổng số ca</p>
+                    </div>
+                    <div
+                        class="p-6 bg-white dark:bg-neutral-dark rounded-xl border border-border-light dark:border-neutral-800">
+                        <p class="text-neutral-muted text-xs font-bold uppercase mb-2">Tỷ lệ hoàn thành</p>
+                        <h4 id="summaryCompletionRate" class="text-3xl font-black text-neutral-dark dark:text-white">0%</h4>
+                        <p id="summaryCompletionText" class="text-xs text-neutral-muted font-medium mt-1">Đã tiêm / Được phê duyệt</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+            /*<![CDATA[*/
+            (function () {
+                let allScreenings = []; // Lưu tất cả dữ liệu để filter
+                let filteredScreenings = []; // Dữ liệu sau khi filter
+                let currentPage = 1;
+                const itemsPerPage = 10;
+
+                // Set current date in filter
+                function setCurrentDate() {
+                    const today = new Date();
+                    const dateStr = today.toLocaleDateString('vi-VN', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+                    const todayOption = document.getElementById('todayOption');
+                    if (todayOption) {
+                        todayOption.textContent = `Hôm nay, ${dateStr}`;
+                    }
+                }
+
+                async function loadScreeningHistory() {
+                    try {
+                        const response = await fetch('/api/doctor/screening/history');
+                        if (!response.ok) throw new Error('Failed to load screening history');
+                        allScreenings = await response.json();
+
+                        // Apply filters and display
+                        applyAllFilters();
+                    } catch (error) {
+                        console.error('Error loading screening history:', error);
+                        const tbody = document.getElementById('screeningHistoryBody');
+                        if (tbody) {
+                            tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-red-500">Lỗi khi tải dữ liệu</td></tr>';
+                        }
+                    }
+                }
+
+                // Apply all filters
+                function applyAllFilters() {
+                    let filtered = [...allScreenings];
+                    
+                    // Filter by search query
+                    const searchInput = document.getElementById('searchInputFilter');
+                    const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
+                    if (searchQuery) {
+                        filtered = filtered.filter(screening => {
+                            const apt = screening.appointment;
+                            const patientName = (apt?.patientInfo?.fullName || '').toLowerCase();
+                            const bookingCode = (apt?.bookingCode || '').toLowerCase();
+                            const phoneNumber = (apt?.patientInfo?.phoneNumber || '').toLowerCase();
+                            const vaccineName = (apt?.vaccineName || '').toLowerCase();
+                            
+                            return patientName.includes(searchQuery) ||
+                                bookingCode.includes(searchQuery) ||
+                                phoneNumber.includes(searchQuery) ||
+                                vaccineName.includes(searchQuery);
+                        });
+                    }
+                    
+                    // Filter by date range
+                    const dateRangeFilter = document.getElementById('dateRangeFilter');
+                    if (dateRangeFilter && dateRangeFilter.value !== 'all') {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        
+                        filtered = filtered.filter(screening => {
+                            if (!screening.screenedAt) return false;
+                            const screenedDate = new Date(screening.screenedAt);
+                            screenedDate.setHours(0, 0, 0, 0);
+                            
+                            if (dateRangeFilter.value === 'today') {
+                                return screenedDate.getTime() === today.getTime();
+                            } else if (dateRangeFilter.value === 'week') {
+                                const weekAgo = new Date(today);
+                                weekAgo.setDate(today.getDate() - 7);
+                                return screenedDate >= weekAgo && screenedDate <= today;
+                            } else if (dateRangeFilter.value === 'month') {
+                                const monthAgo = new Date(today);
+                                monthAgo.setDate(today.getDate() - 30);
+                                return screenedDate >= monthAgo && screenedDate <= today;
+                            } else if (dateRangeFilter.value === 'thisMonth') {
+                                return screenedDate.getMonth() === today.getMonth() && 
+                                       screenedDate.getFullYear() === today.getFullYear();
+                            }
+                            return true;
+                        });
+                    }
+                    
+                    // Filter by result status
+                    const resultStatusFilter = document.getElementById('resultStatusFilter');
+                    if (resultStatusFilter && resultStatusFilter.value !== 'all') {
+                        filtered = filtered.filter(screening => 
+                            screening.screeningResult === resultStatusFilter.value
+                        );
+                    }
+                    
+                    filteredScreenings = filtered;
+                    currentPage = 1;
+                    
+                    // Paginate
+                    const start = (currentPage - 1) * itemsPerPage;
+                    const end = start + itemsPerPage;
+                    const paginatedScreenings = filteredScreenings.slice(start, end);
+                    
+                    displayScreenings(paginatedScreenings);
+                }
+
+                function displayScreenings(screenings) {
+                    const tbody = document.getElementById('screeningHistoryBody');
+                    if (!tbody) return;
+
+                    tbody.innerHTML = '';
+
+                    if (screenings.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Không có lịch sử khám nào</td></tr>';
+                        updateSummary(filteredScreenings);
+                        updatePagination(filteredScreenings.length);
+                        return;
+                    }
+
+                    screenings.forEach(screening => {
+                        const apt = screening.appointment;
+                        const patientName = apt?.patientInfo?.fullName || 'N/A';
+                        const initials = patientName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                        const vaccineName = apt?.vaccineName || 'N/A';
+                        const date = screening.screenedAt ? new Date(screening.screenedAt).toLocaleDateString('vi-VN') : 'N/A';
+                        const time = screening.screenedAt ? new Date(screening.screenedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+
+                        let resultBadge = '';
+                        const status = apt?.status || 'UNKNOWN';
+                        const hasVaccinationRecord = apt?.hasVaccinationRecord || false;
+
+                        if (screening.screeningResult === 'APPROVED') {
+                            if (status === 'COMPLETED' || hasVaccinationRecord) {
+                                // Đã tiêm xong
+                                resultBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 dark:text-green-600"><span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>✓ ĐÃ TIÊM</span>';
+                            } else {
+                                // Chỉ mới khám xong, chưa tiêm
+                                resultBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/20 text-green-700 dark:text-primary"><span class="w-1.5 h-1.5 rounded-full bg-primary mr-1.5"></span>✓ ĐỦ ĐIỀU KIỆN</span>';
+                            }
+                        } else {
+                            resultBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700"><span class="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>✗ KHÔNG ĐỦ ĐIỀU KIỆN</span>';
+                        }
+
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-background-light dark:hover:bg-neutral-800/30 transition-colors';
+                        row.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-semibold text-neutral-dark dark:text-white">${date}</div>
+                        <div class="text-xs text-neutral-muted">${time}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-xs">${initials}</div>
+                            <div>
+                                <div class="text-sm font-bold text-neutral-dark dark:text-white">${patientName}</div>
+                                <div class="text-xs text-neutral-muted">${apt?.bookingCode || 'N/A'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-neutral-dark dark:text-gray-300">${vaccineName}</div>
+                    </td>
+                    <td class="px-6 py-4">${resultBadge}</td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="viewDetail(${screening.id})" class="text-sm font-bold text-primary hover:underline flex items-center gap-1 ml-auto">
+                            Xem chi tiết <span class="material-symbols-outlined text-sm">open_in_new</span>
+                        </button>
+                    </td>
+                `;
+                        tbody.appendChild(row);
+                    });
+
+                    updateSummary(filteredScreenings);
+                    updatePagination(filteredScreenings.length);
+                }
+
+                function updateSummary(screenings) {
+                    // Calculate statistics for this month
+                    const today = new Date();
+                    const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                    
+                    const thisMonthScreenings = screenings.filter(s => {
+                        if (!s.screenedAt) return false;
+                        const screenedDate = new Date(s.screenedAt);
+                        return screenedDate >= thisMonthStart && screenedDate <= today;
+                    });
+                    
+                    const totalThisMonth = thisMonthScreenings.length;
+                    const approved = thisMonthScreenings.filter(s => s.screeningResult === 'APPROVED').length;
+                    const rejected = thisMonthScreenings.filter(s => s.screeningResult === 'REJECTED').length;
+                    
+                    // Calculate percentage
+                    const approvedPercent = totalThisMonth > 0 ? ((approved / totalThisMonth) * 100).toFixed(1) : 0;
+                    const rejectedPercent = totalThisMonth > 0 ? ((rejected / totalThisMonth) * 100).toFixed(1) : 0;
+                    
+                    // Calculate completion rate (số ca đã tiêm / số ca được phê duyệt)
+                    let completionRate = 0;
+                    let completedCount = 0;
+                    let completionText = '0 / 0';
+                    
+                    if (approved > 0) {
+                        // Count how many approved screenings have been vaccinated (hasVaccinationRecord)
+                        completedCount = thisMonthScreenings.filter(s => {
+                            return s.screeningResult === 'APPROVED' && 
+                                   s.appointment && 
+                                   s.appointment.hasVaccinationRecord === true;
+                        }).length;
+                        
+                        completionRate = ((completedCount / approved) * 100).toFixed(1);
+                        completionText = `${completedCount} / ${approved}`;
+                    }
+                    
+                    // Update summary cards
+                    const summaryTotalThisMonth = document.getElementById('summaryTotalThisMonth');
+                    const summaryTotalChange = document.getElementById('summaryTotalChange');
+                    const summaryApproved = document.getElementById('summaryApproved');
+                    const summaryApprovedPercent = document.getElementById('summaryApprovedPercent');
+                    const summaryRejected = document.getElementById('summaryRejected');
+                    const summaryRejectedPercent = document.getElementById('summaryRejectedPercent');
+                    const summaryCompletionRate = document.getElementById('summaryCompletionRate');
+                    const summaryCompletionText = document.getElementById('summaryCompletionText');
+                    
+                    if (summaryTotalThisMonth) summaryTotalThisMonth.textContent = totalThisMonth;
+                    if (summaryTotalChange) {
+                        // Calculate change from last month (would need API data)
+                        summaryTotalChange.textContent = '-'; // Placeholder
+                    }
+                    if (summaryApproved) summaryApproved.textContent = approved;
+                    if (summaryApprovedPercent) summaryApprovedPercent.textContent = `${approvedPercent}% tổng số ca`;
+                    if (summaryRejected) summaryRejected.textContent = rejected;
+                    if (summaryRejectedPercent) summaryRejectedPercent.textContent = `${rejectedPercent}% tổng số ca`;
+                    if (summaryCompletionRate) summaryCompletionRate.textContent = `${completionRate}%`;
+                    if (summaryCompletionText) summaryCompletionText.textContent = completionText;
+                }
+
+                function updatePagination(total) {
+                    const paginationText = document.getElementById('paginationText');
+                    const paginationButtons = document.getElementById('paginationButtons');
+                    
+                    if (!paginationText || !paginationButtons) return;
+                    
+                    const totalPages = Math.ceil(total / itemsPerPage);
+                    const start = (currentPage - 1) * itemsPerPage + 1;
+                    const end = Math.min(currentPage * itemsPerPage, total);
+                    
+                    paginationText.textContent = `Hiển thị ${start} - ${end} của ${total} hồ sơ`;
+                    
+                    // Generate pagination buttons
+                    let buttonsHTML = '';
+                    
+                    // Previous button
+                    buttonsHTML += `
+                        <button onclick="goToPage(${currentPage - 1})" 
+                                class="p-2 rounded-lg hover:bg-background-light dark:hover:bg-neutral-800 text-neutral-muted transition-colors disabled:opacity-50"
+                                ${currentPage === 1 ? 'disabled' : ''}>
+                            <span class="material-symbols-outlined">chevron_left</span>
+                        </button>
+                    `;
+                    
+                    // Page number buttons
+                    const maxVisiblePages = 5;
+                    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                    
+                    if (endPage - startPage < maxVisiblePages - 1) {
+                        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                    }
+                    
+                    if (startPage > 1) {
+                        buttonsHTML += `<button onclick="goToPage(1)" class="w-8 h-8 rounded-lg text-xs font-bold hover:bg-background-light dark:hover:bg-neutral-800 text-neutral-dark dark:text-white">1</button>`;
+                        if (startPage > 2) {
+                            buttonsHTML += `<span class="text-neutral-muted px-1">...</span>`;
+                        }
+                    }
+                    
+                    for (let i = startPage; i <= endPage; i++) {
+                        buttonsHTML += `
+                            <button onclick="goToPage(${i})" 
+                                    class="w-8 h-8 rounded-lg text-xs font-bold ${i === currentPage ? 'bg-primary text-white' : 'hover:bg-background-light dark:hover:bg-neutral-800 text-neutral-dark dark:text-white'}">
+                                ${i}
+                            </button>
+                        `;
+                    }
+                    
+                    if (endPage < totalPages) {
+                        if (endPage < totalPages - 1) {
+                            buttonsHTML += `<span class="text-neutral-muted px-1">...</span>`;
+                        }
+                        buttonsHTML += `<button onclick="goToPage(${totalPages})" class="w-8 h-8 rounded-lg text-xs font-bold hover:bg-background-light dark:hover:bg-neutral-800 text-neutral-dark dark:text-white">${totalPages}</button>`;
+                    }
+                    
+                    // Next button
+                    buttonsHTML += `
+                        <button onclick="goToPage(${currentPage + 1})" 
+                                class="p-2 rounded-lg hover:bg-background-light dark:hover:bg-neutral-800 text-neutral-muted transition-colors"
+                                ${currentPage === totalPages ? 'disabled' : ''}>
+                            <span class="material-symbols-outlined">chevron_right</span>
+                        </button>
+                    `;
+                    
+                    paginationButtons.innerHTML = buttonsHTML;
+                }
+                
+                function goToPage(page) {
+                    const totalPages = Math.ceil(filteredScreenings.length / itemsPerPage);
+                    if (page < 1 || page > totalPages) return;
+                    
+                    currentPage = page;
+                    const start = (page - 1) * itemsPerPage;
+                    const end = start + itemsPerPage;
+                    const paginatedScreenings = filteredScreenings.slice(start, end);
+                    
+                    displayScreenings(paginatedScreenings);
+                }
+                
+                window.goToPage = goToPage;
+
+                function filterScreenings(searchQuery) {
+                    // Update search input in filter section
+                    const searchInput = document.getElementById('searchInputFilter');
+                    
+                    if (searchInput) {
+                        searchInput.value = searchQuery;
+                    }
+                    
+                    // Apply all filters (which includes search)
+                    applyAllFilters();
+                }
+
+                window.viewDetail = function (screeningId) {
+                    window.location.href = `/doctor/history/detail/${screeningId}`;
+                };
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    // Initialize sidebar - đợi một chút để đảm bảo sidebar fragment đã được render
+                    setTimeout(function() {
+                        if (typeof setupSidebar === 'function') {
+                            setupSidebar();
+                        }
+                    }, 100);
+                    
+                    setCurrentDate();
+                    loadScreeningHistory();
+
+                    // Thêm event listener cho search input ở filter
+                    const searchInputFilter = document.getElementById('searchInputFilter');
+                    if (searchInputFilter) {
+                        searchInputFilter.addEventListener('input', function (e) {
+                            filterScreenings(e.target.value);
+                        });
+                    }
+                    
+                    // Thêm event listener cho date range filter
+                    const dateRangeFilter = document.getElementById('dateRangeFilter');
+                    if (dateRangeFilter) {
+                        dateRangeFilter.addEventListener('change', function () {
+                            applyAllFilters();
+                        });
+                    }
+                    
+                    // Thêm event listener cho result status filter
+                    const resultStatusFilter = document.getElementById('resultStatusFilter');
+                    if (resultStatusFilter) {
+                        resultStatusFilter.addEventListener('change', function () {
+                            applyAllFilters();
+                        });
+                    }
+                });
+            })();
+        /*]]>*/
+    </script>
+</body>
+
+</html>

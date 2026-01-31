@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Gửi Thông báo theo Trung tâm - VacciCare</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        .tab-active {
+            @apply text-primary border-b-2 border-primary;
+        }
+        .tab-inactive {
+            @apply text-[#61896f] border-b-2 border-transparent hover:text-[#111813] dark:hover:text-white transition-all;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white antialiased">
+    <div class="flex h-screen overflow-hidden">
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <main class="flex-1 lg:ml-72 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
+            <!-- Header with Tabs -->
+            <header class="bg-white dark:bg-zinc-900 border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
+                <div class="flex items-center gap-3 mb-4">
+                    <button onclick="window.location.href='/admin/notifications'"
+                        class="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-[#61896f] dark:text-zinc-400"
+                        title="Quay lại">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <a class="text-[#61896f] dark:text-zinc-400 text-sm font-medium hover:underline"
+                            th:href="@{/admin/home}">Hệ thống</a>
+                        <span class="text-[#61896f] dark:text-zinc-400 text-sm font-medium">/</span>
+                        <a class="text-[#61896f] dark:text-zinc-400 text-sm font-medium hover:underline"
+                            th:href="@{/admin/notifications}">Thông báo</a>
+                    </div>
+                </div>
+                <!-- Tabs Navigation -->
+                <div class="flex gap-8 border-b border-zinc-200 dark:border-zinc-800">
+                    <button onclick="window.location.href='/admin/notifications/send-individual'"
+                        class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">person</span>
+                        Cá nhân cụ thể
+                    </button>
+                    <button onclick="window.location.href='/admin/notifications/send-all'"
+                        class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">groups</span>
+                        Tất cả người dùng
+                    </button>
+                    <button onclick="window.location.href='/admin/notifications/send-role'"
+                        class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">shield_person</span>
+                        Theo vai trò
+                    </button>
+                    <button onclick="window.location.href='/admin/notifications/send-center'"
+                        class="tab-active py-4 text-sm font-bold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">home_work</span>
+                        Theo Trung tâm
+                    </button>
+                    <button onclick="window.location.href='/admin/notifications/templates'"
+                        class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">description</span>
+                        Quản lý Template
+                    </button>
+                </div>
+            </header>
+            <!-- Content -->
+            <div class="flex-1 p-8">
+                <div class="max-w-5xl mx-auto">
+                    <!-- Page Heading -->
+                    <div class="mb-8">
+                        <h1 class="text-[#111813] dark:text-white text-4xl font-black leading-tight tracking-tight">Gửi
+                            Thông báo theo Trung tâm</h1>
+                        <p class="text-[#61896f] text-base mt-2 max-w-2xl">Nhắm mục tiêu khách hàng chính xác dựa trên
+                            địa điểm tiêm chủng và phân loại đối tượng cụ thể tại các trung tâm.</p>
+                    </div>
+                    <div class="grid grid-cols-1 gap-6">
+                        <!-- Section 1: Target Selection -->
+                        <div
+                            class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+                            <div
+                                class="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50/50 dark:bg-zinc-800/20">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+                                        <span class="font-bold text-sm">1</span>
+                                    </div>
+                                    <h2 class="text-[#111813] dark:text-white text-xl font-bold tracking-tight">Chọn đối
+                                        tượng mục tiêu</h2>
+                                </div>
+                                <span
+                                    class="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-wider italic">Địa
+                                    lý</span>
+                            </div>
+                            <div class="p-6">
+                                <div class="flex flex-col lg:flex-row gap-8">
+                                    <div class="flex-1 space-y-6">
+                                        <div class="space-y-2">
+                                            <label class="text-sm font-bold text-[#111813] dark:text-zinc-300">Trung tâm
+                                                tiêm chủng</label>
+                                            <div class="relative group">
+                                                <span
+                                                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-primary transition-colors">apartment</span>
+                                                <select
+                                                    class="w-full pl-10 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all appearance-none cursor-pointer">
+                                                    <option>Tất cả trung tâm</option>
+                                                    <option selected="">Trung tâm Tiêm chủng VNVC Quận 1</option>
+                                                    <option>Trung tâm Tiêm chủng VNVC Bình Thạnh</option>
+                                                    <option>Trung tâm Tiêm chủng VNVC Thủ Đức</option>
+                                                    <option>Trung tâm Tiêm chủng VNVC Hà Nội - Đống Đa</option>
+                                                </select>
+                                                <span
+                                                    class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none">expand_more</span>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label class="text-sm font-bold text-[#111813] dark:text-zinc-300">Phân loại
+                                                khách hàng tại trung tâm</label>
+                                            <div class="grid grid-cols-2 gap-3">
+                                                <label
+                                                    class="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg border border-zinc-100 dark:border-zinc-700 cursor-pointer hover:border-primary/50 transition-colors">
+                                                    <input checked=""
+                                                        class="rounded border-zinc-300 dark:border-zinc-600 text-primary focus:ring-primary"
+                                                        type="checkbox" />
+                                                    <span class="text-sm font-medium">Tất cả khách hàng</span>
+                                                </label>
+                                                <label
+                                                    class="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg border border-zinc-100 dark:border-zinc-700 cursor-pointer hover:border-primary/50 transition-colors">
+                                                    <input
+                                                        class="rounded border-zinc-300 dark:border-zinc-600 text-primary focus:ring-primary"
+                                                        type="checkbox" />
+                                                    <span class="text-sm font-medium">Khách hàng VIP/Premium</span>
+                                                </label>
+                                                <label
+                                                    class="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg border border-zinc-100 dark:border-zinc-700 cursor-pointer hover:border-primary/50 transition-colors">
+                                                    <input
+                                                        class="rounded border-zinc-300 dark:border-zinc-600 text-primary focus:ring-primary"
+                                                        type="checkbox" />
+                                                    <span class="text-sm font-medium">Đã tiêm mũi 1</span>
+                                                </label>
+                                                <label
+                                                    class="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg border border-zinc-100 dark:border-zinc-700 cursor-pointer hover:border-primary/50 transition-colors">
+                                                    <input
+                                                        class="rounded border-zinc-300 dark:border-zinc-600 text-primary focus:ring-primary"
+                                                        type="checkbox" />
+                                                    <span class="text-sm font-medium">Trễ lịch tiêm</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="w-full lg:w-72">
+                                        <div
+                                            class="bg-zinc-50 dark:bg-zinc-800 p-4 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-600">
+                                            <p
+                                                class="text-xs font-bold text-[#61896f] uppercase mb-4 flex items-center gap-2">
+                                                <span class="material-symbols-outlined text-sm">analytics</span>
+                                                Dự kiến người nhận
+                                            </p>
+                                            <div class="flex flex-col items-center justify-center py-4">
+                                                <p class="text-5xl font-black text-[#111813] dark:text-primary">1,248
+                                                </p>
+                                                <p class="text-sm text-zinc-500 mt-2 font-medium">Khách hàng được chọn
+                                                </p>
+                                            </div>
+                                            <div class="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                                                <div class="flex justify-between text-xs mb-1">
+                                                    <span class="text-zinc-500">Tin nhắn app</span>
+                                                    <span class="font-bold">1,248</span>
+                                                </div>
+                                                <div class="flex justify-between text-xs">
+                                                    <span class="text-zinc-500">Zalo/SMS dự phòng</span>
+                                                    <span class="font-bold text-zinc-400">0</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Section 2: Content Creation -->
+                        <div
+                            class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+                            <div
+                                class="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-3 bg-zinc-50/50 dark:bg-zinc-800/20">
+                                <div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+                                    <span class="font-bold text-sm">2</span>
+                                </div>
+                                <h2 class="text-[#111813] dark:text-white text-xl font-bold tracking-tight">Soạn nội
+                                    dung thông báo</h2>
+                            </div>
+                            <div class="p-6 space-y-6">
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-[#111813] dark:text-zinc-300">Tiêu đề thông
+                                        báo</label>
+                                    <input
+                                        class="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                        placeholder="Ví dụ: Nhắc lịch tiêm chủng định kỳ tháng 10" type="text" />
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-[#111813] dark:text-zinc-300">Nội dung chi
+                                        tiết</label>
+                                    <div class="border border-zinc-200 dark:border-zinc-700 rounded-lg overflow-hidden">
+                                        <div
+                                            class="bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 p-2 flex flex-wrap gap-1">
+                                            <button
+                                                class="p-1.5 hover:bg-white dark:hover:bg-zinc-700 rounded transition-colors"
+                                                title="Bold"><span
+                                                    class="material-symbols-outlined text-sm">format_bold</span></button>
+                                            <button
+                                                class="p-1.5 hover:bg-white dark:hover:bg-zinc-700 rounded transition-colors"
+                                                title="Italic"><span
+                                                    class="material-symbols-outlined text-sm">format_italic</span></button>
+                                            <button
+                                                class="p-1.5 hover:bg-white dark:hover:bg-zinc-700 rounded transition-colors"
+                                                title="Underline"><span
+                                                    class="material-symbols-outlined text-sm">format_underlined</span></button>
+                                            <div class="w-px h-4 bg-zinc-300 dark:bg-zinc-600 my-auto mx-1"></div>
+                                            <button
+                                                class="p-1.5 hover:bg-white dark:hover:bg-zinc-700 rounded transition-colors"
+                                                title="List Bullet"><span
+                                                    class="material-symbols-outlined text-sm">format_list_bulleted</span></button>
+                                            <button
+                                                class="p-1.5 hover:bg-white dark:hover:bg-zinc-700 rounded transition-colors"
+                                                title="List Number"><span
+                                                    class="material-symbols-outlined text-sm">format_list_numbered</span></button>
+                                            <div class="w-px h-4 bg-zinc-300 dark:bg-zinc-600 my-auto mx-1"></div>
+                                            <button
+                                                class="p-1.5 hover:bg-white dark:hover:bg-zinc-700 rounded transition-colors"
+                                                title="Link"><span
+                                                    class="material-symbols-outlined text-sm">link</span></button>
+                                            <button
+                                                class="p-1.5 hover:bg-white dark:hover:bg-zinc-700 rounded transition-colors"
+                                                title="Image"><span
+                                                    class="material-symbols-outlined text-sm">image</span></button>
+                                            <button
+                                                class="p-1.5 hover:bg-white dark:hover:bg-zinc-700 rounded transition-colors"
+                                                title="Variable"><span
+                                                    class="material-symbols-outlined text-sm">person_add</span></button>
+                                        </div>
+                                        <textarea
+                                            class="w-full px-4 py-3 bg-white dark:bg-zinc-900 border-none focus:ring-0 text-sm leading-relaxed"
+                                            placeholder="Nhập nội dung thông báo tại đây. Bạn có thể sử dụng các thẻ biến như {Ten_Khach_Hang} để cá nhân hóa..."
+                                            rows="6"></textarea>
+                                    </div>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-[#111813] dark:text-zinc-300">Hình ảnh đi kèm
+                                        (Tùy chọn)</label>
+                                    <div
+                                        class="border-2 border-dashed border-zinc-200 dark:border-zinc-700 rounded-lg p-8 flex flex-col items-center justify-center hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
+                                        <span
+                                            class="material-symbols-outlined text-zinc-400 text-4xl mb-2">cloud_upload</span>
+                                        <p class="text-sm font-medium">Kéo thả hình ảnh hoặc <span
+                                                class="text-primary font-bold">tải lên từ máy</span></p>
+                                        <p class="text-xs text-zinc-400 mt-1">Định dạng hỗ trợ: JPG, PNG, WEBP (Max 5MB)
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Action Area -->
+                        <div class="flex flex-col md:flex-row items-center justify-between gap-4 py-6">
+                            <div class="flex items-center gap-4">
+                                <button
+                                    class="flex items-center gap-2 px-6 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg font-bold text-sm hover:bg-zinc-50 transition-colors">
+                                    <span class="material-symbols-outlined text-lg">save</span>
+                                    Lưu nháp
+                                </button>
+                                <button
+                                    class="text-[#61896f] text-sm font-bold hover:underline decoration-2 underline-offset-4">Xóa
+                                    biểu mẫu</button>
+                            </div>
+                            <div class="flex flex-col md:flex-row items-center gap-4">
+                                <div
+                                    class="flex items-center gap-2 px-4 py-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800/50 rounded-lg">
+                                    <span class="material-symbols-outlined text-yellow-600 text-sm">info</span>
+                                    <p class="text-xs font-medium text-yellow-700 dark:text-yellow-400">Kiểm tra kỹ đối
+                                        tượng trước khi gửi hàng loạt.</p>
+                                </div>
+                                <button
+                                    class="flex items-center gap-2 px-8 py-3.5 bg-primary text-[#111813] font-black text-base rounded-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                                    <span class="material-symbols-outlined fill">send</span>
+                                    Gửi hàng loạt theo trung tâm
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Footer Section -->
+                <footer
+                    class="max-w-5xl mx-auto px-8 py-6 border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center text-[#61896f] text-xs">
+                    <p>© 2024 VacciCare. Version 2.4.0</p>
+                    <div class="flex gap-4">
+                        <a class="hover:text-primary transition-colors" href="#">Hướng dẫn sử dụng</a>
+                        <a class="hover:text-primary transition-colors" href="#">Chính sách bảo mật</a>
+                    </div>
+                </footer>
+            </div>
+    </div>
+    </main>
+    </div>
+</body>
+
+</html>

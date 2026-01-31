@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Quản lý Thông báo Hệ thống Admin</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        .tab-active {
+            @apply text-primary border-b-2 border-primary;
+        }
+        .tab-inactive {
+            @apply text-[#61896f] border-b-2 border-transparent hover:text-[#111813] dark:hover:text-white transition-all;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white antialiased">
+    <div class="flex h-screen overflow-hidden">
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <main class="flex-1 lg:ml-72 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
+            <!-- Header with Tabs -->
+            <header class="bg-white dark:bg-zinc-900 border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="flex items-center gap-2">
+                        <a class="text-[#61896f] dark:text-zinc-400 text-sm font-medium hover:underline"
+                            th:href="@{/admin/home}">Hệ thống</a>
+                        <span class="text-[#61896f] dark:text-zinc-400 text-sm font-medium">/</span>
+                        <span class="text-[#111813] dark:text-white text-sm font-bold">Thông báo</span>
+                    </div>
+                </div>
+                <!-- Tabs Navigation -->
+                <div class="flex gap-8 border-b border-zinc-200 dark:border-zinc-800">
+                    <button onclick="window.location.href='/admin/notifications/send-individual'"
+                        class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">person</span>
+                        Cá nhân cụ thể
+                    </button>
+                    <button onclick="window.location.href='/admin/notifications/send-all'"
+                        class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">groups</span>
+                        Tất cả người dùng
+                    </button>
+                    <button onclick="window.location.href='/admin/notifications/send-role'"
+                        class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">shield_person</span>
+                        Theo vai trò
+                    </button>
+                    <button onclick="window.location.href='/admin/notifications/send-center'"
+                        class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">home_work</span>
+                        Theo Trung tâm
+                    </button>
+                    <button onclick="window.location.href='/admin/notifications/templates'"
+                        class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg leading-none">description</span>
+                        Quản lý Template
+                    </button>
+                </div>
+            </header>
+            <!-- Content -->
+            <div class="flex-1 p-8">
+                <!-- Page Heading -->
+                <div class="mb-8">
+                    <h2 class="text-[#111813] dark:text-white text-3xl font-black tracking-tight">Quản lý Thông báo</h2>
+                    <p class="text-[#61896f] text-base font-normal mt-1">Theo dõi và điều hành hệ thống thông báo gửi
+                        tới người dùng</p>
+                    <div class="flex gap-3 mt-4">
+                        <button onclick="window.location.href='/admin/notifications/templates'"
+                            class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-zinc-900 border border-[#dbe6df] dark:border-zinc-800 text-[#111813] dark:text-white text-sm font-bold rounded-lg hover:bg-background-light transition-colors">
+                            <span class="material-symbols-outlined text-lg">description</span>
+                            Quản lý Template
+                        </button>
+                        <button onclick="window.location.href='/admin/notifications/send-individual'"
+                            class="flex items-center gap-2 px-6 py-2.5 bg-primary text-black text-sm font-bold rounded-lg hover:bg-primary/90 transition-all shadow-md">
+                            <span class="material-symbols-outlined text-lg">send</span>
+                            Gửi thông báo mới
+                        </button>
+                    </div>
+                </div>
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div
+                        class="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-[#dbe6df] dark:border-zinc-800 flex flex-col gap-2">
+                        <div class="flex justify-between items-center mb-1">
+                            <p class="text-[#61896f] text-xs font-bold uppercase tracking-widest">Tổng thông báo</p>
+                            <span class="material-symbols-outlined text-primary">analytics</span>
+                        </div>
+                        <p class="text-[#111813] dark:text-white text-3xl font-black" id="statTotal">0</p>
+                        <div class="flex items-center gap-1 mt-1">
+                            <span class="text-[#078829] text-sm font-bold" id="statTotalChange">+0%</span>
+                            <span class="text-[#61896f] text-xs">từ tháng trước</span>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-[#dbe6df] dark:border-zinc-800 flex flex-col gap-2">
+                        <div class="flex justify-between items-center mb-1">
+                            <p class="text-[#61896f] text-xs font-bold uppercase tracking-widest">Đã đọc</p>
+                            <span class="material-symbols-outlined text-blue-500">visibility</span>
+                        </div>
+                        <p class="text-[#111813] dark:text-white text-3xl font-black" id="statRead">0</p>
+                        <div class="flex items-center gap-1 mt-1">
+                            <span class="text-[#078829] text-sm font-bold" id="statReadChange">+0%</span>
+                            <span class="text-[#61896f] text-xs">tỷ lệ tăng</span>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-[#dbe6df] dark:border-zinc-800 flex flex-col gap-2">
+                        <div class="flex justify-between items-center mb-1">
+                            <p class="text-[#61896f] text-xs font-bold uppercase tracking-widest">Chưa đọc</p>
+                            <span class="material-symbols-outlined text-orange-500">mark_email_unread</span>
+                        </div>
+                        <p class="text-[#111813] dark:text-white text-3xl font-black" id="statUnread">0</p>
+                        <div class="flex items-center gap-1 mt-1">
+                            <span class="text-sm font-bold" id="statUnreadChange">0%</span>
+                            <span class="text-[#61896f] text-xs">đang tồn đọng</span>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-[#dbe6df] dark:border-zinc-800 flex flex-col gap-2">
+                        <div class="flex justify-between items-center mb-1">
+                            <p class="text-[#61896f] text-xs font-bold uppercase tracking-widest">Tỷ lệ đọc (%)</p>
+                            <span class="material-symbols-outlined text-primary">pie_chart</span>
+                        </div>
+                        <p class="text-[#111813] dark:text-white text-3xl font-black" id="statReadRate">0%</p>
+                        <div class="flex items-center gap-1 mt-1">
+                            <div class="w-full bg-gray-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-primary h-full" id="statReadRateBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- Line Chart -->
+                    <div
+                        class="lg:col-span-2 bg-white dark:bg-zinc-900 p-6 rounded-xl border border-[#dbe6df] dark:border-zinc-800">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="text-lg font-bold text-[#111813] dark:text-white">Xu hướng gửi thông báo</h3>
+                                <p class="text-sm text-[#61896f]">Hoạt động gửi tin nhắn trong 7 ngày qua</p>
+                            </div>
+                            <select
+                                class="bg-background-light dark:bg-zinc-800 border-none rounded-lg text-xs font-bold px-3 py-1.5 focus:ring-primary">
+                                <option>7 ngày gần đây</option>
+                                <option>30 ngày gần đây</option>
+                            </select>
+                        </div>
+                        <div class="h-64 relative flex flex-col justify-end">
+                            <div id="trendChart" class="w-full h-full">
+                                <!-- Chart will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Classification Chart -->
+                    <div class="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-[#dbe6df] dark:border-zinc-800">
+                        <h3 class="text-lg font-bold text-[#111813] dark:text-white mb-6">Phân loại thông báo</h3>
+                        <div class="flex justify-center relative py-4">
+                            <div class="size-48 rounded-full border-[16px] border-[#f0f4f2] dark:border-zinc-800 relative flex items-center justify-center"
+                                id="classificationChart">
+                                <div class="text-center">
+                                    <p class="text-2xl font-black text-[#111813] dark:text-white"
+                                        id="classificationTotal">0</p>
+                                    <p class="text-[10px] text-[#61896f] uppercase font-bold tracking-tighter">Tổng số
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-8 space-y-3" id="classificationLegend">
+                            <!-- Classification items will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+                <!-- Detailed Table Section -->
+                <section
+                    class="bg-white dark:bg-zinc-900 rounded-xl border border-[#dbe6df] dark:border-zinc-800 overflow-hidden">
+                    <div
+                        class="p-6 border-b border-[#dbe6df] dark:border-zinc-800 flex flex-wrap justify-between items-center gap-4">
+                        <h3 class="text-lg font-bold text-[#111813] dark:text-white">Danh sách chi tiết thông báo</h3>
+                        <div class="flex gap-2">
+                            <div class="relative">
+                                <span
+                                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#61896f] text-xl">search</span>
+                                <input id="searchInput"
+                                    class="pl-10 pr-4 py-2 bg-background-light dark:bg-zinc-800 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary transition-all"
+                                    placeholder="Tìm người nhận, tiêu đề..." type="text" onkeyup="handleSearch()" />
+                            </div>
+                            <button
+                                class="p-2 bg-background-light dark:bg-zinc-800 rounded-lg hover:bg-gray-200 transition-colors">
+                                <span class="material-symbols-outlined text-xl">filter_list</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-background-light/50 dark:bg-zinc-800/50">
+                                <tr>
+                                    <th class="px-6 py-4 text-xs font-bold text-[#61896f] uppercase tracking-wider">
+                                        Người nhận</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-[#61896f] uppercase tracking-wider">Loại
+                                    </th>
+                                    <th class="px-6 py-4 text-xs font-bold text-[#61896f] uppercase tracking-wider">Tiêu
+                                        đề</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-[#61896f] uppercase tracking-wider">
+                                        Trạng thái</th>
+                                    <th
+                                        class="px-6 py-4 text-xs font-bold text-[#61896f] uppercase tracking-wider text-center">
+                                        Đã đọc</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-[#61896f] uppercase tracking-wider">Thời
+                                        gian</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-[#61896f] uppercase tracking-wider">
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="notificationsTableBody" class="divide-y divide-[#dbe6df] dark:divide-zinc-800">
+                                <tr>
+                                    <td colspan="7" class="px-6 py-4 text-center text-[#61896f]">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <span class="material-symbols-outlined animate-spin">hourglass_empty</span>
+                                            <span>Đang tải dữ liệu...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div
+                        class="px-6 py-4 bg-background-light/30 dark:bg-zinc-800/30 border-t border-[#dbe6df] dark:border-zinc-800 flex justify-between items-center">
+                        <p class="text-xs font-medium text-[#61896f]" id="paginationText">Đang tải...</p>
+                        <div class="flex gap-1" id="paginationControls">
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+            /*<![CDATA[*/
+            (function () {
+                let currentPage = 0;
+                const pageSize = 10;
+                let totalNotifications = 0;
+                let totalPages = 0;
+
+                // Load stats
+                async function loadStats() {
+                    try {
+                        const response = await fetch('/api/admin/notifications/stats', {
+                            credentials: 'include'
+                        });
+                        if (!response.ok) throw new Error('Failed to load stats');
+                        const stats = await response.json();
+
+                        document.getElementById('statTotal').textContent = formatNumber(stats.total || 0);
+                        document.getElementById('statRead').textContent = formatNumber(stats.read || 0);
+                        document.getElementById('statUnread').textContent = formatNumber(stats.unread || 0);
+                        document.getElementById('statReadRate').textContent = (stats.readRate || 0).toFixed(1) + '%';
+                        document.getElementById('statReadRateBar').style.width = (stats.readRate || 0) + '%';
+
+                        const totalChange = stats.totalChange || 0;
+                        const totalChangeEl = document.getElementById('statTotalChange');
+                        totalChangeEl.textContent = (totalChange >= 0 ? '+' : '') + totalChange.toFixed(1) + '%';
+                        totalChangeEl.className = totalChange >= 0 ? 'text-[#078829] text-sm font-bold' : 'text-red-500 text-sm font-bold';
+
+                        const readChange = stats.readChange || 0;
+                        const readChangeEl = document.getElementById('statReadChange');
+                        readChangeEl.textContent = (readChange >= 0 ? '+' : '') + readChange.toFixed(1) + '%';
+
+                        const unreadChange = stats.unreadChange || 0;
+                        const unreadChangeEl = document.getElementById('statUnreadChange');
+                        unreadChangeEl.textContent = (unreadChange >= 0 ? '+' : '') + unreadChange.toFixed(1) + '%';
+                        unreadChangeEl.className = unreadChange >= 0 ? 'text-[#078829] text-sm font-bold' : 'text-red-500 text-sm font-bold';
+                    } catch (error) {
+                        console.error('Error loading stats:', error);
+                    }
+                }
+
+                // Load trend
+                async function loadTrend() {
+                    try {
+                        const response = await fetch('/api/admin/notifications/trend?days=7', {
+                            credentials: 'include'
+                        });
+                        if (!response.ok) throw new Error('Failed to load trend');
+                        const trend = await response.json();
+
+                        renderTrendChart(trend);
+                    } catch (error) {
+                        console.error('Error loading trend:', error);
+                    }
+                }
+
+                // Render trend chart
+                function renderTrendChart(trend) {
+                    const chartDiv = document.getElementById('trendChart');
+                    if (!trend || trend.length === 0) {
+                        chartDiv.innerHTML = '<div class="flex items-center justify-center h-full text-[#61896f]">Không có dữ liệu</div>';
+                        return;
+                    }
+
+                    const maxCount = Math.max(...trend.map(t => t.count || 0), 1);
+                    const width = 400;
+                    const height = 150;
+                    const padding = 20;
+                    const chartWidth = width - padding * 2;
+                    const chartHeight = height - padding * 2;
+
+                    let pathData = '';
+                    let areaPathData = '';
+                    const dayNames = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+
+                    trend.forEach((day, index) => {
+                        const x = padding + (index / (trend.length - 1)) * chartWidth;
+                        const y = padding + chartHeight - ((day.count || 0) / maxCount) * chartHeight;
+
+                        if (index === 0) {
+                            pathData += `M ${x} ${y}`;
+                            areaPathData += `M ${x} ${height - padding}`;
+                        } else {
+                            pathData += ` L ${x} ${y}`;
+                            areaPathData += ` L ${x} ${y}`;
+                        }
+                    });
+
+                    areaPathData += ` L ${width - padding} ${height - padding} Z`;
+
+                    const svg = `
+            <svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 ${width} ${height}">
+                <defs>
+                    <linearGradient id="grad1" x1="0%" x2="0%" y1="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#13ec5b;stop-opacity:1"></stop>
+                        <stop offset="100%" style="stop-color:#13ec5b;stop-opacity:0"></stop>
+                    </linearGradient>
+                </defs>
+                <path d="${areaPathData}" fill="url(#grad1)" opacity="0.1"></path>
+                <path d="${pathData}" fill="none" stroke="#13ec5b" stroke-linecap="round" stroke-width="4"></path>
+            </svg>
+            <div class="flex justify-between mt-4">
+                ${trend.map((day, index) => {
+                        const date = new Date(day.date);
+                        const dayName = dayNames[date.getDay()];
+                        return `<span class="text-[11px] font-bold text-[#61896f]">${dayName}</span>`;
+                    }).join('')}
+            </div>
+        `;
+
+                    chartDiv.innerHTML = svg;
+                }
+
+                // Load classification
+                async function loadClassification() {
+                    try {
+                        const response = await fetch('/api/admin/notifications/classification', {
+                            credentials: 'include'
+                        });
+                        if (!response.ok) throw new Error('Failed to load classification');
+                        const data = await response.json();
+
+                        document.getElementById('classificationTotal').textContent = formatNumber(data.total || 0);
+
+                        const classification = data.classification || {};
+                        const typeMap = {
+                            'IN_APP': { name: 'Hệ thống', color: 'bg-primary' },
+                            'EMAIL': { name: 'Email', color: 'bg-blue-400' },
+                            'SMS': { name: 'SMS', color: 'bg-orange-400' },
+                            'PUSH': { name: 'Push', color: 'bg-purple-400' }
+                        };
+
+                        let legendHtml = '';
+                        let totalPercentage = 0;
+                        let startAngle = 0;
+                        let svgCircles = '';
+
+                        Object.entries(classification).forEach(([type, info]) => {
+                            const percentage = info.percentage || 0;
+                            const typeInfo = typeMap[type] || { name: type, color: 'bg-gray-400' };
+
+                            legendHtml += `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="size-3 rounded-full ${typeInfo.color}"></div>
+                            <span class="text-sm font-medium text-[#61896f]">${typeInfo.name}</span>
+                        </div>
+                        <span class="text-sm font-bold text-[#111813] dark:text-white">${percentage}%</span>
+                    </div>
+                `;
+
+                            if (percentage > 0) {
+                                const dashArray = (percentage / 100) * 276;
+                                const offset = (totalPercentage / 100) * 276;
+                                svgCircles += `<circle cx="50%" cy="50%" fill="transparent" r="44%" stroke="#13ec5b" stroke-dasharray="${dashArray} 360" stroke-dashoffset="${-offset}" stroke-linecap="round" stroke-width="16"></circle>`;
+                                totalPercentage += percentage;
+                            }
+                        });
+
+                        document.getElementById('classificationLegend').innerHTML = legendHtml;
+
+                        const chartDiv = document.getElementById('classificationChart');
+                        chartDiv.innerHTML = `
+                <svg class="absolute inset-0 size-full -rotate-90">${svgCircles}</svg>
+                <div class="text-center relative z-10">
+                    <p class="text-2xl font-black text-[#111813] dark:text-white">${formatNumber(data.total || 0)}</p>
+                    <p class="text-[10px] text-[#61896f] uppercase font-bold tracking-tighter">Tổng số</p>
+                </div>
+            `;
+                    } catch (error) {
+                        console.error('Error loading classification:', error);
+                    }
+                }
+
+                // Load notifications
+                async function loadNotifications() {
+                    try {
+                        const search = document.getElementById('searchInput')?.value || '';
+                        let url = `/api/admin/notifications?page=${currentPage}&size=${pageSize}`;
+                        if (search) url += `&search=${encodeURIComponent(search)}`;
+
+                        const response = await fetch(url, {
+                            credentials: 'include'
+                        });
+                        if (!response.ok) throw new Error('Failed to load notifications');
+                        const data = await response.json();
+
+                        totalNotifications = data.total || 0;
+                        totalPages = data.totalPages || 0;
+
+                        renderNotifications(data.notifications || []);
+                        updatePagination();
+                    } catch (error) {
+                        console.error('Error loading notifications:', error);
+                        const tbody = document.getElementById('notificationsTableBody');
+                        if (tbody) {
+                            tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Lỗi khi tải dữ liệu</td></tr>';
+                        }
+                    }
+                }
+
+                // Render notifications
+                function renderNotifications(notifications) {
+                    const tbody = document.getElementById('notificationsTableBody');
+                    if (!tbody) return;
+
+                    if (notifications.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-[#61896f]">Không có dữ liệu</td></tr>';
+                        return;
+                    }
+
+                    const typeMap = {
+                        'IN_APP': { name: 'Hệ thống', color: 'bg-primary/10 text-primary' },
+                        'EMAIL': { name: 'Email', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' },
+                        'SMS': { name: 'SMS', color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' },
+                        'PUSH': { name: 'Push', color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400' }
+                    };
+
+                    tbody.innerHTML = notifications.map(n => {
+                        const user = n.user || {};
+                        const initials = user.fullName ? user.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U';
+                        const typeInfo = typeMap[n.type] || { name: n.type || 'UNKNOWN', color: 'bg-gray-100 text-gray-700' };
+                        const statusColor = n.status === 'SENT' ? 'text-primary' : n.status === 'FAILED' ? 'text-red-500' : 'text-amber-500';
+                        const statusDot = n.status === 'SENT' ? 'bg-primary' : n.status === 'FAILED' ? 'bg-red-500' : 'bg-amber-500';
+                        const statusText = n.status === 'SENT' ? 'Đã gửi' : n.status === 'FAILED' ? 'Thất bại' : 'Chờ gửi';
+                        const isRead = n.isRead ? 'text-primary' : 'text-gray-300 dark:text-zinc-700';
+                        const isReadIcon = n.isRead ? 'visibility' : 'visibility_off';
+                        const createdAt = n.createdAt ? formatDateTime(n.createdAt) : 'N/A';
+
+                        return `
+                <tr class="hover:bg-background-light dark:hover:bg-zinc-800 transition-colors group">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="size-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-xs">${initials}</div>
+                            <div class="flex flex-col">
+                                <p class="text-sm font-bold">${user.fullName || 'N/A'}</p>
+                                ${user.phoneNumber ? `<p class="text-[11px] text-[#61896f]">${user.phoneNumber}</p>` : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded ${typeInfo.color} text-[10px] font-bold uppercase tracking-tighter">${typeInfo.name}</span>
+                    </td>
+                    <td class="px-6 py-4 max-w-[240px]">
+                        <p class="text-sm font-medium truncate">${n.title || 'N/A'}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-1.5 ${statusColor} text-xs font-bold">
+                            <div class="size-1.5 rounded-full ${statusDot} ${n.status === 'PENDING' ? 'animate-pulse' : ''}"></div>
+                            ${statusText}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="material-symbols-outlined ${isRead} text-lg">${isReadIcon}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <p class="text-xs font-medium text-[#61896f]">${createdAt}</p>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button class="p-1 hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined text-xl">more_vert</span>
+                        </button>
+                    </td>
+                </tr>
+            `;
+                    }).join('');
+                }
+
+                // Update pagination
+                function updatePagination() {
+                    const start = currentPage * pageSize + 1;
+                    const end = Math.min((currentPage + 1) * pageSize, totalNotifications);
+
+                    const paginationText = document.getElementById('paginationText');
+                    if (paginationText) {
+                        paginationText.textContent = `Hiển thị ${start}-${end}/${totalNotifications} kết quả`;
+                    }
+
+                    const paginationControls = document.getElementById('paginationControls');
+                    if (paginationControls) {
+                        let html = '';
+                        if (currentPage > 0) {
+                            html += `<button onclick="changePage(${currentPage - 1})" class="size-8 flex items-center justify-center rounded border border-[#dbe6df] dark:border-zinc-700 text-[#61896f] hover:bg-white transition-colors">
+                    <span class="material-symbols-outlined text-lg">chevron_left</span>
+                </button>`;
+                        } else {
+                            html += `<button disabled class="size-8 flex items-center justify-center rounded border border-[#dbe6df] dark:border-zinc-700 text-[#61896f] disabled:opacity-50">
+                    <span class="material-symbols-outlined text-lg">chevron_left</span>
+                </button>`;
+                        }
+
+                        for (let i = 0; i < totalPages && i < 5; i++) {
+                            if (i === currentPage) {
+                                html += `<button class="size-8 flex items-center justify-center rounded bg-primary text-black font-bold text-xs">${i + 1}</button>`;
+                            } else {
+                                html += `<button onclick="changePage(${i})" class="size-8 flex items-center justify-center rounded border border-[#dbe6df] dark:border-zinc-700 text-[#61896f] font-bold text-xs hover:bg-white transition-colors">${i + 1}</button>`;
+                            }
+                        }
+
+                        if (currentPage < totalPages - 1) {
+                            html += `<button onclick="changePage(${currentPage + 1})" class="size-8 flex items-center justify-center rounded border border-[#dbe6df] dark:border-zinc-700 text-[#61896f] hover:bg-white transition-colors">
+                    <span class="material-symbols-outlined text-lg">chevron_right</span>
+                </button>`;
+                        } else {
+                            html += `<button disabled class="size-8 flex items-center justify-center rounded border border-[#dbe6df] dark:border-zinc-700 text-[#61896f] disabled:opacity-50">
+                    <span class="material-symbols-outlined text-lg">chevron_right</span>
+                </button>`;
+                        }
+
+                        paginationControls.innerHTML = html;
+                    }
+                }
+
+                window.changePage = function (page) {
+                    currentPage = page;
+                    loadNotifications();
+                };
+
+                window.handleSearch = function () {
+                    currentPage = 0;
+                    loadNotifications();
+                };
+
+                function formatNumber(num) {
+                    if (num >= 1000) {
+                        return (num / 1000).toFixed(1) + 'k';
+                    }
+                    return num.toString();
+                }
+
+                function formatDateTime(dateTimeStr) {
+                    if (!dateTimeStr) return 'N/A';
+                    const date = new Date(dateTimeStr);
+                    const now = new Date();
+                    const diffMs = now - date;
+                    const diffMins = Math.floor(diffMs / 60000);
+                    const diffHours = Math.floor(diffMs / 3600000);
+                    const diffDays = Math.floor(diffMs / 86400000);
+
+                    if (diffMins < 1) return 'Vừa xong';
+                    if (diffMins < 60) return `${diffMins} phút trước`;
+                    if (diffHours < 24) return `${diffHours} giờ trước`;
+                    if (diffDays === 1) return 'Hôm qua, ' + date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                    if (diffDays < 7) return date.toLocaleDateString('vi-VN', { weekday: 'long', hour: '2-digit', minute: '2-digit' });
+                    return date.toLocaleDateString('vi-VN') + ', ' + date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                }
+
+                // Load all data on page load
+                loadStats();
+                loadTrend();
+                loadClassification();
+                loadNotifications();
+            })();
+        /*]]>*/
+    </script>
+</body>
+
+</html>

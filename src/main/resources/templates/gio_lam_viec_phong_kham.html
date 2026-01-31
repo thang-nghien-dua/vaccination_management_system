@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cấu hình Giờ làm việc Trung tâm</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tab-active {
+            @apply text-primary border-b-2 border-primary;
+        }
+        .tab-inactive {
+            @apply text-[#61896f] border-b-2 border-transparent hover:text-[#111813] dark:hover:text-white transition-all;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white antialiased">
+<div class="flex h-screen overflow-hidden">
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto flex flex-col">
+<!-- Breadcrumbs & Header -->
+<header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-8 py-4">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<button onclick="window.location.href='/admin/centers'" class="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-[#61896f] dark:text-zinc-400" title="Quay lại Quản lý Trung tâm">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div class="flex items-center gap-2">
+<a class="text-[#61896f] dark:text-zinc-400 text-sm font-medium hover:underline" th:href="@{/admin/home}">Hệ thống</a>
+<span class="text-[#61896f] dark:text-zinc-400 text-sm font-medium">/</span>
+<a class="text-[#61896f] dark:text-zinc-400 text-sm font-medium hover:underline" th:href="@{/admin/centers}">Trung tâm</a>
+<span class="text-[#61896f] dark:text-zinc-400 text-sm font-medium">/</span>
+<span class="text-[#111813] dark:text-white text-sm font-bold">Giờ làm việc</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-zinc-500 hover:bg-zinc-100 rounded-full">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-zinc-200" data-alt="User profile avatar"></div>
+</div>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-4">
+<div>
+<h2 class="text-[#111813] dark:text-white text-3xl font-extrabold tracking-tight" id="centerTitle">Cấu hình Giờ làm việc Trung tâm</h2>
+<p class="text-[#61896f] dark:text-zinc-400 text-sm mt-1" id="centerAddress">Thiết lập và quản lý thời gian hoạt động định kỳ của trung tâm theo từng thứ trong tuần.</p>
+</div>
+</div>
+</header>
+<!-- Content Body -->
+<div class="p-8 flex-1 flex flex-col gap-6">
+<!-- Tabs -->
+<div class="flex gap-8 border-b border-zinc-200 dark:border-zinc-800">
+<button onclick="switchTab('vaccines')" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2" id="vaccinesTab">
+<span class="material-symbols-outlined text-lg leading-none">vaccines</span>
+                            Vaccine tại Trung tâm
+                        </button>
+<button onclick="switchTab('rooms')" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2" id="roomsTab">
+<span class="material-symbols-outlined text-lg leading-none">meeting_room</span>
+                            Phòng khám
+                        </button>
+<button id="workingHoursTab" class="tab-active py-4 text-sm font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-lg leading-none">schedule</span>
+                            Giờ làm việc
+                        </button>
+<button onclick="switchTab('staff')" class="tab-inactive py-4 text-sm font-semibold flex items-center gap-2" id="staffTab">
+<span class="material-symbols-outlined text-lg leading-none">badge</span>
+                            Nhân viên
+                        </button>
+</div>
+<div class="flex items-center justify-between">
+<button onclick="openAddWorkingHoursModal()" class="flex items-center gap-2 px-5 py-2.5 bg-primary text-[#111813] font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
+<span class="material-symbols-outlined">add_circle</span>
+<span>Thêm khung giờ</span>
+</button>
+</div>
+<!-- Main Data Card -->
+<div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+<div class="p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+<h3 class="font-bold text-[#111813] dark:text-white">Lịch làm việc hàng tuần</h3>
+<div class="flex items-center gap-2">
+<span class="size-3 bg-primary rounded-full animate-pulse"></span>
+<span class="text-xs font-semibold text-[#61896f] uppercase tracking-wider">Hệ thống đang hoạt động</span>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800">
+<th class="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider">Thứ</th>
+<th class="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider">Giờ bắt đầu</th>
+<th class="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider">Giờ kết thúc</th>
+<th class="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider">Trạng thái</th>
+<th class="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider text-right">Thao tác</th>
+</tr>
+</thead>
+<tbody id="workingHoursTableBody" class="divide-y divide-zinc-200 dark:divide-zinc-800">
+<!-- Dữ liệu sẽ được load từ API -->
+<tr>
+<td colspan="5" class="px-6 py-8 text-center text-slate-500">
+<span class="material-symbols-outlined animate-spin text-2xl mb-2 inline-block">refresh</span>
+<p>Đang tải dữ liệu...</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Additional Help Section -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="p-5 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col gap-3">
+<div class="size-10 bg-blue-100 dark:bg-blue-900/30 text-blue-500 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined">info</span>
+</div>
+<h4 class="font-bold text-slate-900 dark:text-white">Lưu ý</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Giờ làm việc sẽ ảnh hưởng trực tiếp đến khả năng đặt lịch của bệnh nhân trên ứng dụng di động.</p>
+</div>
+<div class="p-5 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col gap-3">
+<div class="size-10 bg-amber-100 dark:bg-amber-900/30 text-amber-500 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined">warning</span>
+</div>
+<h4 class="font-bold text-[#111813] dark:text-white">Nghỉ lễ</h4>
+<p class="text-sm text-[#61896f] dark:text-zinc-400 leading-relaxed">Để cấu hình các ngày nghỉ lễ đặc biệt, vui lòng chuyển sang tab <a class="text-primary hover:underline" href="#">Quản lý ngày nghỉ</a>.</p>
+</div>
+<div class="p-5 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col gap-3">
+<div class="size-10 bg-green-100 dark:bg-green-900/30 text-green-500 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined">verified</span>
+</div>
+<h4 class="font-bold text-[#111813] dark:text-white">Đã đồng bộ</h4>
+<p class="text-sm text-[#61896f] dark:text-zinc-400 leading-relaxed">Dữ liệu giờ làm việc được đồng bộ hóa tức thì với hệ thống tra cứu điểm tiêm toàn quốc.</p>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+<script>
+// Lấy centerId từ URL - hỗ trợ cả /admin/centers/{id}/working-hours và /centers/{id}
+const centerIdFromPath = window.location.pathname.match(/\/(?:admin\/)?centers\/(\d+)/);
+const centerId = centerIdFromPath ? centerIdFromPath[1] : null;
+
+let workingHours = [];
+let centerData = null;
+
+const dayNames = {
+    'MONDAY': 'Thứ Hai',
+    'TUESDAY': 'Thứ Ba',
+    'WEDNESDAY': 'Thứ Tư',
+    'THURSDAY': 'Thứ Năm',
+    'FRIDAY': 'Thứ Sáu',
+    'SATURDAY': 'Thứ Bảy',
+    'SUNDAY': 'Chủ Nhật'
+};
+
+const allDays = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+
+// Chuyển tab
+function switchTab(tab) {
+    if (!centerId) {
+        console.error('Center ID not found, cannot switch tab');
+        return;
+    }
+    
+    if (tab === 'vaccines') {
+        window.location.href = `/admin/centers/${centerId}/vaccines`;
+    } else if (tab === 'rooms') {
+        window.location.href = `/admin/centers/${centerId}/rooms`;
+    } else if (tab === 'staff') {
+        window.location.href = `/admin/centers/${centerId}/staff`;
+    }
+    // Nếu tab là 'working-hours', giữ nguyên trang hiện tại
+}
+
+function updateCenterHeader() {
+    if (!centerData) return;
+    
+    const titleElement = document.getElementById('centerTitle');
+    const addressElement = document.getElementById('centerAddress');
+    
+    if (titleElement) {
+        titleElement.textContent = `Cấu hình Giờ làm việc - ${centerData.name || 'N/A'}`;
+    }
+    
+    if (addressElement) {
+        addressElement.textContent = centerData.address || 'N/A';
+    }
+}
+
+// Load thông tin trung tâm
+async function loadCenterData() {
+    // Luôn load working hours trước, không phụ thuộc vào center data
+    await loadWorkingHours();
+    
+    if (!centerId) {
+        console.error('Center ID not found');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/admin/centers/${centerId}`);
+        if (response.ok) {
+            centerData = await response.json();
+            updateCenterHeader();
+        } else {
+            console.error('Failed to load center data');
+        }
+    } catch (error) {
+        console.error('Error loading center data:', error);
+    }
+}
+
+// Load giờ làm việc
+async function loadWorkingHours() {
+    if (!centerId) {
+        renderWorkingHours(); // Render ngay cả khi không có centerId
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/center-working-hours/center/${centerId}`);
+        if (response.ok) {
+            workingHours = await response.json() || [];
+            renderWorkingHours();
+        } else {
+            console.error('Failed to load working hours');
+            workingHours = [];
+            renderWorkingHours(); // Render ngay cả khi có lỗi
+        }
+    } catch (error) {
+        console.error('Error loading working hours:', error);
+        workingHours = [];
+        renderWorkingHours(); // Render ngay cả khi có lỗi
+    }
+}
+
+function renderWorkingHours() {
+    const tbody = document.getElementById('workingHoursTableBody');
+    if (!tbody) {
+        console.error('Table body not found');
+        return;
+    }
+    
+    // Đảm bảo workingHours là array
+    if (!Array.isArray(workingHours)) {
+        workingHours = [];
+    }
+    
+    // Tạo map từ workingHours để dễ lookup
+    const hoursMap = {};
+    workingHours.forEach(wh => {
+        if (wh && wh.dayOfWeek) {
+            hoursMap[wh.dayOfWeek] = wh;
+        }
+    });
+    
+    tbody.innerHTML = allDays.map(day => {
+        const wh = hoursMap[day];
+        const isActive = wh && wh.isActive !== false;
+        const isSunday = day === 'SUNDAY';
+        
+        if (!wh) {
+            // Chưa có giờ làm việc cho ngày này
+            return `
+                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors ${isSunday ? 'bg-slate-50/30 dark:bg-slate-800/10' : ''}">
+                    <td class="px-6 py-4 font-bold ${isSunday ? 'text-slate-500 dark:text-slate-500' : 'text-slate-900 dark:text-slate-200'}">${dayNames[day]}</td>
+                    <td class="px-6 py-4 font-medium text-slate-400 dark:text-slate-600">-- : --</td>
+                    <td class="px-6 py-4 font-medium text-slate-400 dark:text-slate-600">-- : --</td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-bold rounded-full border border-slate-200 dark:border-slate-700">Chưa cấu hình</span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <button onclick="openAddWorkingHoursModalForDay('${day}')" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-500 transition-colors" title="Thêm">
+                                <span class="material-symbols-outlined text-[20px]">add</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+        
+        const startTime = wh.startTime || '-- : --';
+        const endTime = wh.endTime || '-- : --';
+        const statusClass = isActive 
+            ? 'bg-primary/10 text-primary border border-primary/20'
+            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700';
+        const statusText = isActive ? 'Hoạt động' : 'Tạm nghỉ';
+        
+        return `
+            <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors ${isSunday ? 'bg-slate-50/30 dark:bg-slate-800/10' : ''}">
+                <td class="px-6 py-4 font-bold ${isSunday ? 'text-slate-500 dark:text-slate-500' : 'text-slate-900 dark:text-slate-200'}">${dayNames[day]}</td>
+                <td class="px-6 py-4 font-medium ${isSunday ? 'text-slate-400 dark:text-slate-600' : 'text-slate-600 dark:text-slate-400'}">${startTime}</td>
+                <td class="px-6 py-4 font-medium ${isSunday ? 'text-slate-400 dark:text-slate-600' : 'text-slate-600 dark:text-slate-400'}">${endTime}</td>
+                <td class="px-6 py-4">
+                    <span class="px-3 py-1 ${statusClass} text-xs font-bold rounded-full">${statusText}</span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <div class="flex items-center justify-end gap-2">
+                        <button onclick="editWorkingHours(${wh.id})" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-500 transition-colors" title="Sửa">
+                            <span class="material-symbols-outlined text-[20px]">edit</span>
+                        </button>
+                        <button onclick="deleteWorkingHours(${wh.id}, '${dayNames[day]}')" class="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-red-400 transition-colors" title="Xóa">
+                            <span class="material-symbols-outlined text-[20px]">delete</span>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function openAddWorkingHoursModal() {
+    // Hiển thị danh sách các ngày chưa có giờ làm việc
+    const existingDays = workingHours.map(wh => wh.dayOfWeek);
+    const availableDays = allDays.filter(day => !existingDays.includes(day));
+    
+    if (availableDays.length === 0) {
+        alert('Tất cả các ngày trong tuần đã được cấu hình giờ làm việc!');
+        return;
+    }
+    
+    // Tạo dropdown để chọn ngày
+    let dayOptions = availableDays.map(day => `<option value="${day}">${dayNames[day]}</option>`).join('');
+    
+    const modalHTML = `
+        <div id="addWorkingHoursModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#102216]/60 backdrop-blur-sm">
+            <div class="bg-white dark:bg-[#102216] w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden border border-white/10">
+                <div class="px-6 py-4 border-b border-[#f0f4f2] dark:border-white/10 flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-[#111813] dark:text-white">Thêm Giờ làm việc</h3>
+                    <button onclick="closeAddWorkingHoursModal()" class="p-2 hover:bg-[#f0f4f2] dark:hover:bg-white/10 rounded-full text-[#61896f] transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <form id="addWorkingHoursForm" onsubmit="handleAddWorkingHoursFromModal(event)">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Thứ trong tuần *</label>
+                                <select id="dayOfWeek" name="dayOfWeek" required 
+                                       class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all">
+                                    ${dayOptions}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Giờ bắt đầu *</label>
+                                <input type="time" id="startTime" name="startTime" required 
+                                       class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all"
+                                       value="08:00">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Giờ kết thúc *</label>
+                                <input type="time" id="endTime" name="endTime" required 
+                                       class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all"
+                                       value="17:00">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Trạng thái</label>
+                                <select id="isActive" name="isActive" 
+                                        class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all">
+                                    <option value="true" selected>Hoạt động</option>
+                                    <option value="false">Tạm nghỉ</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button type="button" onclick="closeAddWorkingHoursModal()" class="px-6 py-2 text-sm font-bold text-[#61896f] hover:text-[#111813] dark:hover:text-white transition-colors">
+                                Hủy
+                            </button>
+                            <button type="submit" class="px-8 py-2.5 bg-primary text-[#111813] text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
+                                Thêm giờ làm việc
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function closeAddWorkingHoursModal() {
+    const modal = document.getElementById('addWorkingHoursModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+async function handleAddWorkingHours(event) {
+    event.preventDefault();
+    
+    if (!centerId) {
+        alert('Không tìm thấy ID trung tâm');
+        return;
+    }
+    
+    const formData = new FormData(event.target);
+    const dayOfWeek = formData.get('dayOfWeek');
+    const startTime = formData.get('startTime');
+    const endTime = formData.get('endTime');
+    const isActive = formData.get('isActive') === 'true';
+    
+    try {
+        const response = await fetch('/api/center-working-hours', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                centerId: parseInt(centerId),
+                dayOfWeek: dayOfWeek,
+                startTime: startTime,
+                endTime: endTime,
+                isActive: isActive
+            })
+        });
+        
+        if (response.ok) {
+            alert('Thêm giờ làm việc thành công!');
+            closeAddWorkingHoursModal();
+            loadWorkingHours();
+        } else {
+            const error = await response.json();
+            alert('Lỗi: ' + (error.error || 'Không thể thêm giờ làm việc'));
+        }
+    } catch (error) {
+        console.error('Error adding working hours:', error);
+        alert('Có lỗi xảy ra khi thêm giờ làm việc');
+    }
+}
+
+function openAddWorkingHoursModalForDay(dayOfWeek) {
+    // Kiểm tra xem ngày này đã có giờ làm việc chưa
+    const existing = workingHours.find(wh => wh.dayOfWeek === dayOfWeek);
+    if (existing) {
+        alert(`Ngày ${dayNames[dayOfWeek]} đã có giờ làm việc. Vui lòng sửa hoặc xóa giờ làm việc hiện tại.`);
+        return;
+    }
+    
+    const modalHTML = `
+        <div id="addWorkingHoursModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#102216]/60 backdrop-blur-sm">
+            <div class="bg-white dark:bg-[#102216] w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden border border-white/10">
+                <div class="px-6 py-4 border-b border-[#f0f4f2] dark:border-white/10 flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-[#111813] dark:text-white">Thêm Giờ làm việc - ${dayNames[dayOfWeek]}</h3>
+                    <button onclick="closeAddWorkingHoursModal()" class="p-2 hover:bg-[#f0f4f2] dark:hover:bg-white/10 rounded-full text-[#61896f] transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <form id="addWorkingHoursForm" onsubmit="handleAddWorkingHours(event, '${dayOfWeek}')">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Thứ trong tuần</label>
+                                <input type="text" value="${dayNames[dayOfWeek]}" readonly
+                                       class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm opacity-75">
+                                <input type="hidden" name="dayOfWeek" value="${dayOfWeek}">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Giờ bắt đầu *</label>
+                                <input type="time" id="startTime" name="startTime" required 
+                                       class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all"
+                                       value="08:00">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Giờ kết thúc *</label>
+                                <input type="time" id="endTime" name="endTime" required 
+                                       class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all"
+                                       value="17:00">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Trạng thái</label>
+                                <select id="isActive" name="isActive" 
+                                        class="w-full px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all">
+                                    <option value="true" selected>Hoạt động</option>
+                                    <option value="false">Tạm nghỉ</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button type="button" onclick="closeAddWorkingHoursModal()" class="px-6 py-2 text-sm font-bold text-[#61896f] hover:text-[#111813] dark:hover:text-white transition-colors">
+                                Hủy
+                            </button>
+                            <button type="submit" class="px-8 py-2.5 bg-primary text-[#111813] text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
+                                Thêm giờ làm việc
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+async function handleAddWorkingHoursFromModal(event) {
+    event.preventDefault();
+    
+    if (!centerId) {
+        alert('Không tìm thấy ID trung tâm');
+        return;
+    }
+    
+    const formData = new FormData(event.target);
+    const dayOfWeek = formData.get('dayOfWeek');
+    const startTime = formData.get('startTime');
+    const endTime = formData.get('endTime');
+    const isActive = formData.get('isActive') === 'true';
+    
+    try {
+        const response = await fetch('/api/center-working-hours', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                centerId: parseInt(centerId),
+                dayOfWeek: dayOfWeek,
+                startTime: startTime,
+                endTime: endTime,
+                isActive: isActive
+            })
+        });
+        
+        if (response.ok) {
+            alert('Thêm giờ làm việc thành công!');
+            closeAddWorkingHoursModal();
+            loadWorkingHours();
+        } else {
+            const error = await response.json();
+            alert('Lỗi: ' + (error.error || 'Không thể thêm giờ làm việc'));
+        }
+    } catch (error) {
+        console.error('Error adding working hours:', error);
+        alert('Có lỗi xảy ra khi thêm giờ làm việc');
+    }
+}
+
+async function handleAddWorkingHours(event, dayOfWeek) {
+    event.preventDefault();
+    
+    if (!centerId) {
+        alert('Không tìm thấy ID trung tâm');
+        return;
+    }
+    
+    const formData = new FormData(event.target);
+    const startTime = formData.get('startTime');
+    const endTime = formData.get('endTime');
+    const isActive = formData.get('isActive') === 'true';
+    
+    try {
+        const response = await fetch('/api/center-working-hours', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                centerId: parseInt(centerId),
+                dayOfWeek: dayOfWeek,
+                startTime: startTime,
+                endTime: endTime,
+                isActive: isActive
+            })
+        });
+        
+        if (response.ok) {
+            alert('Thêm giờ làm việc thành công!');
+            closeAddWorkingHoursModal();
+            loadWorkingHours();
+        } else {
+            const error = await response.json();
+            alert('Lỗi: ' + (error.error || 'Không thể thêm giờ làm việc'));
+        }
+    } catch (error) {
+        console.error('Error adding working hours:', error);
+        alert('Có lỗi xảy ra khi thêm giờ làm việc');
+    }
+}
+
+async function editWorkingHours(id) {
+    const wh = workingHours.find(w => w.id === id);
+    if (!wh) return;
+    
+    const startTime = prompt('Nhập giờ bắt đầu (HH:mm):', wh.startTime || '08:00');
+    if (startTime === null) return;
+    
+    const endTime = prompt('Nhập giờ kết thúc (HH:mm):', wh.endTime || '17:00');
+    if (endTime === null) return;
+    
+    const isActive = confirm('Giờ làm việc đang hoạt động?') ? true : false;
+    
+    try {
+        const response = await fetch(`/api/center-working-hours/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                startTime: startTime,
+                endTime: endTime,
+                isActive: isActive
+            })
+        });
+        
+        if (response.ok) {
+            alert('Cập nhật giờ làm việc thành công!');
+            loadWorkingHours();
+        } else {
+            const error = await response.json();
+            alert('Lỗi: ' + (error.error || 'Không thể cập nhật giờ làm việc'));
+        }
+    } catch (error) {
+        console.error('Error updating working hours:', error);
+        alert('Có lỗi xảy ra khi cập nhật giờ làm việc');
+    }
+}
+
+async function deleteWorkingHours(id, dayName) {
+    if (!confirm(`Bạn có chắc chắn muốn xóa giờ làm việc cho "${dayName}"?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/center-working-hours/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            alert('Xóa giờ làm việc thành công!');
+            loadWorkingHours();
+        } else {
+            const error = await response.json();
+            alert('Lỗi: ' + (error.error || 'Không thể xóa giờ làm việc'));
+        }
+    } catch (error) {
+        console.error('Error deleting working hours:', error);
+        alert('Có lỗi xảy ra khi xóa giờ làm việc');
+    }
+}
+
+// Khởi tạo khi trang load
+document.addEventListener('DOMContentLoaded', () => {
+    if (centerId) {
+        loadCenterData();
+    } else {
+        console.error('Center ID not found in URL');
+    }
+});
+</script>
+
+</body></html>

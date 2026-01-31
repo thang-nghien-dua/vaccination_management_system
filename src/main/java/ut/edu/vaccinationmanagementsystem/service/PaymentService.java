@@ -131,6 +131,65 @@ public class PaymentService {
         return paymentRepository.findByTransactionId(transactionId)
             .orElse(null);
     }
+    
+    /**
+     * Tính phí hủy dựa trên thời gian hủy
+     * @param originalAmount Số tiền gốc của appointment
+     * @param hoursUntilAppointment Số giờ còn lại trước giờ hẹn
+     * @return Phí hủy (BigDecimal)
+     */
+    public BigDecimal calculateCancellationFee(BigDecimal originalAmount, long hoursUntilAppointment) {
+        if (originalAmount == null || originalAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+        
+        if (hoursUntilAppointment >= 24) {
+            return BigDecimal.ZERO; // Miễn phí (≥ 24 giờ)
+        } else if (hoursUntilAppointment >= 12) {
+            return originalAmount.multiply(new BigDecimal("0.20")); // 20% (12-24 giờ)
+        } else if (hoursUntilAppointment >= 6) {
+            return originalAmount.multiply(new BigDecimal("0.50")); // 50% (6-12 giờ)
+        } else {
+            return originalAmount; // 100% - không cho hủy hoặc phí 100% (< 6 giờ)
+        }
+    }
+    
+    /**
+     * Tạo Payment mới cho phí hủy (phải thanh toán bằng VNPay)
+     * Lưu ý: Payment có OneToOne với Appointment, nên ta sẽ lưu phí hủy vào Payment cũ
+     * và tạo một Appointment "dummy" để tracking phí hủy
+     * 
+     * @param user User cần thanh toán phí hủy
+     * @param cancellationFee Số tiền phí hủy
+     * @param cancelledAppointment Appointment đã bị hủy
+     * @return Payment đã được tạo (hoặc null nếu không cần tạo)
+     */
+    public Payment createCancellationFeePayment(User user, BigDecimal cancellationFee, Appointment cancelledAppointment) {
+        if (cancellationFee == null || cancellationFee.compareTo(BigDecimal.ZERO) <= 0) {
+            return null; // Không có phí hủy
+        }
+        
+        // Vì Payment có OneToOne với Appointment và unique constraint,
+        // ta sẽ chỉ lưu thông tin phí hủy vào Payment cũ của appointment đã hủy
+        // Payment mới cho phí hủy sẽ được tạo thông qua một Appointment đặc biệt
+        // Nhưng để đơn giản, ta chỉ cần đánh dấu trong Payment cũ là có phí hủy chưa thanh toán
+        // User sẽ thanh toán phí hủy thông qua một endpoint riêng
+        
+        // Lưu ý: Logic này sẽ được xử lý trong AppointmentService.cancelAppointment()
+        // Ở đây chỉ return null vì Payment đã được cập nhật trong cancelAppointment
+        return null;
+    }
+    
+    /**
+     * Đánh dấu phí hủy đã được thanh toán
+     * @param payment Payment chứa phí hủy
+     */
+    public void markCancellationFeeAsPaid(Payment payment) {
+        payment.setCancellationFeePaid(true);
+        payment.setPaymentStatus(PaymentStatus.PAID);
+        payment.setPaidAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+    }
 }
 
 

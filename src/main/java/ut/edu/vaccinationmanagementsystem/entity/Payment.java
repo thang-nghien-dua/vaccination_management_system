@@ -19,6 +19,7 @@ public class Payment {
     
     @OneToOne
     @JoinColumn(name = "appointment_id", unique = true, nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Appointment appointment; // Lịch hẹn liên kết (One-to-One)
     
     @Column(nullable = false, precision = 10, scale = 2)
@@ -40,6 +41,15 @@ public class Payment {
     
     @Column(nullable = true, unique = true)
     private String invoiceNumber; // Số hóa đơn (duy nhất)
+    
+    @Column(nullable = true, precision = 10, scale = 2)
+    private BigDecimal cancellationFee; // Phí hủy (để tracking, chưa refund thực sự)
+    
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean cancellationFeePaid = false; // Phí hủy đã được thanh toán chưa
+    
+    @Column(nullable = true, columnDefinition = "TEXT")
+    private String cancellationReason; // Lý do hủy lịch
     
     // Getters and Setters
     public Long getId() {
@@ -100,6 +110,30 @@ public class Payment {
     
     public void setInvoiceNumber(String invoiceNumber) {
         this.invoiceNumber = invoiceNumber;
+    }
+    
+    public BigDecimal getCancellationFee() {
+        return cancellationFee;
+    }
+    
+    public void setCancellationFee(BigDecimal cancellationFee) {
+        this.cancellationFee = cancellationFee;
+    }
+    
+    public Boolean getCancellationFeePaid() {
+        return cancellationFeePaid;
+    }
+    
+    public void setCancellationFeePaid(Boolean cancellationFeePaid) {
+        this.cancellationFeePaid = cancellationFeePaid;
+    }
+    
+    public String getCancellationReason() {
+        return cancellationReason;
+    }
+    
+    public void setCancellationReason(String cancellationReason) {
+        this.cancellationReason = cancellationReason;
     }
 }
 

@@ -17,6 +17,7 @@ public class Screening {
     
     @OneToOne
     @JoinColumn(name = "appointment_id", unique = true, nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Appointment appointment; // Lịch hẹn liên kết (One-to-One)
     
     @ManyToOne

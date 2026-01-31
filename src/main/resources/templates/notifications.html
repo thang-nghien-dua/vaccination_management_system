@@ -401,6 +401,12 @@
                                                 <span>${escapeHtml(notification.appointment.centerName)}</span>
                                             </div>
                                         ` : ''}
+                                        ${notification.appointment.roomNumber ? `
+                                            <div class="flex items-center gap-2 text-sm text-[#111813] dark:text-white">
+                                                <span class="material-symbols-outlined text-sm text-[#61896f]">meeting_room</span>
+                                                <span>Phòng: ${escapeHtml(notification.appointment.roomNumber)}</span>
+                                            </div>
+                                        ` : ''}
                                         ${notification.appointment.appointmentDate ? `
                                             <div class="flex items-center gap-2 text-sm text-[#111813] dark:text-white">
                                                 <span class="material-symbols-outlined text-sm text-[#61896f]">calendar_today</span>
@@ -444,12 +450,21 @@
             // Mở chi tiết trước
             detailElement.classList.toggle('hidden');
             
-            // Nếu đang mở chi tiết và thông báo chưa đọc thì đánh dấu đã đọc sau một chút (để user thấy được nội dung trước)
+            // Nếu đang mở chi tiết và thông báo chưa đọc thì đánh dấu đã đọc ngay lập tức
             if (isOpening && !notification.isRead) {
-                // Đợi một chút để animation mở hoàn tất, rồi mới đánh dấu đã đọc
-                setTimeout(async () => {
-                    await markAsRead(notificationId, true); // skipReload = true để không reload lại danh sách
-                }, 500); // 500ms delay để user thấy được nội dung mở ra
+                // Cập nhật trạng thái trong mảng ngay lập tức để UI cập nhật
+                notification.isRead = true;
+                
+                // Cập nhật UI ngay lập tức
+                updateNotificationCardUI(notificationId);
+                
+                // Đánh dấu đã đọc trên server (async, không cần đợi)
+                markAsRead(notificationId, true).catch(err => {
+                    console.error('Error marking as read:', err);
+                    // Nếu lỗi, revert lại trạng thái
+                    notification.isRead = false;
+                    renderNotifications();
+                });
             }
         }
     }
@@ -496,9 +511,15 @@
         const card = document.querySelector(`[onclick="toggleNotificationDetail(${notificationId})"]`);
         if (!card) return;
         
-        // Cập nhật border và background
-        card.classList.remove('border-primary/30', 'bg-primary/5');
-        card.classList.add('border-[#f0f4f2]', 'dark:border-[#2d3f33]');
+        // Cập nhật border và background - remove tất cả class liên quan đến unread
+        card.classList.remove('border-primary/30', 'bg-gradient-to-r', 'from-primary/10', 'via-primary/5', 'to-transparent');
+        card.classList.add('border-[#f0f4f2]', 'dark:border-[#2d3f33]', 'bg-white', 'dark:bg-[#1a2e21]');
+        
+        // Xóa thanh màu teal bên trái (nếu có)
+        const leftBar = card.querySelector('.absolute.top-0.left-0.w-1');
+        if (leftBar && leftBar.classList.contains('bg-gradient-to-b')) {
+            leftBar.remove();
+        }
         
         // Cập nhật icon background
         const iconContainer = card.querySelector('.flex-shrink-0');
@@ -507,9 +528,9 @@
             iconContainer.classList.add('bg-[#f0f4f2]', 'dark:bg-[#2d3f33]');
         }
         
-        // Cập nhật icon color
-        const icon = card.querySelector('.material-symbols-outlined');
-        if (icon && icon.parentElement === iconContainer) {
+        // Cập nhật icon color - tìm icon trong iconContainer
+        const icon = iconContainer ? iconContainer.querySelector('.material-symbols-outlined') : null;
+        if (icon) {
             icon.classList.remove('text-primary');
             icon.classList.add('text-[#61896f]');
         }
@@ -523,7 +544,7 @@
         
         // Xóa badge "Mới"
         const badge = card.querySelector('.bg-primary.text-white');
-        if (badge && badge.textContent === 'Mới') {
+        if (badge && badge.textContent.trim() === 'Mới') {
             badge.remove();
         }
         

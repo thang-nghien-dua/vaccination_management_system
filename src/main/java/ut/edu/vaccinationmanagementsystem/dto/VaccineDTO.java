@@ -23,6 +23,7 @@ public class VaccineDTO {
     private String storageTemperature;
     private String imageUrl;
     private VaccineStatus status;
+    private Integer stockQuantity; // Số lượng tồn kho tại trung tâm tổng
     
     // Getters and Setters
     public String getName() {
@@ -135,6 +136,14 @@ public class VaccineDTO {
     
     public void setStatus(VaccineStatus status) {
         this.status = status;
+    }
+    
+    public Integer getStockQuantity() {
+        return stockQuantity;
+    }
+    
+    public void setStockQuantity(Integer stockQuantity) {
+        this.stockQuantity = stockQuantity;
     }
 }
 

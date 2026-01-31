@@ -9,9 +9,12 @@ import org.springframework.transaction.annotation.Transactional;
 import ut.edu.vaccinationmanagementsystem.entity.Appointment;
 import ut.edu.vaccinationmanagementsystem.entity.Notification;
 import ut.edu.vaccinationmanagementsystem.entity.User;
+import ut.edu.vaccinationmanagementsystem.entity.enums.AppointmentStatus;
 import ut.edu.vaccinationmanagementsystem.entity.enums.NotificationStatus;
 import ut.edu.vaccinationmanagementsystem.entity.enums.NotificationType;
+import ut.edu.vaccinationmanagementsystem.repository.AppointmentRepository;
 import ut.edu.vaccinationmanagementsystem.repository.NotificationRepository;
+import ut.edu.vaccinationmanagementsystem.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -304,7 +307,7 @@ public class NotificationService {
         
         sb.append("Bạn sẽ nhận được thông báo nhắc nhở trước lịch hẹn.\n\n");
         sb.append("Trân trọng,\n");
-        sb.append("Hệ thống Tiêm chủng Quốc gia");
+        sb.append("Hệ thống Tiêm chủng VacciCare");
         
         return sb.toString();
     }
@@ -334,7 +337,7 @@ public class NotificationService {
         
         sb.append("Nếu bạn muốn đặt lịch mới, vui lòng truy cập hệ thống.\n\n");
         sb.append("Trân trọng,\n");
-        sb.append("Hệ thống Tiêm chủng Quốc gia");
+        sb.append("Hệ thống Tiêm chủng VacciCare");
         
         return sb.toString();
     }
@@ -389,6 +392,102 @@ public class NotificationService {
             notification.setIsRead(true);
         }
         notificationRepository.saveAll(unreadNotifications);
+    }
+    
+    /**
+     * Tạo thông báo mới
+     */
+    public Notification createNotification(Long userId, Long appointmentId, NotificationType type, 
+                                          String title, String content) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        
+        Notification notification = new Notification();
+        notification.setUser(user);
+        notification.setType(type);
+        notification.setTitle(title);
+        notification.setContent(content);
+        notification.setStatus(NotificationStatus.PENDING);
+        notification.setIsRead(false);
+        notification.setCreatedAt(LocalDateTime.now());
+        
+        if (appointmentId != null) {
+            Appointment appointment = appointmentRepository.findById(appointmentId)
+                    .orElse(null);
+            notification.setAppointment(appointment);
+        }
+        
+        // Nếu là EMAIL type, gửi email ngay
+        if (type == NotificationType.EMAIL) {
+            try {
+                sendEmail(user.getEmail(), title, content);
+                notification.setStatus(NotificationStatus.SENT);
+                notification.setSentAt(LocalDateTime.now());
+            } catch (Exception e) {
+                notification.setStatus(NotificationStatus.FAILED);
+                System.err.println("Failed to send notification email: " + e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            // IN_APP được gửi ngay
+            notification.setStatus(NotificationStatus.SENT);
+            notification.setSentAt(LocalDateTime.now());
+        }
+        
+        return notificationRepository.save(notification);
+    }
+    
+    @Autowired
+    private AppointmentRepository appointmentRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    /**
+     * Gửi thông báo nhắc lịch cho tất cả appointments sắp tới
+     * Có thể gọi từ cron job hoặc manual
+     */
+    public int sendAppointmentReminders() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Appointment> appointments = appointmentRepository.findAll();
+        int sentCount = 0;
+        
+        for (Appointment appointment : appointments) {
+            // Chỉ xử lý appointments có status PENDING hoặc CONFIRMED
+            if (appointment.getStatus() != AppointmentStatus.PENDING && 
+                appointment.getStatus() != AppointmentStatus.CONFIRMED) {
+                continue;
+            }
+            
+            // Kiểm tra nếu appointment có đầy đủ thông tin
+            if (appointment.getAppointmentDate() == null || 
+                appointment.getAppointmentTime() == null) {
+                continue;
+            }
+            
+            // Tính toán thời gian appointment
+            LocalDateTime appointmentDateTime = LocalDateTime.of(
+                appointment.getAppointmentDate(),
+                appointment.getAppointmentTime()
+            );
+            
+            // Tính số giờ còn lại
+            long hoursUntil = java.time.Duration.between(now, appointmentDateTime).toHours();
+            
+            // Tạo thông báo nhắc nhở 1 ngày trước (24-25 giờ)
+            if (hoursUntil >= 24 && hoursUntil <= 25) {
+                createAppointmentReminderNotification(appointment, 1, 0, 0);
+                sentCount++;
+            }
+            
+            // Tạo thông báo nhắc nhở 2 giờ trước (2-3 giờ)
+            if (hoursUntil >= 2 && hoursUntil <= 3) {
+                createAppointmentReminderNotification(appointment, 0, 2, 0);
+                sentCount++;
+            }
+        }
+        
+        return sentCount;
     }
 }
 

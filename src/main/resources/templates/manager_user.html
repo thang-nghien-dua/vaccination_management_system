@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Quản lý Người dùng Hệ thống - VacciCare</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .status-chip {
+            @apply px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider;
+        }
+        .role-chip {
+            @apply px-2.5 py-0.5 rounded-lg text-[11px] font-bold uppercase;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white antialiased">
+    <div class="flex h-screen overflow-hidden">
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <main class="flex-1 lg:ml-72 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
+            <header
+                class="sticky top-0 z-10 flex items-center justify-between bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
+                <div class="flex flex-1 items-center gap-4">
+                    <h2 class="text-xl font-bold text-[#111813] dark:text-white">Quản lý Người dùng</h2>
+                </div>
+            </header>
+            <section class="p-8 space-y-6">
+                <div
+                    class="flex flex-col lg:flex-row gap-4 items-center justify-between bg-white dark:bg-white/5 p-4 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
+                    <div class="flex flex-1 flex-wrap gap-3 w-full lg:w-auto">
+                        <div class="relative flex-1 min-w-[280px]">
+                            <span
+                                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#61896f] text-xl">search</span>
+                            <input id="searchInput"
+                                class="w-full pl-10 pr-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all"
+                                placeholder="Tìm tên, email, SĐT..." type="text" onkeyup="handleSearch()" />
+                        </div>
+                        <select id="roleFilter"
+                            class="px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-medium text-[#61896f] focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer"
+                            onchange="handleFilter()">
+                            <option value="">Tất cả Vai trò</option>
+                            <option value="CUSTOMER">Khách hàng</option>
+                            <option value="DOCTOR">Bác sĩ</option>
+                            <option value="NURSE">Y tá</option>
+                            <option value="ADMIN">Quản trị viên</option>
+                        </select>
+                        <select id="statusFilter"
+                            class="px-4 py-2 bg-[#f6f8f6] dark:bg-white/5 border-none rounded-xl text-sm font-medium text-[#61896f] focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer"
+                            onchange="handleFilter()">
+                            <option value="">Tất cả Trạng thái</option>
+                            <option value="ACTIVE">Đang hoạt động</option>
+                            <option value="INACTIVE">Ngoại tuyến</option>
+                            <option value="LOCKED">Bị khóa</option>
+                        </select>
+                    </div>
+                    <button onclick="openCreateModal()"
+                        class="w-full lg:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-primary text-[#111813] font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
+                        <span class="material-symbols-outlined">person_add</span>
+                        Thêm người dùng mới
+                    </button>
+                </div>
+                <div
+                    class="bg-white dark:bg-white/5 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 dark:bg-white/5 border-b border-[#f0f4f2] dark:border-white/10">
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Người dùng</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Vai trò</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Ngày đăng ký</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">
+                                        Trạng thái</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f] text-right">
+                                        Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody" class="divide-y divide-[#f0f4f2] dark:divide-white/10">
+                                <!-- Dữ liệu sẽ được load từ API -->
+                                <tr>
+                                    <td colspan="5" class="px-6 py-4 text-center text-[#61896f]">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <span class="material-symbols-outlined animate-spin">hourglass_empty</span>
+                                            <span>Đang tải dữ liệu...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div
+                        class="px-6 py-4 bg-gray-50 dark:bg-white/5 border-t border-[#f0f4f2] dark:border-white/10 flex items-center justify-end">
+                        <div class="flex gap-2" id="usersPaginationButtons">
+                            <!-- Pagination buttons will be generated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+            /*<![CDATA[*/
+            (function () {
+                let currentPage = 1;
+                const pageSize = 10;
+                let allUsers = [];
+
+                // Hàm loại bỏ dấu tiếng Việt
+                function removeVietnameseTones(str) {
+                    if (!str) return '';
+                    str = str.toLowerCase();
+                    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');
+                    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, 'e');
+                    str = str.replace(/ì|í|ị|ỉ|ĩ/g, 'i');
+                    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, 'o');
+                    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u');
+                    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y');
+                    str = str.replace(/đ/g, 'd');
+                    return str;
+                }
+
+                // Filter và search
+                window.handleSearch = function () {
+                    loadUsers();
+                };
+
+                window.handleFilter = function () {
+                    loadUsers();
+                };
+
+                // Load users với filter
+                async function loadUsers() {
+                    try {
+                        const search = document.getElementById('searchInput')?.value || '';
+                        const role = document.getElementById('roleFilter')?.value || '';
+                        const status = document.getElementById('statusFilter')?.value || '';
+
+                        // Load tất cả users trước, sau đó filter client-side để hỗ trợ tìm kiếm không dấu
+                        let url = '/api/admin/users?';
+                        if (role) url += `role=${encodeURIComponent(role)}&`;
+                        if (status) url += `status=${encodeURIComponent(status)}&`;
+
+                        const response = await fetch(url, {
+                            credentials: 'include'
+                        });
+                        if (!response.ok) throw new Error('Failed to load users');
+                        allUsers = await response.json();
+
+                        // Filter by search (không phân biệt dấu) - client-side
+                        if (search) {
+                            const searchNoTone = removeVietnameseTones(search);
+                            allUsers = allUsers.filter(u => {
+                                const nameNoTone = removeVietnameseTones(u.fullName || '');
+                                const emailNoTone = removeVietnameseTones(u.email || '');
+                                const phoneNoTone = removeVietnameseTones(u.phoneNumber || '');
+
+                                return nameNoTone.includes(searchNoTone) ||
+                                    emailNoTone.includes(searchNoTone) ||
+                                    phoneNoTone.includes(searchNoTone);
+                            });
+                        }
+
+                        currentPage = 1; // Reset về trang đầu khi search
+                        renderUsers();
+                        updatePagination();
+                    } catch (error) {
+                        console.error('Error loading users:', error);
+                        const tbody = document.getElementById('usersTableBody');
+                        if (tbody) {
+                            tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-red-500">Lỗi khi tải dữ liệu</td></tr>';
+                        }
+                    }
+                }
+
+                // Render users table
+                function renderUsers() {
+                    const tbody = document.getElementById('usersTableBody');
+                    if (!tbody) return;
+
+                    const start = (currentPage - 1) * pageSize;
+                    const end = start + pageSize;
+                    const pageUsers = allUsers.slice(start, end);
+
+                    if (pageUsers.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-[#61896f]">Không có dữ liệu</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = pageUsers.map(user => {
+                        const initials = user.fullName ? user.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U';
+                        const roleColors = {
+                            'CUSTOMER': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+                            'DOCTOR': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+                            'NURSE': 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-400',
+                            'RECEPTIONIST': 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
+                            'ADMIN': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                        };
+                        const statusColors = {
+                            'ACTIVE': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+                            'INACTIVE': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+                            'LOCKED': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                        };
+                        const roleColor = roleColors[user.role] || 'bg-gray-100 text-gray-700';
+                        const statusColor = statusColors[user.status] || 'bg-gray-100 text-gray-700';
+                        const createDate = user.createAt ? new Date(user.createAt).toLocaleDateString('vi-VN') : 'N/A';
+
+                        return `
+                <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="size-10 rounded-full overflow-hidden border border-[#f0f4f2] dark:border-white/10 flex items-center justify-center bg-primary/20 text-primary font-bold">
+                                ${initials}
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold">${user.fullName || 'N/A'}</span>
+                                <span class="text-[11px] text-[#61896f]">${user.email || 'N/A'}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="role-chip ${roleColor}">${user.role}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-xs font-medium text-[#61896f]">${createDate}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="status-chip ${statusColor}">${user.status}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex justify-end gap-2">
+                            <button class="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg text-blue-500 transition-colors" title="Xem chi tiết" onclick="viewUser(${user.id})">
+                                <span class="material-symbols-outlined text-lg">visibility</span>
+                            </button>
+                            <button class="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg text-amber-500 transition-colors" title="Chỉnh sửa" onclick="editUser(${user.id})">
+                                <span class="material-symbols-outlined text-lg">edit_square</span>
+                            </button>
+                            <button class="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg text-red-500 transition-colors" title="${user.status === 'LOCKED' ? 'Mở khóa' : 'Khóa'}" onclick="toggleUserStatus(${user.id}, '${user.status}')">
+                                <span class="material-symbols-outlined text-lg">${user.status === 'LOCKED' ? 'lock_open' : 'block'}</span>
+                            </button>
+                            <button class="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg text-red-600 transition-colors" title="Xóa" onclick="deleteUser(${user.id})">
+                                <span class="material-symbols-outlined text-lg">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+                    }).join('');
+                }
+
+                // Update pagination
+                function updatePagination() {
+                    const totalPages = Math.ceil(allUsers.length / pageSize);
+
+                    // Update pagination buttons
+                    const paginationContainer = document.getElementById('usersPaginationButtons');
+                    if (!paginationContainer) return;
+
+                    // Clear existing buttons
+                    paginationContainer.innerHTML = '';
+
+                    // Previous button
+                    const prevBtn = document.createElement('button');
+                    prevBtn.className = 'p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors disabled:opacity-50';
+                    prevBtn.disabled = currentPage === 1;
+                    prevBtn.innerHTML = '<span class="material-symbols-outlined text-sm">chevron_left</span>';
+                    prevBtn.onclick = () => {
+                        if (currentPage > 1) {
+                            currentPage--;
+                            renderUsers();
+                            updatePagination();
+                        }
+                    };
+                    paginationContainer.appendChild(prevBtn);
+
+                    // Page number buttons
+                    const maxVisiblePages = 5;
+                    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                    if (endPage - startPage < maxVisiblePages - 1) {
+                        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                    }
+
+                    for (let i = startPage; i <= endPage; i++) {
+                        const pageBtn = document.createElement('button');
+                        pageBtn.className = `p-2 rounded-lg font-bold text-xs px-4 transition-colors ${
+                            i === currentPage
+                                ? 'bg-primary text-[#111813]'
+                                : 'bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50'
+                        }`;
+                        pageBtn.textContent = i.toString();
+                        pageBtn.onclick = () => {
+                            currentPage = i;
+                            renderUsers();
+                            updatePagination();
+                        };
+                        paginationContainer.appendChild(pageBtn);
+                    }
+
+                    // Next button
+                    const nextBtn = document.createElement('button');
+                    nextBtn.className = 'p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors disabled:opacity-50';
+                    nextBtn.disabled = currentPage === totalPages;
+                    nextBtn.innerHTML = '<span class="material-symbols-outlined text-sm">chevron_right</span>';
+                    nextBtn.onclick = () => {
+                        if (currentPage < totalPages) {
+                            currentPage++;
+                            renderUsers();
+                            updatePagination();
+                        }
+                    };
+                    paginationContainer.appendChild(nextBtn);
+                }
+
+                // Placeholder functions for buttons
+                window.viewUser = function (userId) {
+                    console.log('View user:', userId);
+                    // TODO: Implement view user modal
+                };
+
+                window.editUser = function (userId) {
+                    console.log('Edit user:', userId);
+                    // TODO: Implement edit user modal
+                };
+
+                window.toggleUserStatus = function (userId, currentStatus) {
+                    console.log('Toggle user status:', userId, currentStatus);
+                    // TODO: Implement toggle user status
+                };
+
+                // Load users immediately or when DOM is ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', function () {
+                        loadUsers();
+
+                        // Setup search input listener với debounce
+                        const searchInput = document.getElementById('searchInput');
+                        if (searchInput) {
+                            let searchTimeout;
+                            searchInput.addEventListener('input', function () {
+                                clearTimeout(searchTimeout);
+                                searchTimeout = setTimeout(function () {
+                                    loadUsers();
+                                }, 300);
+                            });
+                        }
+                    });
+                } else {
+                    // DOM already loaded, run immediately
+                    loadUsers();
+
+                    // Setup search input listener với debounce
+                    const searchInput = document.getElementById('searchInput');
+                    if (searchInput) {
+                        let searchTimeout;
+                        searchInput.addEventListener('input', function () {
+                            clearTimeout(searchTimeout);
+                            searchTimeout = setTimeout(function () {
+                                loadUsers();
+                            }, 300);
+                        });
+                    }
+                }
+
+                // View user details
+                window.viewUser = async function (userId) {
+                    try {
+                        const response = await fetch(`/api/admin/users/${userId}`, {
+                            credentials: 'include'
+                        });
+                        if (!response.ok) throw new Error('Failed to load user');
+                        const user = await response.json();
+
+                        alert(`Chi tiết người dùng:\n\nTên: ${user.fullName}\nEmail: ${user.email}\nSĐT: ${user.phoneNumber || 'N/A'}\nVai trò: ${user.role}\nTrạng thái: ${user.status}\nNgày đăng ký: ${user.createAt ? new Date(user.createAt).toLocaleDateString('vi-VN') : 'N/A'}`);
+                    } catch (error) {
+                        console.error('Error viewing user:', error);
+                        alert('Lỗi khi tải thông tin người dùng');
+                    }
+                };
+
+                // Edit user
+                window.editUser = async function (userId) {
+                    try {
+                        const response = await fetch(`/api/admin/users/${userId}`, {
+                            credentials: 'include'
+                        });
+                        if (!response.ok) throw new Error('Failed to load user');
+                        const user = await response.json();
+
+                        openEditModal(user);
+                    } catch (error) {
+                        console.error('Error loading user for edit:', error);
+                        alert('Lỗi khi tải thông tin người dùng');
+                    }
+                };
+
+                // Delete user
+                window.deleteUser = async function (userId) {
+                    if (!confirm('Bạn có chắc chắn muốn xóa người dùng này? Hành động này không thể hoàn tác.')) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`/api/admin/users/${userId}`, {
+                            method: 'DELETE',
+                            credentials: 'include'
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            throw new Error(data.error || 'Failed to delete user');
+                        }
+
+                        alert('Xóa người dùng thành công!');
+                        loadUsers(); // Reload danh sách
+                    } catch (error) {
+                        console.error('Error deleting user:', error);
+                        alert('Lỗi khi xóa người dùng: ' + error.message);
+                    }
+                };
+
+                // Toggle user status (Lock/Unlock)
+                window.toggleUserStatus = async function (userId, currentStatus) {
+                    const action = currentStatus === 'LOCKED' ? 'mở khóa' : 'khóa';
+                    if (!confirm(`Bạn có chắc chắn muốn ${action} người dùng này?`)) {
+                        return;
+                    }
+
+                    try {
+                        const newStatus = currentStatus === 'LOCKED' ? 'ACTIVE' : 'LOCKED';
+                        const response = await fetch(`/api/admin/users/${userId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                                status: newStatus
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            throw new Error(data.error || 'Failed to update user status');
+                        }
+
+                        alert(`${action.charAt(0).toUpperCase() + action.slice(1)} người dùng thành công!`);
+                        loadUsers(); // Reload danh sách
+                    } catch (error) {
+                        console.error('Error toggling user status:', error);
+                        alert('Lỗi khi cập nhật trạng thái: ' + error.message);
+                    }
+                };
+
+                // Open create modal
+                window.openCreateModal = function () {
+                    document.getElementById('userModalTitle').textContent = 'Thêm người dùng mới';
+                    document.getElementById('userForm').reset();
+                    document.getElementById('userId').value = '';
+                    document.getElementById('userModal').classList.remove('hidden');
+                };
+
+                // Open edit modal
+                window.openEditModal = function (user) {
+                    document.getElementById('userModalTitle').textContent = 'Chỉnh sửa người dùng';
+                    document.getElementById('userId').value = user.id;
+                    document.getElementById('userEmail').value = user.email || '';
+                    document.getElementById('userFullName').value = user.fullName || '';
+                    document.getElementById('userPhone').value = user.phoneNumber || '';
+                    document.getElementById('userRole').value = user.role || 'CUSTOMER';
+                    document.getElementById('userStatus').value = user.status || 'ACTIVE';
+                    document.getElementById('userPassword').required = false;
+                    document.getElementById('userPassword').parentElement.style.display = 'none';
+                    document.getElementById('userModal').classList.remove('hidden');
+                };
+
+                // Close modal
+                window.closeUserModal = function () {
+                    document.getElementById('userModal').classList.add('hidden');
+                    document.getElementById('userForm').reset();
+                    document.getElementById('userPassword').required = true;
+                    document.getElementById('userPassword').parentElement.style.display = 'block';
+                };
+
+                // Save user (create or update)
+                window.saveUser = async function (e) {
+                    e.preventDefault();
+
+                    const userId = document.getElementById('userId').value;
+                    const formData = {
+                        email: document.getElementById('userEmail').value.trim(),
+                        fullName: document.getElementById('userFullName').value.trim(),
+                        phoneNumber: document.getElementById('userPhone').value.trim(),
+                        role: document.getElementById('userRole').value,
+                        status: document.getElementById('userStatus').value
+                    };
+
+                    const password = document.getElementById('userPassword').value.trim();
+                    if (password) {
+                        formData.password = password;
+                    }
+
+                    // Validation
+                    if (!formData.email || !formData.fullName || !formData.role || !formData.status) {
+                        alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+                        return;
+                    }
+
+                    if (!userId && !password) {
+                        alert('Vui lòng nhập mật khẩu cho người dùng mới');
+                        return;
+                    }
+
+                    try {
+                        const url = userId ? `/api/admin/users/${userId}` : '/api/admin/users';
+                        const method = userId ? 'PUT' : 'POST';
+
+                        const response = await fetch(url, {
+                            method: method,
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify(formData)
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            throw new Error(data.error || 'Failed to save user');
+                        }
+
+                        alert(userId ? 'Cập nhật người dùng thành công!' : 'Tạo người dùng thành công!');
+                        closeUserModal();
+                        loadUsers(); // Reload danh sách
+                    } catch (error) {
+                        console.error('Error saving user:', error);
+                        alert('Lỗi: ' + error.message);
+                    }
+                };
+            })();
+        /*]]>*/
+    </script>
+
+    <!-- User Modal -->
+    <div id="userModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-white/10 rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-[#f0f4f2] dark:border-white/10 flex items-center justify-between">
+                <h2 id="userModalTitle" class="text-xl font-bold">Thêm người dùng mới</h2>
+                <button onclick="closeUserModal()"
+                    class="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <form id="userForm" onsubmit="saveUser(event)" class="p-6 space-y-4">
+                <input type="hidden" id="userId" value="">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Email *</label>
+                    <input id="userEmail" type="email" required
+                        class="w-full px-4 py-2 border border-[#f0f4f2] dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary"
+                        placeholder="user@example.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Họ và tên *</label>
+                    <input id="userFullName" type="text" required
+                        class="w-full px-4 py-2 border border-[#f0f4f2] dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary"
+                        placeholder="Nguyễn Văn A">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Số điện thoại</label>
+                    <input id="userPhone" type="tel"
+                        class="w-full px-4 py-2 border border-[#f0f4f2] dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary"
+                        placeholder="0901234567">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Mật khẩu <span
+                            id="passwordRequired">*</span></label>
+                    <input id="userPassword" type="password" required
+                        class="w-full px-4 py-2 border border-[#f0f4f2] dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary"
+                        placeholder="Nhập mật khẩu">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Vai trò *</label>
+                        <select id="userRole" required
+                            class="w-full px-4 py-2 border border-[#f0f4f2] dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary">
+                            <option value="CUSTOMER">Khách hàng</option>
+                            <option value="DOCTOR">Bác sĩ</option>
+                            <option value="NURSE">Y tá</option>
+                            <option value="RECEPTIONIST">Lễ tân</option>
+                            <option value="ADMIN">Quản trị viên</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Trạng thái *</label>
+                        <select id="userStatus" required
+                            class="w-full px-4 py-2 border border-[#f0f4f2] dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary">
+                            <option value="ACTIVE">Đang hoạt động</option>
+                            <option value="INACTIVE">Ngoại tuyến</option>
+                            <option value="LOCKED">Bị khóa</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="submit"
+                        class="flex-1 px-6 py-2.5 bg-primary text-[#111813] font-bold rounded-lg hover:shadow-lg transition-all">
+                        Lưu
+                    </button>
+                    <button type="button" onclick="closeUserModal()"
+                        class="flex-1 px-6 py-2.5 bg-gray-200 dark:bg-white/10 text-gray-700 dark:text-white font-bold rounded-lg hover:bg-gray-300 transition-all">
+                        Hủy
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</body>
+
+</html>

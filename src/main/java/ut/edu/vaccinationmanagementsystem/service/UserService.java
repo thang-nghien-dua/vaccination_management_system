@@ -36,6 +36,37 @@ public class UserService {
     @Autowired
     private ut.edu.vaccinationmanagementsystem.repository.EmailVerificationTokenRepository emailVerificationTokenRepository;
     
+    @Autowired
+    private ut.edu.vaccinationmanagementsystem.repository.StaffInfoRepository staffInfoRepository;
+    
+    @Autowired
+    private ut.edu.vaccinationmanagementsystem.repository.VaccinationCenterRepository vaccinationCenterRepository;
+    
+    @Autowired
+    private ut.edu.vaccinationmanagementsystem.repository.NotificationRepository notificationRepository;
+    
+    @Autowired
+    private ut.edu.vaccinationmanagementsystem.repository.AppointmentRepository appointmentRepository;
+    
+    @Autowired
+    private ut.edu.vaccinationmanagementsystem.repository.VaccinationRecordRepository vaccinationRecordRepository;
+    
+    @Autowired
+    private ut.edu.vaccinationmanagementsystem.repository.FamilyMemberRepository familyMemberRepository;
+    
+    
+    @Autowired
+    private ut.edu.vaccinationmanagementsystem.repository.ScreeningRepository screeningRepository;
+    
+    @Autowired
+    private ut.edu.vaccinationmanagementsystem.repository.AdverseReactionRepository adverseReactionRepository;
+    
+    @Autowired
+    private ut.edu.vaccinationmanagementsystem.repository.AppointmentHistoryRepository appointmentHistoryRepository;
+    
+    @Autowired
+    private ut.edu.vaccinationmanagementsystem.repository.WorkScheduleRepository workScheduleRepository;
+    
     // Đăng ký tài khoản mới
     public User register(UserRegisterDTO dto) {
         // Validate các field bắt buộc
@@ -246,6 +277,231 @@ public class UserService {
             }
             return userRepository.save(user);
         }
+    }
+    
+    /**
+     * Admin tạo user mới
+     */
+    public User createUserByAdmin(ut.edu.vaccinationmanagementsystem.dto.AdminUserDTO dto) {
+        // Validate
+        if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
+            throw new RuntimeException("Email is required");
+        }
+        if (dto.getFullName() == null || dto.getFullName().trim().isEmpty()) {
+            throw new RuntimeException("Full name is required");
+        }
+        if (dto.getRole() == null) {
+            throw new RuntimeException("Role is required");
+        }
+        if (dto.getStatus() == null) {
+            throw new RuntimeException("Status is required");
+        }
+        
+        // Kiểm tra email đã tồn tại chưa
+        String emailLower = dto.getEmail().trim().toLowerCase();
+        if (userRepository.existsByEmail(emailLower)) {
+            throw new RuntimeException("Email already exists: " + emailLower);
+        }
+        
+        // Tạo user mới
+        User user = new User();
+        user.setEmail(emailLower);
+        
+        // Password: nếu có thì encode, nếu không thì null (cho OAuth users)
+        if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+            user.setAuthProvider(AuthProvider.EMAIL);
+        } else {
+            user.setPassword(null);
+            user.setAuthProvider(AuthProvider.EMAIL); // Mặc định EMAIL
+        }
+        
+        user.setFullName(dto.getFullName().trim());
+        user.setPhoneNumber(dto.getPhoneNumber());
+        user.setDayOfBirth(dto.getDayOfBirth());
+        user.setGender(dto.getGender());
+        user.setAddress(dto.getAddress());
+        user.setCitizenId(dto.getCitizenId());
+        user.setRole(dto.getRole());
+        user.setStatus(dto.getStatus());
+        user.setCreateAt(LocalDate.now());
+        
+        User savedUser = userRepository.save(user);
+        
+        // Handle StaffInfo if role is a staff member
+        if (dto.getRole() == Role.DOCTOR || dto.getRole() == Role.NURSE || dto.getRole() == Role.RECEPTIONIST) {
+            ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = new ut.edu.vaccinationmanagementsystem.entity.StaffInfo();
+            staffInfo.setUser(savedUser);
+            staffInfo.setEmployeeId(dto.getEmployeeId() != null ? dto.getEmployeeId() : "EMP" + savedUser.getId());
+            staffInfo.setSpecialization(dto.getSpecialization());
+            staffInfo.setLicenseNumber(dto.getLicenseNumber());
+            staffInfo.setHireDate(dto.getHireDate() != null ? dto.getHireDate() : LocalDate.now());
+            staffInfo.setDepartment(dto.getDepartment());
+            
+            if (dto.getCenterId() != null) {
+                vaccinationCenterRepository.findById(dto.getCenterId()).ifPresent(staffInfo::setCenter);
+            }
+            
+            staffInfoRepository.save(staffInfo);
+        }
+        
+        return savedUser;
+    }
+    
+    /**
+     * Admin cập nhật user
+     */
+    public User updateUserByAdmin(Long userId, ut.edu.vaccinationmanagementsystem.dto.AdminUserDTO dto) {
+        User user = getUserById(userId);
+        
+        // Validate
+        if (dto.getFullName() != null && dto.getFullName().trim().isEmpty()) {
+            throw new RuntimeException("Full name cannot be empty");
+        }
+        
+        // Cập nhật email (nếu thay đổi)
+        if (dto.getEmail() != null && !dto.getEmail().trim().equalsIgnoreCase(user.getEmail())) {
+            String newEmail = dto.getEmail().trim().toLowerCase();
+            if (userRepository.existsByEmail(newEmail)) {
+                throw new RuntimeException("Email already exists: " + newEmail);
+            }
+            user.setEmail(newEmail);
+        }
+        
+        // Cập nhật password (nếu có)
+        if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+        
+        // Cập nhật các thông tin khác
+        if (dto.getFullName() != null) {
+            user.setFullName(dto.getFullName().trim());
+        }
+        if (dto.getPhoneNumber() != null) {
+            user.setPhoneNumber(dto.getPhoneNumber().trim());
+        }
+        if (dto.getDayOfBirth() != null) {
+            user.setDayOfBirth(dto.getDayOfBirth());
+        }
+        if (dto.getGender() != null) {
+            user.setGender(dto.getGender());
+        }
+        if (dto.getAddress() != null) {
+            user.setAddress(dto.getAddress());
+        }
+        if (dto.getCitizenId() != null) {
+            user.setCitizenId(dto.getCitizenId().trim().isEmpty() ? null : dto.getCitizenId().trim());
+        }
+        if (dto.getRole() != null) {
+            user.setRole(dto.getRole());
+        }
+        if (dto.getStatus() != null) {
+            user.setStatus(dto.getStatus());
+        }
+        
+        User savedUser = userRepository.save(user);
+        
+        // Update StaffInfo if role is a staff member
+        if (savedUser.getRole() == Role.DOCTOR || savedUser.getRole() == Role.NURSE || savedUser.getRole() == Role.RECEPTIONIST) {
+            ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = staffInfoRepository.findByUser(savedUser)
+                    .orElse(new ut.edu.vaccinationmanagementsystem.entity.StaffInfo());
+            
+            if (staffInfo.getUser() == null) {
+                staffInfo.setUser(savedUser);
+            }
+            
+            // Tự động generate employee_id nếu chưa có
+            if (staffInfo.getEmployeeId() == null || staffInfo.getEmployeeId().trim().isEmpty()) {
+                if (dto.getEmployeeId() != null && !dto.getEmployeeId().trim().isEmpty()) {
+                    staffInfo.setEmployeeId(dto.getEmployeeId().trim());
+                } else {
+                    // Generate employee_id tự động: EMP + user_id
+                    staffInfo.setEmployeeId("EMP" + savedUser.getId());
+                }
+            } else if (dto.getEmployeeId() != null && !dto.getEmployeeId().trim().isEmpty()) {
+                staffInfo.setEmployeeId(dto.getEmployeeId().trim());
+            }
+            
+            if (dto.getSpecialization() != null) staffInfo.setSpecialization(dto.getSpecialization());
+            if (dto.getLicenseNumber() != null) staffInfo.setLicenseNumber(dto.getLicenseNumber());
+            if (dto.getHireDate() != null) staffInfo.setHireDate(dto.getHireDate());
+            if (dto.getDepartment() != null) staffInfo.setDepartment(dto.getDepartment());
+            
+            if (dto.getCenterId() != null) {
+                vaccinationCenterRepository.findById(dto.getCenterId()).ifPresent(staffInfo::setCenter);
+            }
+            
+            staffInfoRepository.save(staffInfo);
+        } else {
+            // Nếu role không phải staff nữa, xóa StaffInfo nếu có
+            staffInfoRepository.findByUser(savedUser).ifPresent(staffInfoRepository::delete);
+        }
+        
+        return savedUser;
+    }
+    
+    /**
+     * Admin xóa user
+     * Xóa tất cả các bản ghi liên quan trước khi xóa user để tránh foreign key constraint
+     */
+    @Transactional
+    public void deleteUserByAdmin(Long userId) {
+        User user = getUserById(userId);
+        
+        // Không cho phép xóa chính mình
+        // (Có thể thêm check này nếu cần)
+        
+        // Xóa các bản ghi liên quan trước khi xóa user
+        
+        // 1. Xóa notifications
+        notificationRepository.findByUserIdOrderByCreatedAtDesc(userId).forEach(notificationRepository::delete);
+        
+        // 2. Xóa family members
+        familyMemberRepository.findByUserOrderByCreatedAtDesc(user).forEach(familyMemberRepository::delete);
+        
+        // 3. Xóa work schedules
+        workScheduleRepository.findByUserId(userId).forEach(workScheduleRepository::delete);
+        
+        // 4. Xóa appointment histories (nơi user là người thay đổi)
+        // Sử dụng findAll và filter vì không có findByChangedById
+        appointmentHistoryRepository.findAll().stream()
+            .filter(history -> history.getChangedBy() != null && history.getChangedBy().getId().equals(userId))
+            .forEach(appointmentHistoryRepository::delete);
+        
+        // 5. Xóa screenings (nơi user là bác sĩ)
+        screeningRepository.findByDoctorIdOrderByScreenedAtDesc(userId).forEach(screeningRepository::delete);
+        
+        // 6. Xóa adverse reactions (nơi user là người xử lý)
+        adverseReactionRepository.findByHandledById(userId).forEach(adverseReactionRepository::delete);
+        
+        // 7. Xử lý vaccination records
+        // 7a. Xóa tất cả records có user là người được tiêm (vì user_id là NOT NULL)
+        vaccinationRecordRepository.findByUserIdOrderByInjectionDateDesc(userId).forEach(vaccinationRecordRepository::delete);
+        
+        // 7b. Cập nhật records có nurse là user này (set nurse = null)
+        vaccinationRecordRepository.findAll().stream()
+            .filter(record -> record.getNurse() != null && record.getNurse().getId().equals(userId))
+            .forEach(record -> {
+                record.setNurse(null);
+                vaccinationRecordRepository.save(record);
+            });
+        
+        // 8. Cập nhật appointments (set booked_by_user_id và booked_for_user_id = null)
+        // Lưu ý: Có thể cần xóa appointments hoặc set null tùy business logic
+        appointmentRepository.findByBookedByUserId(userId).forEach(appointment -> {
+            appointment.setBookedByUser(null);
+            appointmentRepository.save(appointment);
+        });
+        appointmentRepository.findByBookedForUserId(userId).forEach(appointment -> {
+            appointment.setBookedForUser(null);
+            appointmentRepository.save(appointment);
+        });
+        
+        // 9. Xóa StaffInfo nếu có
+        staffInfoRepository.findByUser(user).ifPresent(staffInfoRepository::delete);
+        
+        // 10. Cuối cùng mới xóa user
+        userRepository.delete(user);
     }
 }
 

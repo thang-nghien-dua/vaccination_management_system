@@ -117,6 +117,26 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("familyMemberId") Long familyMemberId,
             @Param("vaccineId") Long vaccineId,
             @Param("statuses") List<AppointmentStatus> statuses);
+    
+    /**
+     * Đếm số lượng appointments theo status
+     */
+    long countByStatus(AppointmentStatus status);
+    
+    /**
+     * Tìm tất cả appointments theo status
+     */
+    List<Appointment> findByStatus(AppointmentStatus status);
+    
+    /**
+     * Đếm số lượng appointments theo status và centerId
+     */
+    long countByStatusAndCenterId(AppointmentStatus status, Long centerId);
+    
+    /**
+     * Tìm tất cả appointments theo status và centerId
+     */
+    List<Appointment> findByStatusAndCenterId(AppointmentStatus status, Long centerId);
 }
 
 

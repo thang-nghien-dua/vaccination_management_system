@@ -69,36 +69,47 @@ public class User {
     private LocalDate createAt;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private StaffInfo staffInfo; // Thông tin nhân viên (chỉ có khi role là STAFF)
 
     @OneToMany(mappedBy = "bookedByUser")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<Appointment> bookedAppointments; // Danh sách lịch hẹn mà user này đặt
 
     @OneToMany(mappedBy = "bookedForUser")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<Appointment> appointmentsForMe; // Danh sách lịch hẹn được đặt cho user này
 
     @OneToMany(mappedBy = "user")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<VaccinationRecord> vaccinationRecords; // Lịch sử tiêm chủng
 
     @OneToMany(mappedBy = "user")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<FamilyMember> familyMembers; // Danh sách người thân
 
     @OneToMany(mappedBy = "user")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<Notification> notifications; // Danh sách thông báo
 
     @OneToMany(mappedBy = "user")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<WorkSchedule> workSchedules; // Lịch làm việc (cho nhân viên)
 
     @OneToMany(mappedBy = "changedBy")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<AppointmentHistory> appointmentHistories; // Lịch sử thay đổi trạng thái lịch hẹn
 
     @OneToMany(mappedBy = "doctor")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<Screening> screenings; // Danh sách khám sàng lọc (cho bác sĩ)
 
     @OneToMany(mappedBy = "nurse")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<VaccinationRecord> injections; // Danh sách tiêm vaccine (cho bác sĩ/y tá)
 
     @OneToMany(mappedBy = "handledBy")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<AdverseReaction> adverseReactions;
 
     // Getters and Setters
