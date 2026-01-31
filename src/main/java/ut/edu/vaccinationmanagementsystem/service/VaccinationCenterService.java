@@ -53,7 +53,6 @@ public class VaccinationCenterService {
         try {
             return vaccinationCenterRepository.save(center);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException("Failed to save vaccination center: " + e.getMessage(), e);
         }
     }

@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html class="light" lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Quản lý người thân - VacciCare</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="/css/ux-enhancements.css" rel="stylesheet"/>
+    <script src="/js/sidebar.js"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0f766e",
+                        "primary-light": "#14b8a6",
+                        "primary-dark": "#134e4a",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav {
+            background-color: #f0f4f2;
+            border-left: 4px solid #0f766e;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen text-[#111813] dark:text-white font-display">
+<div class="flex min-h-screen">
+    <!-- Sidebar Overlay (mobile) -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-72 bg-white dark:bg-[#1a2e21] border-r border-[#f0f4f2] dark:border-[#2d3f33] fixed h-full z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
+        <div class="p-6 flex items-center gap-3">
+            <button id="sidebarToggleBtn" class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors flex-shrink-0" title="Menu">
+                <span class="material-symbols-outlined text-xl">menu</span>
+            </button>
+            <h1 id="sidebarLogoText" class="text-xl font-bold tracking-tight flex-1 lg:block">VacciCare</h1>
+            <button id="sidebarCloseBtn" class="lg:hidden p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors flex-shrink-0" title="Đóng sidebar">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div id="sidebarUserProfile" class="px-4 mb-6" th:if="${isAuthenticated}">
+            <div class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark rounded-xl">
+                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 bg-primary/20 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0" th:if="${currentUser?.fullName != null}">
+                    <span th:text="${#strings.substring(currentUser.fullName, 0, 1)}"></span>
+                </div>
+                <div class="flex flex-col overflow-hidden min-w-0 lg:block">
+                    <p id="sidebarUserName" class="text-sm font-bold truncate" th:text="${currentUser?.fullName ?: currentUser?.email}">Tên người dùng</p>
+                    <p id="sidebarUserRole" class="text-xs text-[#61896f] truncate" th:text="${currentUser?.role?.name() == 'CUSTOMER' ? 'Người dùng cá nhân' : (currentUser?.role?.name() == 'ADMIN' ? 'Quản trị viên' : 'Nhân viên y tế')}">Người dùng cá nhân</p>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 px-2 space-y-1 overflow-y-auto">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/home">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">dashboard</span>
+                <span id="navTextHome" class="text-sm font-medium">Tổng quan</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/profile">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">person</span>
+                <span id="navTextProfile" class="text-sm font-medium">Thông tin cá nhân</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/appointments">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">calendar_month</span>
+                <span id="navTextAppointments" class="text-sm font-medium">Đặt lịch</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/vaccination-history">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">history_edu</span>
+                <span id="navTextHistory" class="text-sm font-medium">Hồ sơ tiêm chủng</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg active-nav text-primary font-bold" href="/family-members">
+                <span class="material-symbols-outlined">group</span>
+                <span id="navTextFamily" class="text-sm">Người thân</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="/vaccines">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">vaccines</span>
+                <span id="navTextVaccines" class="text-sm font-medium">Vaccine</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors relative" href="/notifications">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">notifications</span>
+                <span id="navTextNotifications" class="text-sm font-medium">Thông báo</span>
+                <span id="notificationBadge" class="hidden absolute top-2 right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">0</span>
+            </a>
+        </nav>
+        <div class="mt-auto p-4 border-t border-[#f0f4f2] dark:border-[#2d3f33] space-y-2">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors" href="#">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white">settings</span>
+                <span id="navTextSettings" class="text-sm font-medium">Cài đặt</span>
+            </a>
+            <form th:action="@{/api/auth/logout}" method="post" class="inline">
+                <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-50 transition-colors">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span id="navTextLogout" class="text-sm font-medium">Đăng xuất</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-72 flex flex-col min-h-screen">
+        <header class="sticky top-0 z-50 bg-gradient-to-r from-primary/10 via-primary/5 to-white/90 dark:from-primary/20 dark:via-primary/10 dark:to-[#102216]/90 backdrop-blur-xl border-b border-primary/20 dark:border-primary/30 px-8 py-6 transition-all">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="size-12 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                        <span class="material-symbols-outlined text-white text-2xl">group</span>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-[#111813] dark:text-white mb-1">Quản lý Người thân</h2>
+                        <p class="text-sm text-[#61896f]">Quản lý hồ sơ tiêm chủng cho các thành viên trong gia đình bạn</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="addFamilyMemberBtn" class="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40">
+                        <span class="material-symbols-outlined">add</span>
+                        Thêm người thân mới
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8 space-y-6 w-full">
+            <!-- Thông báo lỗi -->
+            <div id="errorMessage" class="hidden p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-300 text-sm">
+                <span id="errorText"></span>
+            </div>
+
+            <!-- Thông báo thành công -->
+            <div id="successMessage" class="hidden p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-green-700 dark:text-green-300 text-sm">
+                <span id="successText"></span>
+            </div>
+
+            <!-- Danh sách người thân -->
+            <div id="familyMembersList" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Sẽ được load bằng JavaScript -->
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modal Thêm/Sửa người thân -->
+    <div id="familyMemberModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-xl border border-[#f0f4f2] dark:border-[#2d3f33] p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold" id="modalTitle">Thêm người thân</h3>
+                <button id="closeModalBtn" class="p-2 hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] rounded-lg transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <form id="familyMemberForm" class="space-y-6">
+                <input type="hidden" id="familyMemberId" value="">
+                
+                <!-- Họ và tên -->
+                <div>
+                    <label for="fullName" class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Họ và tên <span class="text-red-500">*</span></label>
+                    <input type="text" id="fullName" name="fullName" required
+                           class="w-full px-4 py-3 rounded-xl border border-[#f0f4f2] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                </div>
+
+                <!-- Quan hệ -->
+                <div>
+                    <label for="relationship" class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Quan hệ <span class="text-red-500">*</span></label>
+                    <select id="relationship" name="relationship" required
+                            class="w-full px-4 py-3 rounded-xl border border-[#f0f4f2] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                        <option value="">Chọn quan hệ</option>
+                        <option value="CHILD">Con</option>
+                        <option value="PARENT">Bố/Mẹ</option>
+                        <option value="SPOUSE">Vợ/Chồng</option>
+                        <option value="OTHER">Khác</option>
+                    </select>
+                </div>
+
+                <!-- Ngày sinh và Giới tính -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="dateOfBirth" class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Ngày sinh</label>
+                        <input type="date" id="dateOfBirth" name="dateOfBirth"
+                               class="w-full px-4 py-3 rounded-xl border border-[#f0f4f2] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                    </div>
+                    <div>
+                        <label for="gender" class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Giới tính</label>
+                        <select id="gender" name="gender"
+                                class="w-full px-4 py-3 rounded-xl border border-[#f0f4f2] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                            <option value="">Chọn</option>
+                            <option value="MALE">Nam</option>
+                            <option value="FEMALE">Nữ</option>
+                            <option value="OTHER">Khác</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Số điện thoại -->
+                <div>
+                    <label for="phoneNumber" class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Số điện thoại</label>
+                    <input type="tel" id="phoneNumber" name="phoneNumber"
+                           class="w-full px-4 py-3 rounded-xl border border-[#f0f4f2] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                </div>
+
+                <!-- Số CMND/CCCD -->
+                <div>
+                    <label for="citizenId" class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Số CMND/CCCD</label>
+                    <input type="text" id="citizenId" name="citizenId"
+                           class="w-full px-4 py-3 rounded-xl border border-[#f0f4f2] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex gap-4 pt-4">
+                    <button type="submit" id="saveBtn"
+                            class="flex-1 bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-transform hover:scale-105 active:scale-95 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span id="saveBtnText">Lưu</span>
+                        <span id="saveBtnSpinner" class="hidden">
+                            <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </span>
+                    </button>
+                    <button type="button" id="cancelBtn" class="px-8 py-4 rounded-xl font-bold border border-[#f0f4f2] dark:border-[#2d3f33] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-all">
+                        Hủy
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Hồ sơ chi tiết -->
+    <div id="familyMemberDetailModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm overflow-y-auto p-4">
+        <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-xl border border-[#f0f4f2] dark:border-[#2d3f33] p-8 max-w-4xl w-full my-8 max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between mb-6 flex-shrink-0">
+                <h3 class="text-2xl font-bold">Hồ sơ chi tiết</h3>
+                <button id="closeDetailModalBtn" class="p-2 hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] rounded-lg transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div id="detailModalContent" class="flex-1 overflow-y-auto min-h-0">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load danh sách người thân khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFamilyMembers();
+        });
+
+        // Mở modal thêm mới
+        document.getElementById('addFamilyMemberBtn').addEventListener('click', function() {
+            openModal();
+        });
+
+        // Đóng modal
+        document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+        document.getElementById('cancelBtn').addEventListener('click', closeModal);
+        document.getElementById('familyMemberModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Submit form
+        document.getElementById('familyMemberForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            const saveBtn = document.getElementById('saveBtn');
+            const saveBtnText = document.getElementById('saveBtnText');
+            const saveBtnSpinner = document.getElementById('saveBtnSpinner');
+            const familyMemberId = document.getElementById('familyMemberId').value;
+            
+            // Ẩn thông báo cũ
+            errorDiv.classList.add('hidden');
+            successDiv.classList.add('hidden');
+            
+            // Hiển thị loading
+            saveBtn.disabled = true;
+            saveBtnText.textContent = 'Đang lưu...';
+            saveBtnSpinner.classList.remove('hidden');
+            
+            // Lấy dữ liệu form
+            const formData = {
+                fullName: document.getElementById('fullName').value,
+                relationship: document.getElementById('relationship').value,
+                dateOfBirth: document.getElementById('dateOfBirth').value || null,
+                gender: document.getElementById('gender').value || null,
+                phoneNumber: document.getElementById('phoneNumber').value || null,
+                citizenId: document.getElementById('citizenId').value || null
+            };
+            
+            try {
+                const url = familyMemberId ? `/api/family-members/${familyMemberId}` : '/api/family-members';
+                const method = familyMemberId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Thành công
+                    successDiv.classList.remove('hidden');
+                    document.getElementById('successText').textContent = data.message || 'Lưu thành công!';
+                    
+                    // Đóng modal và reload danh sách
+                    closeModal();
+                    setTimeout(() => {
+                        loadFamilyMembers();
+                    }, 1000);
+                } else {
+                    // Hiển thị lỗi
+                    errorDiv.classList.remove('hidden');
+                    document.getElementById('errorText').textContent = data.error || 'Có lỗi xảy ra. Vui lòng thử lại.';
+                }
+            } catch (error) {
+                errorDiv.classList.remove('hidden');
+                document.getElementById('errorText').textContent = 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+            } finally {
+                // Ẩn loading và enable button
+                saveBtn.disabled = false;
+                saveBtnText.textContent = 'Lưu';
+                saveBtnSpinner.classList.add('hidden');
+            }
+        });
+
+        // Load danh sách người thân
+        async function loadFamilyMembers() {
+            try {
+                const response = await fetch('/api/family-members');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const listDiv = document.getElementById('familyMembersList');
+                    
+                    if (data.length === 0) {
+                        // Vẫn hiển thị card "Thêm thành viên mới" trong grid
+                        const addCardHTML = `
+                            <div onclick="openModal()" class="bg-gradient-to-br from-primary/5 via-primary/10 to-background-light dark:from-primary/10 dark:via-primary/5 dark:to-[#102216] rounded-2xl border-2 border-dashed border-primary/40 dark:border-primary/30 p-8 flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/10 dark:hover:bg-primary/20 transition-all duration-300 group min-h-[400px] shadow-lg hover:shadow-xl">
+                                <div class="size-20 bg-gradient-to-br from-primary/20 to-primary/30 group-hover:from-primary/30 group-hover:to-primary/40 rounded-full flex items-center justify-center mb-4 transition-all shadow-lg">
+                                    <span class="material-symbols-outlined text-4xl text-primary group-hover:scale-110 transition-transform">add</span>
+                                </div>
+                                <h3 class="text-xl font-bold text-[#111813] dark:text-white mb-2">Thêm thành viên mới</h3>
+                                <p class="text-sm text-[#61896f] dark:text-[#8fa896] text-center">Đăng ký hồ sơ cho con, cha mẹ hoặc người thân khác</p>
+                            </div>
+                        `;
+                        listDiv.innerHTML = addCardHTML;
+                    } else {
+                        // Xóa card "Thêm thành viên mới" nếu có trong listDiv
+                        const addCard = listDiv.querySelector('div[onclick="openModal()"]');
+                        if (addCard) {
+                            addCard.remove();
+                        }
+                        
+                        // Render các card người thân với màu sắc đa dạng
+                        const avatarColors = [
+                            'from-blue-500/20 to-blue-600/10 text-blue-600 border-blue-300',
+                            'from-purple-500/20 to-purple-600/10 text-purple-600 border-purple-300',
+                            'from-pink-500/20 to-pink-600/10 text-pink-600 border-pink-300',
+                            'from-indigo-500/20 to-indigo-600/10 text-indigo-600 border-indigo-300',
+                            'from-teal-500/20 to-teal-600/10 text-teal-600 border-teal-300',
+                            'from-cyan-500/20 to-cyan-600/10 text-cyan-600 border-cyan-300'
+                        ];
+                        
+                        const cardGradients = [
+                            'from-blue-50/50 to-white dark:from-blue-950/30 dark:to-[#1a2e21]',
+                            'from-purple-50/50 to-white dark:from-purple-950/30 dark:to-[#1a2e21]',
+                            'from-pink-50/50 to-white dark:from-pink-950/30 dark:to-[#1a2e21]',
+                            'from-indigo-50/50 to-white dark:from-indigo-950/30 dark:to-[#1a2e21]',
+                            'from-teal-50/50 to-white dark:from-teal-950/30 dark:to-[#1a2e21]',
+                            'from-cyan-50/50 to-white dark:from-cyan-950/30 dark:to-[#1a2e21]'
+                        ];
+                        
+                        const membersHTML = data.map((member, index) => {
+                            const age = member.dateOfBirth ? calculateAge(member.dateOfBirth) : null;
+                            const avatarColor = avatarColors[index % avatarColors.length];
+                            const cardGradient = cardGradients[index % cardGradients.length];
+                            
+                            return `
+                                <div class="bg-gradient-to-br ${cardGradient} rounded-2xl shadow-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] p-6 hover:shadow-2xl hover:border-primary/60 hover:scale-[1.02] transition-all duration-300 group flex flex-col min-h-[400px] relative overflow-hidden">
+                                    <!-- Decorative background element -->
+                                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/20 to-transparent rounded-full -mr-16 -mt-16 opacity-50 group-hover:opacity-70 transition-opacity"></div>
+                                    
+                                    <!-- Header với Avatar và Tên -->
+                                    <div class="flex items-start gap-4 mb-6 pb-6 border-b border-[#e2e8f0]/50 dark:border-[#2d3f33]/50 relative z-10">
+                                        <div class="size-16 bg-gradient-to-br ${avatarColor} rounded-2xl flex items-center justify-center font-bold text-2xl shadow-xl border-2 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-2xl transition-all duration-300 flex-shrink-0 relative">
+                                            <div class="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
+                                            <span class="relative z-10 drop-shadow-sm">${member.fullName ? member.fullName.charAt(0).toUpperCase() : '?'}</span>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <h4 class="font-bold text-xl text-[#111813] dark:text-white truncate group-hover:text-primary transition-colors">${member.fullName}</h4>
+                                                <span class="px-3 py-1 bg-gradient-to-r from-primary/20 to-primary/10 text-primary rounded-full text-xs font-bold border border-primary/30 shadow-md backdrop-blur-sm">
+                                                    ${getRelationshipLabel(member.relationship)}
+                                                </span>
+                                            </div>
+                                            <div class="flex flex-wrap items-center gap-4 text-sm text-[#61896f]">
+                                                ${member.dateOfBirth ? `<span class="flex items-center gap-1.5 bg-white/60 dark:bg-[#102216]/60 px-2 py-1 rounded-lg">
+                                                    <span class="material-symbols-outlined text-base text-primary">cake</span>
+                                                    <span class="font-medium">${formatDate(member.dateOfBirth)}${age ? ` (${age} tuổi)` : ''}</span>
+                                                </span>` : ''}
+                                                ${member.gender ? `<span class="flex items-center gap-1.5 bg-white/60 dark:bg-[#102216]/60 px-2 py-1 rounded-lg">
+                                                    <span class="material-symbols-outlined text-base text-primary">person</span>
+                                                    <span class="font-medium">${getGenderLabel(member.gender)}</span>
+                                                </span>` : ''}
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-2 flex-shrink-0">
+                                            <button onclick="event.stopPropagation(); editFamilyMember(${member.id})" class="p-2 hover:bg-primary/20 text-primary rounded-lg transition-all shadow-sm hover:shadow-md" title="Sửa">
+                                                <span class="material-symbols-outlined">edit</span>
+                                            </button>
+                                            <button onclick="event.stopPropagation(); deleteFamilyMember(${member.id}, '${member.fullName}')" class="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 rounded-lg transition-all shadow-sm hover:shadow-md" title="Xóa">
+                                                <span class="material-symbols-outlined">delete</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Thông tin tiêm chủng (placeholder) -->
+                                    <div class="space-y-4 flex-1 relative z-10">
+                                        <div class="p-4 bg-gradient-to-br from-orange-50 via-orange-100/70 to-orange-50/50 dark:from-orange-900/40 dark:via-orange-800/30 dark:to-orange-900/20 rounded-xl border-2 border-orange-300/60 dark:border-orange-700/60 shadow-md hover:shadow-lg transition-all group-hover:border-orange-400 dark:group-hover:border-orange-600">
+                                            <div class="flex items-start gap-3">
+                                                <div class="size-10 bg-gradient-to-br from-orange-400 to-orange-500 rounded-lg flex items-center justify-center shadow-md">
+                                                    <span class="material-symbols-outlined text-white text-lg flex-shrink-0">calendar_today</span>
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-xs font-bold text-orange-900 dark:text-orange-100 uppercase tracking-wide mb-1">Mũi tiêm sắp tới</p>
+                                                    <p class="text-sm font-semibold text-orange-800 dark:text-orange-200">Chưa có lịch hẹn</p>
+                                                    <p class="text-xs text-orange-700/80 dark:text-orange-300/80 mt-1">Đặt lịch để nhắc nhở</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="p-4 bg-gradient-to-br from-emerald-50 via-green-50/70 to-emerald-50/50 dark:from-emerald-900/40 dark:via-green-800/30 dark:to-emerald-900/20 rounded-xl border-2 border-emerald-300/60 dark:border-emerald-700/60 shadow-md hover:shadow-lg transition-all group-hover:border-emerald-400 dark:group-hover:border-emerald-600">
+                                            <div class="flex items-start gap-3">
+                                                <div class="size-10 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-lg flex items-center justify-center shadow-md">
+                                                    <span class="material-symbols-outlined text-white text-lg flex-shrink-0">check_circle</span>
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wide mb-1">Lần tiêm cuối</p>
+                                                    <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-200">Chưa có thông tin</p>
+                                                    <p class="text-xs text-emerald-700/80 dark:text-emerald-300/80 mt-1">Sẽ cập nhật sau khi tiêm</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="flex gap-3 mt-6 pt-6 border-t border-[#e2e8f0]/50 dark:border-[#2d3f33]/50 relative z-10">
+                                        <button onclick="event.stopPropagation(); bookAppointment(${member.id})" class="flex-1 bg-gradient-to-r from-primary via-primary to-primary-dark hover:from-primary-dark hover:via-primary-dark hover:to-primary text-white px-4 py-3 rounded-xl font-bold text-sm transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+                                            <span class="material-symbols-outlined text-lg">calendar_month</span>
+                                            <span>Đặt lịch tiêm hộ</span>
+                                        </button>
+                                        <button onclick="event.stopPropagation(); viewDetails(${member.id})" class="px-4 py-3 border-2 border-primary/60 text-primary hover:bg-primary/10 hover:border-primary rounded-xl font-bold text-sm transition-all shadow-sm hover:shadow-md backdrop-blur-sm">
+                                            Hồ sơ chi tiết
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                        
+                        // Card "Thêm thành viên mới" ở cuối danh sách
+                        const addCardHTML = `
+                            <div onclick="openModal()" class="bg-gradient-to-br from-primary/5 via-primary/10 to-background-light dark:from-primary/10 dark:via-primary/5 dark:to-[#102216] rounded-2xl border-2 border-dashed border-primary/50 dark:border-primary/40 p-8 flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/10 dark:hover:bg-primary/20 transition-all duration-300 group min-h-[400px] shadow-lg hover:shadow-2xl hover:scale-[1.02] relative overflow-hidden">
+                                <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <div class="size-20 bg-gradient-to-br from-primary/30 to-primary/40 group-hover:from-primary/40 group-hover:to-primary/50 rounded-full flex items-center justify-center mb-4 transition-all shadow-xl group-hover:shadow-2xl group-hover:scale-110 relative z-10">
+                                    <span class="material-symbols-outlined text-4xl text-primary group-hover:scale-110 transition-transform">add</span>
+                                </div>
+                                <h3 class="text-xl font-bold text-[#111813] dark:text-white mb-2 group-hover:text-primary transition-colors relative z-10">Thêm thành viên mới</h3>
+                                <p class="text-sm text-[#61896f] dark:text-[#8fa896] text-center relative z-10">Đăng ký hồ sơ cho con, cha mẹ hoặc người thân khác</p>
+                            </div>
+                        `;
+                        
+                        // Hiển thị các card người thân trước, card "Thêm" ở cuối
+                        listDiv.innerHTML = membersHTML + addCardHTML;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading family members:', error);
+            }
+        }
+
+        // Mở modal
+        function openModal(memberId = null) {
+            const modal = document.getElementById('familyMemberModal');
+            const form = document.getElementById('familyMemberForm');
+            const title = document.getElementById('modalTitle');
+            
+            if (memberId) {
+                title.textContent = 'Sửa thông tin người thân';
+                document.getElementById('familyMemberId').value = memberId;
+                loadFamilyMemberData(memberId);
+            } else {
+                title.textContent = 'Thêm người thân';
+                document.getElementById('familyMemberId').value = '';
+                form.reset();
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        // Đóng modal
+        function closeModal() {
+            document.getElementById('familyMemberModal').classList.add('hidden');
+            document.getElementById('familyMemberForm').reset();
+            document.getElementById('familyMemberId').value = '';
+        }
+
+        // Load dữ liệu để sửa
+        async function loadFamilyMemberData(id) {
+            try {
+                const response = await fetch(`/api/family-members/${id}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('fullName').value = data.fullName || '';
+                    document.getElementById('relationship').value = data.relationship || '';
+                    document.getElementById('dateOfBirth').value = data.dateOfBirth || '';
+                    document.getElementById('gender').value = data.gender || '';
+                    document.getElementById('phoneNumber').value = data.phoneNumber || '';
+                    document.getElementById('citizenId').value = data.citizenId || '';
+                }
+            } catch (error) {
+                console.error('Error loading family member data:', error);
+            }
+        }
+
+        // Sửa người thân
+        window.editFamilyMember = function(id) {
+            openModal(id);
+        };
+
+        // Xóa người thân
+        window.deleteFamilyMember = async function(id, name) {
+            if (!confirm(`Bạn có chắc chắn muốn xóa ${name} khỏi danh sách người thân?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/family-members/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const successDiv = document.getElementById('successMessage');
+                    successDiv.classList.remove('hidden');
+                    document.getElementById('successText').textContent = data.message || 'Xóa thành công!';
+                    
+                    setTimeout(() => {
+                        loadFamilyMembers();
+                    }, 1000);
+                } else {
+                    const errorDiv = document.getElementById('errorMessage');
+                    errorDiv.classList.remove('hidden');
+                    document.getElementById('errorText').textContent = data.error || 'Xóa thất bại. Vui lòng thử lại.';
+                }
+            } catch (error) {
+                const errorDiv = document.getElementById('errorMessage');
+                errorDiv.classList.remove('hidden');
+                document.getElementById('errorText').textContent = 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+            }
+        };
+
+        // Helper functions
+        function getRelationshipLabel(relationship) {
+            const labels = {
+                'CHILD': 'Con',
+                'PARENT': 'Bố/Mẹ',
+                'SPOUSE': 'Vợ/Chồng',
+                'OTHER': 'Khác'
+            };
+            return labels[relationship] || relationship;
+        }
+
+        function getGenderLabel(gender) {
+            const labels = {
+                'MALE': 'Nam',
+                'FEMALE': 'Nữ',
+                'OTHER': 'Khác'
+            };
+            return labels[gender] || gender;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('vi-VN');
+        }
+
+        function calculateAge(dateOfBirth) {
+            if (!dateOfBirth) return null;
+            const today = new Date();
+            const birthDate = new Date(dateOfBirth);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        }
+
+        // Placeholder functions cho các action buttons
+        window.bookAppointment = function(memberId) {
+            // Chuyển đến trang đặt lịch với familyMemberId
+            window.location.href = `/appointments?familyMemberId=${memberId}`;
+        };
+
+        window.viewDetails = async function(memberId) {
+            try {
+                const response = await fetch(`/api/family-members/${memberId}/details`, {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert(error.error || 'Không thể tải thông tin chi tiết');
+                    return;
+                }
+                
+                const data = await response.json();
+                displayFamilyMemberDetails(data);
+            } catch (error) {
+                console.error('Error loading family member details:', error);
+                alert('Có lỗi xảy ra khi tải thông tin chi tiết');
+            }
+        };
+        
+        // Hiển thị hồ sơ chi tiết
+        function displayFamilyMemberDetails(data) {
+            const content = document.getElementById('detailModalContent');
+            const basicInfo = data.basicInfo;
+            const appointments = data.appointments || [];
+            const records = data.vaccinationRecords || [];
+            const stats = data.statistics || {};
+            
+            const age = basicInfo.dateOfBirth ? calculateAge(basicInfo.dateOfBirth) : null;
+            
+            content.innerHTML = `
+                <!-- Thông tin cơ bản -->
+                <div class="bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 rounded-2xl p-6 mb-6 border-2 border-primary/20">
+                    <div class="flex items-start gap-6">
+                        <div class="size-20 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center font-bold text-3xl text-white shadow-lg">
+                            ${basicInfo.fullName ? basicInfo.fullName.charAt(0).toUpperCase() : '?'}
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-3">
+                                <h4 class="text-2xl font-bold text-[#111813] dark:text-white">${basicInfo.fullName}</h4>
+                                <span class="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm font-bold">
+                                    ${getRelationshipLabel(basicInfo.relationship)}
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                ${basicInfo.dateOfBirth ? `
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary">cake</span>
+                                        <span class="text-[#61896f]"><strong>Ngày sinh:</strong> ${formatDate(basicInfo.dateOfBirth)}${age ? ` (${age} tuổi)` : ''}</span>
+                                    </div>
+                                ` : ''}
+                                ${basicInfo.gender ? `
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary">person</span>
+                                        <span class="text-[#61896f]"><strong>Giới tính:</strong> ${getGenderLabel(basicInfo.gender)}</span>
+                                    </div>
+                                ` : ''}
+                                ${basicInfo.phoneNumber ? `
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary">phone</span>
+                                        <span class="text-[#61896f]">
+                                            <strong>SĐT:</strong> ${basicInfo.phoneNumber}
+                                            ${basicInfo.phoneVerified ? '<span class="text-green-600 ml-2">✓ Đã xác thực</span>' : '<span class="text-orange-600 ml-2">Chưa xác thực</span>'}
+                                        </span>
+                                    </div>
+                                ` : ''}
+                                ${basicInfo.citizenId ? `
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary">badge</span>
+                                        <span class="text-[#61896f]"><strong>CMND/CCCD:</strong> ${basicInfo.citizenId}</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Thống kê -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-3xl">calendar_month</span>
+                            <div>
+                                <p class="text-xs text-blue-700 dark:text-blue-300 font-semibold uppercase">Tổng lịch hẹn</p>
+                                <p class="text-2xl font-bold text-blue-900 dark:text-blue-100">${stats.totalAppointments || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-xl p-4">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-3xl">check_circle</span>
+                            <div>
+                                <p class="text-xs text-green-700 dark:text-green-300 font-semibold uppercase">Đã tiêm</p>
+                                <p class="text-2xl font-bold text-green-900 dark:text-green-100">${stats.totalVaccinations || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-200 dark:border-orange-800 rounded-xl p-4">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-orange-600 dark:text-orange-400 text-3xl">schedule</span>
+                            <div>
+                                <p class="text-xs text-orange-700 dark:text-orange-300 font-semibold uppercase">Sắp tới</p>
+                                <p class="text-2xl font-bold text-orange-900 dark:text-orange-100">${stats.upcomingAppointments || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lịch hẹn -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">calendar_today</span>
+                        Lịch hẹn tiêm chủng
+                    </h4>
+                    <div class="bg-white dark:bg-[#102216] rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] overflow-hidden">
+                        ${appointments.length > 0 ? `
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-[#f0f4f2] dark:bg-[#2d3f33]">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Ngày giờ</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Vaccine</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Trung tâm</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Mũi</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${appointments.map(apt => `
+                                            <tr class="border-t border-[#e2e8f0] dark:border-[#2d3f33] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33]">
+                                                <td class="px-4 py-3">
+                                                    <div class="text-sm font-medium">${apt.appointmentDate ? formatDate(apt.appointmentDate) : 'N/A'}</div>
+                                                    <div class="text-xs text-[#61896f]">${apt.appointmentTime ? apt.appointmentTime.substring(0, 5) : ''}</div>
+                                                </td>
+                                                <td class="px-4 py-3 text-sm">${apt.vaccineName || 'N/A'}</td>
+                                                <td class="px-4 py-3 text-sm">${apt.centerName || 'N/A'}</td>
+                                                <td class="px-4 py-3 text-sm">Mũi ${apt.doseNumber || 1}</td>
+                                                <td class="px-4 py-3">
+                                                    <span class="px-2 py-1 rounded text-xs font-semibold ${getStatusBadgeClass(apt.status)}">
+                                                        ${getStatusLabel(apt.status)}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ` : `
+                            <div class="p-8 text-center text-[#61896f]">
+                                <span class="material-symbols-outlined text-4xl mb-2 opacity-50">calendar_today</span>
+                                <p class="font-medium">Chưa có lịch hẹn nào</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+                
+                <!-- Lịch sử tiêm chủng -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">history_edu</span>
+                        Lịch sử tiêm chủng
+                    </h4>
+                    <div class="bg-white dark:bg-[#102216] rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] overflow-hidden">
+                        ${records.length > 0 ? `
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-[#f0f4f2] dark:bg-[#2d3f33]">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Ngày tiêm</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Vaccine</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Mũi</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Số lô</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Trung tâm</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${records.map(record => `
+                                            <tr class="border-t border-[#e2e8f0] dark:border-[#2d3f33] hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33]">
+                                                <td class="px-4 py-3">
+                                                    <div class="text-sm font-medium">${formatDate(record.injectionDate)}</div>
+                                                    <div class="text-xs text-[#61896f]">${record.injectionTime ? record.injectionTime.substring(0, 5) : ''}</div>
+                                                </td>
+                                                <td class="px-4 py-3 text-sm">${record.vaccineName || 'N/A'}</td>
+                                                <td class="px-4 py-3 text-sm">Mũi ${record.doseNumber || 1}</td>
+                                                <td class="px-4 py-3 text-sm">${record.batchNumber || 'N/A'}</td>
+                                                <td class="px-4 py-3 text-sm">${record.centerName || 'N/A'}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ` : `
+                            <div class="p-8 text-center text-[#61896f]">
+                                <span class="material-symbols-outlined text-4xl mb-2 opacity-50">history_edu</span>
+                                <p class="font-medium">Chưa có lịch sử tiêm chủng</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('familyMemberDetailModal').classList.remove('hidden');
+        }
+        
+        // Helper functions cho detail modal
+        function getStatusLabel(status) {
+            if (!status) return 'N/A';
+            const labels = {
+                'PENDING': 'Chờ xác nhận',
+                'CONFIRMED': 'Đã xác nhận',
+                'CHECKED_IN': 'Đã check-in',
+                'COMPLETED': 'Hoàn thành',
+                'CANCELLED': 'Đã hủy'
+            };
+            return labels[status] || status;
+        }
+        
+        function getStatusBadgeClass(status) {
+            if (!status) return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+            const classes = {
+                'PENDING': 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+                'CONFIRMED': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+                'CHECKED_IN': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+                'COMPLETED': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+                'CANCELLED': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+            };
+            return classes[status] || 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+        }
+        
+        // Đóng modal chi tiết
+        document.getElementById('closeDetailModalBtn').addEventListener('click', () => {
+            document.getElementById('familyMemberDetailModal').classList.add('hidden');
+        });
+        
+        document.getElementById('familyMemberDetailModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+    </script>
+<script>
+    // Load số lượng thông báo chưa đọc
+    async function loadUnreadNotificationCount() {
+        try {
+            const response = await fetch('/api/notifications/unread-count');
+            if (response.ok) {
+                const data = await response.json();
+                const badge = document.getElementById('notificationBadge');
+                if (badge) {
+                    if (data.count > 0) {
+                        badge.textContent = data.count > 99 ? '99+' : data.count;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error loading unread count:', error);
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        loadUnreadNotificationCount();
+        setInterval(loadUnreadNotificationCount, 30000);
+    });
+</script>
+</body>
+</html>
+

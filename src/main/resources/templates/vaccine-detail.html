@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html class="light" lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Chi tiết Vaccine - VacciCare</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="/css/ux-enhancements.css" rel="stylesheet"/>
+    <script src="/js/sidebar.js"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0f766e",
+                        "primary-light": "#14b8a6",
+                        "primary-dark": "#134e4a",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav {
+            background: linear-gradient(90deg, rgba(15, 118, 110, 0.1) 0%, rgba(15, 118, 110, 0.05) 100%);
+            border-left: 4px solid #0f766e;
+            color: #0f766e;
+        }
+        .active-tab {
+            background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen text-[#111813] dark:text-white font-display">
+<div class="flex min-h-screen">
+    <!-- Sidebar Overlay (mobile) -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-72 bg-gradient-to-b from-white via-primary/5 to-white dark:from-[#1a2e21] dark:via-primary/10 dark:to-[#1a2e21] border-r border-primary/20 dark:border-primary/30 fixed h-full z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col shadow-lg">
+        <div class="p-6 flex items-center gap-3 border-b border-primary/10 dark:border-primary/20">
+            <button id="sidebarToggleBtn" class="p-2 rounded-lg hover:bg-primary/10 dark:hover:bg-primary/20 transition-all flex-shrink-0 group" title="Menu">
+                <span class="material-symbols-outlined text-xl text-[#61896f] group-hover:text-primary transition-colors">menu</span>
+            </button>
+            <h1 id="sidebarLogoText" class="text-xl font-bold tracking-tight flex-1 lg:block bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">VacciCare</h1>
+            <button id="sidebarCloseBtn" class="lg:hidden p-2 rounded-lg hover:bg-primary/10 dark:hover:bg-primary/20 transition-all flex-shrink-0 group" title="Đóng sidebar">
+                <span class="material-symbols-outlined text-[#61896f] group-hover:text-primary transition-colors">close</span>
+            </button>
+        </div>
+        <div id="sidebarUserProfile" class="px-4 mb-6 mt-4" th:if="${isAuthenticated}">
+            <div class="flex items-center gap-3 p-3 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 rounded-xl border border-primary/20 dark:border-primary/30 hover:shadow-md transition-all">
+                <div class="bg-gradient-to-br from-primary to-primary-dark rounded-full size-10 flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-lg shadow-primary/30" th:if="${currentUser?.fullName != null}">
+                    <span th:text="${#strings.substring(currentUser.fullName, 0, 1)}"></span>
+                </div>
+                <div class="flex flex-col overflow-hidden min-w-0 lg:block">
+                    <p id="sidebarUserName" class="text-sm font-bold truncate text-[#111813] dark:text-white" th:text="${currentUser?.fullName ?: currentUser?.email}">Tên người dùng</p>
+                    <p id="sidebarUserRole" class="text-xs text-[#61896f] truncate" th:text="${currentUser?.role?.name() == 'CUSTOMER' ? 'Người dùng cá nhân' : (currentUser?.role?.name() == 'ADMIN' ? 'Quản trị viên' : 'Nhân viên y tế')}">Người dùng cá nhân</p>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 px-2 space-y-1 overflow-y-auto">
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-gradient-to-r hover:from-primary/10 hover:via-primary/5 hover:to-transparent dark:hover:from-primary/20 dark:hover:via-primary/10 transition-all group" href="/home">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white group-hover:text-primary transition-colors">dashboard</span>
+                <span id="navTextHome" class="text-sm font-medium group-hover:text-primary transition-colors">Tổng quan</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-gradient-to-r hover:from-primary/10 hover:via-primary/5 hover:to-transparent dark:hover:from-primary/20 dark:hover:via-primary/10 transition-all group" href="/profile">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white group-hover:text-primary transition-colors">person</span>
+                <span id="navTextProfile" class="text-sm font-medium group-hover:text-primary transition-colors">Thông tin cá nhân</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-gradient-to-r hover:from-primary/10 hover:via-primary/5 hover:to-transparent dark:hover:from-primary/20 dark:hover:via-primary/10 transition-all group" href="/appointments">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white group-hover:text-primary transition-colors">calendar_month</span>
+                <span id="navTextAppointments" class="text-sm font-medium group-hover:text-primary transition-colors">Đặt lịch</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-gradient-to-r hover:from-primary/10 hover:via-primary/5 hover:to-transparent dark:hover:from-primary/20 dark:hover:via-primary/10 transition-all group" href="/vaccination-history">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white group-hover:text-primary transition-colors">history_edu</span>
+                <span id="navTextHistory" class="text-sm font-medium group-hover:text-primary transition-colors">Hồ sơ tiêm chủng</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-gradient-to-r hover:from-primary/10 hover:via-primary/5 hover:to-transparent dark:hover:from-primary/20 dark:hover:via-primary/10 transition-all group" href="/family-members">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white group-hover:text-primary transition-colors">group</span>
+                <span id="navTextFamily" class="text-sm font-medium group-hover:text-primary transition-colors">Người thân</span>
+            </a>
+            <a class="sidebar-nav-item active-nav flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-bold transition-all group" href="/vaccines">
+                <span class="material-symbols-outlined">vaccines</span>
+                <span id="navTextVaccines" class="text-sm">Vaccine</span>
+            </a>
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-gradient-to-r hover:from-primary/10 hover:via-primary/5 hover:to-transparent dark:hover:from-primary/20 dark:hover:via-primary/10 transition-all relative group" href="/notifications">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white group-hover:text-primary transition-colors">notifications</span>
+                <span id="navTextNotifications" class="text-sm font-medium group-hover:text-primary transition-colors">Thông báo</span>
+                <span id="notificationBadge" class="hidden absolute top-2 right-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">0</span>
+            </a>
+        </nav>
+        <div class="mt-auto p-4 border-t border-primary/10 dark:border-primary/20 space-y-2">
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-[#61896f] hover:bg-gradient-to-r hover:from-primary/10 hover:via-primary/5 hover:to-transparent dark:hover:from-primary/20 dark:hover:via-primary/10 transition-all group" href="#">
+                <span class="material-symbols-outlined text-[#111813] dark:text-white group-hover:text-primary transition-colors">settings</span>
+                <span id="navTextSettings" class="text-sm font-medium group-hover:text-primary transition-colors">Cài đặt</span>
+            </a>
+            <form th:action="@{/api/auth/logout}" method="post" class="inline">
+                <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-500 hover:bg-gradient-to-r hover:from-red-50 hover:via-red-50/50 hover:to-transparent dark:hover:from-red-900/20 dark:hover:via-red-900/10 transition-all group">
+                    <span class="material-symbols-outlined group-hover:scale-110 transition-transform">logout</span>
+                    <span id="navTextLogout" class="text-sm font-medium">Đăng xuất</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-72 flex flex-col min-h-screen">
+        <!-- Header -->
+        <header class="sticky top-0 z-50 bg-gradient-to-r from-primary/10 via-primary/5 to-white/90 dark:from-primary/20 dark:via-primary/10 dark:to-[#102216]/90 backdrop-blur-xl border-b border-primary/20 dark:border-primary/30 px-8 py-6 transition-all">
+            <div class="flex items-center gap-4">
+                <a href="/vaccines" class="p-2 rounded-lg hover:bg-primary/10 dark:hover:bg-primary/20 transition-all group">
+                    <span class="material-symbols-outlined text-[#61896f] group-hover:text-primary transition-colors">arrow_back</span>
+                </a>
+                <div class="size-12 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                    <span class="material-symbols-outlined text-white text-2xl">vaccines</span>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-[#111813] dark:text-white mb-1">Chi tiết Vaccine</h2>
+                    <p class="text-sm text-[#61896f]">Thông tin chi tiết và đặt lịch tiêm chủng</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="flex items-center justify-center min-h-[60vh]">
+            <div class="text-center animate-fade-in">
+                <div class="inline-block spinner h-12 w-12 mb-4"></div>
+                <p class="text-[#61896f] animate-pulse">Đang tải thông tin vaccine...</p>
+            </div>
+        </div>
+
+        <!-- Vaccine Detail Content -->
+        <div id="vaccineDetailContent" class="hidden p-8 space-y-6 page-transition">
+            <!-- Top Section: Main Vaccine Info -->
+            <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-primary/20 dark:border-primary/30 p-6 relative overflow-hidden animate-fade-in">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-primary-light to-primary-dark"></div>
+                <div class="flex flex-col lg:flex-row gap-6 relative z-10">
+                    <!-- Left: Vaccine Image -->
+                    <div class="lg:w-1/3">
+                        <div class="w-full h-64 bg-gradient-to-br from-primary/10 via-primary/5 to-blue-50 dark:from-primary/20 dark:via-primary/10 dark:to-blue-950/20 rounded-xl flex items-center justify-center overflow-hidden group hover:scale-105 transition-transform duration-300 relative">
+                            <div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div id="vaccineImageContainer" class="relative z-10">
+                                <span class="material-symbols-outlined text-6xl text-primary/50 group-hover:text-primary transition-colors duration-300">vaccines</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right: Vaccine Info -->
+                    <div class="lg:w-2/3 flex flex-col">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex-1">
+                                <p class="text-sm font-bold text-primary mb-2" id="vaccineCategory">VACCINE</p>
+                                <h1 class="text-3xl font-bold text-[#111813] dark:text-white mb-2" id="vaccineName">Vaccine Name</h1>
+                                <p class="text-[#61896f] mb-4" id="vaccineDescription">Mô tả vaccine</p>
+                            </div>
+                            <button class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors">
+                                <span class="material-symbols-outlined text-[#61896f]">share</span>
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div>
+                                <p class="text-xs text-[#61896f] mb-1">Giá bán lẻ</p>
+                                <p class="text-xl font-bold text-primary" id="vaccinePrice">0₫</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-[#61896f] mb-1">Xuất xứ</p>
+                                <p class="text-sm font-semibold" id="vaccineOrigin">-</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-[#61896f] mb-1">Đối tượng</p>
+                                <p class="text-sm font-semibold" id="vaccineTarget">-</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-[#61896f] mb-1">Trạng thái</p>
+                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" id="vaccineStatus">CÒN HÀNG</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                    <!-- Middle Section: Tabs and Content -->
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- Left: Tabs Content -->
+                <div class="lg:w-2/3 space-y-6">
+                    <!-- Tabs -->
+                    <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-primary/20 dark:border-primary/30 p-6 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-primary-light to-primary-dark"></div>
+                        <div class="flex gap-2 mb-6 border-b-2 border-primary/20 dark:border-primary/30 relative z-10">
+                            <button class="tab-button active-tab px-6 py-3 rounded-t-lg font-semibold transition-all relative group" data-tab="schedule">
+                                <span class="relative z-10">Phác đồ tiêm</span>
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-primary-dark opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            </button>
+                            <button class="tab-button px-6 py-3 rounded-t-lg font-semibold transition-all hover:bg-primary/5 dark:hover:bg-primary/10 relative group" data-tab="product">
+                                <span class="relative z-10">Thông tin sản phẩm</span>
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-primary-dark opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            </button>
+                            <button class="tab-button px-6 py-3 rounded-t-lg font-semibold transition-all hover:bg-primary/5 dark:hover:bg-primary/10 relative group" data-tab="notes">
+                                <span class="relative z-10">Lưu ý sau tiêm</span>
+                                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-primary-dark opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            </button>
+                        </div>
+                        
+                        <!-- Tab Content: Phác đồ tiêm -->
+                        <div id="tabSchedule" class="tab-content">
+                            <h3 class="text-lg font-bold mb-4">Phác đồ tiêm chi tiết</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full border-collapse">
+                                    <thead>
+                                        <tr class="bg-[#f0f4f2] dark:bg-[#2d3f33]">
+                                            <th class="border border-[#e2e8f0] dark:border-[#2d3f33] px-4 py-3 text-left font-semibold">Đối tượng</th>
+                                            <th class="border border-[#e2e8f0] dark:border-[#2d3f33] px-4 py-3 text-left font-semibold">Lịch tiêm</th>
+                                            <th class="border border-[#e2e8f0] dark:border-[#2d3f33] px-4 py-3 text-left font-semibold">Ghi chú</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="scheduleTableBody">
+                                        <!-- Sẽ được populate bằng JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Tab Content: Thông tin sản phẩm -->
+                        <div id="tabProduct" class="tab-content hidden">
+                            <h3 class="text-lg font-bold mb-4">Thông tin sản phẩm</h3>
+                            <div class="space-y-4" id="productInfo">
+                                <!-- Sẽ được populate bằng JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- Tab Content: Lưu ý sau tiêm -->
+                        <div id="tabNotes" class="tab-content hidden">
+                            <h3 class="text-lg font-bold mb-4">Lưu ý sau tiêm</h3>
+                            <div class="space-y-4" id="afterVaccinationNotes">
+                                <div class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-4 rounded">
+                                    <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                                        <strong>Lưu ý quan trọng:</strong> Sau khi tiêm vaccine, bạn nên ở lại trung tâm ít nhất 15-30 phút để theo dõi phản ứng phụ. Nếu có bất kỳ triệu chứng bất thường nào, hãy báo ngay cho nhân viên y tế.
+                                    </p>
+                                </div>
+                                <div class="space-y-2">
+                                    <p class="font-semibold">Các phản ứng phụ thường gặp:</p>
+                                    <ul class="list-disc list-inside space-y-1 text-sm text-[#61896f]">
+                                        <li>Đau, sưng, đỏ tại vị trí tiêm</li>
+                                        <li>Sốt nhẹ</li>
+                                        <li>Mệt mỏi, đau đầu</li>
+                                        <li>Đau cơ, đau khớp</li>
+                                    </ul>
+                                </div>
+                                <div class="space-y-2">
+                                    <p class="font-semibold">Khi nào cần liên hệ bác sĩ:</p>
+                                    <ul class="list-disc list-inside space-y-1 text-sm text-[#61896f]">
+                                        <li>Sốt cao trên 39°C</li>
+                                        <li>Phản ứng dị ứng nghiêm trọng</li>
+                                        <li>Khó thở, tức ngực</li>
+                                        <li>Triệu chứng kéo dài hơn 48 giờ</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Thông tin quan trọng -->
+                    <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-[#e2e8f0] dark:border-[#2d3f33] p-6">
+                        <h3 class="text-lg font-bold mb-4">Thông tin quan trọng</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-semibold mb-2 text-primary">Chỉ định</h4>
+                                <p class="text-sm text-[#61896f]" id="indications">-</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-2 text-red-600">Chống chỉ định</h4>
+                                <p class="text-sm text-[#61896f]" id="contraindications">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right: Booking Section -->
+                <div class="lg:w-1/3">
+                    <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-primary/20 dark:border-primary/30 p-6 sticky top-24 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-primary-light to-primary-dark"></div>
+                        <h3 class="text-lg font-bold mb-4 relative z-10 flex items-center gap-2">
+                            <span class="size-8 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center">
+                                <span class="material-symbols-outlined text-white text-sm">event</span>
+                            </span>
+                            Đặt lịch tiêm chủng
+                        </h3>
+                        
+                        <!-- Two Options: Self-booking or Consultation -->
+                        <div class="space-y-3 mb-6 relative z-10">
+                            <button id="selfBookingBtn" class="w-full bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95">
+                                <span class="material-symbols-outlined">event</span>
+                                <span>Đặt lịch ngay</span>
+                            </button>
+                            <button id="consultationBtn" class="w-full bg-white dark:bg-[#1a2e21] border-2 border-primary/30 text-primary hover:bg-primary/5 dark:hover:bg-primary/10 hover:border-primary/50 px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95">
+                                <span class="material-symbols-outlined">support_agent</span>
+                                <span>Cần tư vấn</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Self-booking Form -->
+                        <div id="selfBookingForm" class="space-y-4 hidden">
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Chọn trung tâm gần bạn</label>
+                                <select id="centerSelect" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                                    <option value="">Đang tải...</option>
+                                </select>
+                            </div>
+                            
+                            <div id="availabilityInfo" class="hidden">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                                    <span class="text-sm font-semibold text-green-600">Còn hàng</span>
+                                    <a href="#" class="text-sm text-primary hover:underline ml-auto">xem số lượng</a>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Ngày dự kiến tiêm</label>
+                                <input type="date" id="vaccinationDate" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white" min="">
+                            </div>
+                            
+                            <!-- Available Slots -->
+                            <div id="slotsContainer" class="hidden">
+                                <label class="block text-sm font-semibold mb-2">Chọn khung giờ</label>
+                                <div id="slotsList" class="space-y-2 max-h-60 overflow-y-auto">
+                                    <!-- Slots will be populated here -->
+                                </div>
+                                <p id="noSlotsMessage" class="hidden text-sm text-[#61896f] text-center mt-2">Không có slot trống cho ngày này</p>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Đặt cho</label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="bookingFor" value="self" checked class="text-primary">
+                                        <span>Bản thân</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="bookingFor" value="family" class="text-primary">
+                                        <span>Người thân</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div id="bookingFamilyMemberSelect" class="hidden">
+                                <label class="block text-sm font-semibold mb-2">Chọn người thân</label>
+                                <select id="bookingBookedForUserId" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                                    <option value="">Đang tải...</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Số điện thoại <span class="text-red-500">*</span></label>
+                                <input type="tel" id="bookingPhoneNumber" placeholder="0123456789" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                                <p class="mt-1 text-xs text-[#61896f]">Số điện thoại sẽ được sử dụng để liên hệ về lịch hẹn</p>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Ghi chú (tùy chọn)</label>
+                                <textarea id="bookingNotes" rows="2" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white" placeholder="Thông tin bổ sung..."></textarea>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Phương thức thanh toán <span class="text-red-500">*</span></label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="paymentMethod" value="CASH" checked class="text-primary">
+                                        <span>Thanh toán tiền mặt tại trung tâm</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="paymentMethod" value="VNPAY" class="text-primary">
+                                        <span>Thanh toán online qua VNPay</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <button id="bookAppointmentBtn" class="w-full bg-primary hover:bg-primary-dark text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span id="bookingSubmitText">Đặt lịch ngay</span>
+                                <span id="bookingSubmitSpinner" class="hidden animate-spin material-symbols-outlined">sync</span>
+                            </button>
+                            
+                            <a href="#" id="goToAppointmentPageBtn" class="w-full bg-white dark:bg-[#1a2e21] border-2 border-primary text-primary hover:bg-primary/5 dark:hover:bg-primary/10 px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all mt-3">
+                                <span class="material-symbols-outlined">calendar_month</span>
+                                <span>Đặt lịch ở trang đặt lịch</span>
+                            </a>
+                            
+                            <div id="bookingMessage" class="hidden p-3 rounded-xl text-sm font-semibold"></div>
+                            
+                            <p class="text-xs text-[#61896f] text-center">
+                                *Giá vaccine có thể thay đổi tùy thời điểm. Nhân viên VacciCare sẽ liên hệ xác nhận sau khi bạn đăng ký thành công.
+                            </p>
+                        </div>
+                        
+                        <!-- Consultation Form -->
+                        <div id="consultationForm" class="space-y-4 hidden">
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Đặt cho</label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="bookFor" value="self" checked class="text-primary">
+                                        <span>Bản thân</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="bookFor" value="family" class="text-primary">
+                                        <span>Người thân</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div id="familyMemberSelect" class="hidden">
+                                <label class="block text-sm font-semibold mb-2">Chọn người thân</label>
+                                <select id="bookedForUserId" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                                    <option value="">Đang tải...</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Số điện thoại liên hệ <span class="text-red-500">*</span></label>
+                                <input type="tel" id="consultationPhone" required
+                                       class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white"
+                                       placeholder="0901234567">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Lý do cần tư vấn (tùy chọn)</label>
+                                <textarea id="reason" rows="3"
+                                          class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white"
+                                          placeholder="Ví dụ: Cần tư vấn về lịch tiêm cho trẻ 2 tuổi..."></textarea>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Ghi chú thêm (tùy chọn)</label>
+                                <textarea id="notes" rows="2"
+                                          class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white"
+                                          placeholder="Thông tin bổ sung..."></textarea>
+                            </div>
+                            
+                            <p class="text-xs text-[#61896f] text-center italic">
+                                Bạn có thể chủ động liên hệ qua hotline <strong>999-999-9999</strong> để nhận được tư vấn
+                            </p>
+                            
+                            <button id="submitConsultationBtn" class="w-full bg-primary hover:bg-primary-dark text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span id="consultationSubmitText">Gửi yêu cầu tư vấn</span>
+                                <span id="consultationSubmitSpinner" class="hidden animate-spin material-symbols-outlined">sync</span>
+                            </button>
+                            
+                            <div id="consultationMessage" class="hidden p-3 rounded-xl text-sm font-semibold"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Section: Similar Vaccines -->
+            <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-[#e2e8f0] dark:border-[#2d3f33] p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">Vaccine tương tự</h3>
+                    <div class="flex gap-2">
+                        <button id="prevSimilar" class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors disabled:opacity-50">
+                            <span class="material-symbols-outlined">chevron_left</span>
+                        </button>
+                        <button id="nextSimilar" class="p-2 rounded-lg hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] transition-colors disabled:opacity-50">
+                            <span class="material-symbols-outlined">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="similarVaccinesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Sẽ được populate bằng JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden flex items-center justify-center min-h-[60vh]">
+            <div class="text-center">
+                <span class="material-symbols-outlined text-6xl text-red-500 mb-4">error</span>
+                <p class="text-red-600 dark:text-red-400 font-semibold mb-2">Không tìm thấy vaccine</p>
+                <a href="/vaccines" class="text-primary hover:underline">Quay lại danh sách vaccine</a>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    // Lấy vaccineId từ Thymeleaf hoặc từ URL
+    let vaccineId = /*[[${vaccineId}]]*/ null;
+    
+    // Nếu không có từ Thymeleaf, lấy từ URL
+    if (!vaccineId) {
+        const pathParts = window.location.pathname.split('/');
+        const idFromUrl = pathParts[pathParts.length - 1];
+        if (idFromUrl && !isNaN(idFromUrl)) {
+            vaccineId = parseInt(idFromUrl);
+        }
+    }
+    
+    console.log('Vaccine ID:', vaccineId);
+    
+    let vaccineData = null;
+    let centers = [];
+    let similarVaccines = [];
+    let currentSimilarIndex = 0;
+    let availableSlots = [];
+    let selectedSlotId = null;
+    
+    // Store booking data temporarily
+    let pendingBookingData = null;
+    let currentVerificationType = 'user'; // 'user' or 'family'
+    let currentVerificationId = null; // user ID or family member ID
+
+    // Set min date to today
+    document.getElementById('vaccinationDate').min = new Date().toISOString().split('T')[0];
+
+    // Tab switching
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const tab = button.dataset.tab;
+            
+            // Remove active class from all buttons and tabs
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active-tab');
+                btn.classList.add('hover:bg-[#f0f4f2]', 'dark:hover:bg-[#2d3f33]');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Add active class to clicked button and corresponding tab
+            button.classList.add('active-tab');
+            button.classList.remove('hover:bg-[#f0f4f2]', 'dark:hover:bg-[#2d3f33]');
+            document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden');
+        });
+    });
+
+    // Load vaccine detail
+    async function loadVaccineDetail() {
+        if (!vaccineId) {
+            console.error('Vaccine ID is missing');
+            showError();
+            return;
+        }
+
+        try {
+            console.log('Loading vaccine detail for ID:', vaccineId);
+            // Load vaccine data
+            const response = await fetch(`/api/vaccines/${vaccineId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            });
+
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Failed to load vaccine. Status:', response.status);
+                console.error('Error response:', errorText);
+                showError();
+                return;
+            }
+
+            vaccineData = await response.json();
+            console.log('Vaccine data loaded:', vaccineData);
+            renderVaccineDetail();
+            
+            // Load centers and similar vaccines
+            await Promise.all([
+                loadCenters(),
+                loadSimilarVaccines()
+            ]);
+        } catch (error) {
+            console.error('Error loading vaccine detail:', error);
+            console.error('Error stack:', error.stack);
+            showError();
+        } finally {
+            document.getElementById('loadingState').classList.add('hidden');
+        }
+    }
+
+    function renderVaccineDetail() {
+        if (!vaccineData) return;
+
+        // Basic info
+        document.getElementById('vaccineName').textContent = vaccineData.name;
+        document.getElementById('vaccineDescription').textContent = vaccineData.description || 'Vaccine phòng bệnh hiệu quả';
+        document.getElementById('vaccinePrice').textContent = formatPrice(vaccineData.price);
+        document.getElementById('vaccineOrigin').textContent = vaccineData.origin || '-';
+        
+        // Category from diseases
+        if (vaccineData.diseases && vaccineData.diseases.length > 0) {
+            document.getElementById('vaccineCategory').textContent = vaccineData.diseases.map(d => d.name.toUpperCase()).join(' - ');
+        }
+        
+        // Target audience
+        let targetText = '';
+        if (vaccineData.minAge !== null && vaccineData.maxAge !== null) {
+            targetText = `Từ ${vaccineData.minAge} tháng tuổi`;
+        } else if (vaccineData.minAge !== null) {
+            targetText = `Từ ${vaccineData.minAge} tháng tuổi`;
+        } else {
+            targetText = 'Mọi lứa tuổi';
+        }
+        document.getElementById('vaccineTarget').textContent = targetText;
+        
+        // Status
+        const statusEl = document.getElementById('vaccineStatus');
+        if (vaccineData.status === 'AVAILABLE') {
+            statusEl.textContent = 'CÒN HÀNG';
+            statusEl.className = 'px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+        } else {
+            statusEl.textContent = 'HẾT HÀNG';
+            statusEl.className = 'px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+        }
+        
+        // Image
+        const imageContainer = document.getElementById('vaccineImageContainer');
+        if (vaccineData.imageUrl) {
+            imageContainer.innerHTML = `<img src="${vaccineData.imageUrl}" alt="${vaccineData.name}" class="w-full h-full object-contain">`;
+        }
+        
+        // Schedule table
+        renderScheduleTable();
+        
+        // Product info
+        renderProductInfo();
+        
+        // Indications and contraindications
+        document.getElementById('indications').textContent = vaccineData.description || 'Vaccine phòng bệnh hiệu quả';
+        document.getElementById('contraindications').textContent = vaccineData.contraindications || 'Không có chống chỉ định đặc biệt. Tham khảo ý kiến bác sĩ trước khi tiêm.';
+        
+        document.getElementById('vaccineDetailContent').classList.remove('hidden');
+    }
+
+    function renderScheduleTable() {
+        const tbody = document.getElementById('scheduleTableBody');
+        tbody.innerHTML = '';
+        
+        if (!vaccineData) return;
+        
+        // Generate schedule based on vaccine data
+        const schedules = [];
+        
+        if (vaccineData.minAge !== null && vaccineData.minAge <= 18 && vaccineData.maxAge !== null && vaccineData.maxAge <= 18) {
+            // Children only
+            schedules.push({
+                target: `Trẻ ${vaccineData.minAge} tháng - ${vaccineData.maxAge} tuổi (Lần đầu)`,
+                schedule: `${vaccineData.dosesRequired} mũi: Mũi 2 cách mũi 1 ít nhất ${vaccineData.daysBetweenDoses || 28} ngày`,
+                note: vaccineData.dosesRequired > 1 ? 'Tiêm nhắc lại hàng năm 01 liều' : 'Tiêm nhắc lại hàng năm 01 liều'
+            });
+        } else if (vaccineData.minAge === null || vaccineData.minAge >= 18) {
+            // Adults
+            schedules.push({
+                target: 'Người lớn',
+                schedule: `${vaccineData.dosesRequired} mũi${vaccineData.dosesRequired > 1 ? `: Mũi 2 cách mũi 1 ít nhất ${vaccineData.daysBetweenDoses || 28} ngày` : ' duy nhất'}.`,
+                note: 'Tiêm nhắc lại hàng năm 01 liều'
+            });
+        } else {
+            // Both children and adults
+            schedules.push({
+                target: `Trẻ ${vaccineData.minAge} tháng - 9 tuổi (Lần đầu)`,
+                schedule: `${vaccineData.dosesRequired} mũi: Mũi 2 cách mũi 1 ít nhất ${vaccineData.daysBetweenDoses || 28} ngày`,
+                note: 'Tiêm nhắc lại hàng năm 01 liều'
+            });
+            schedules.push({
+                target: 'Trẻ ≥ 9 tuổi & Người lớn',
+                schedule: '01 mũi duy nhất.',
+                note: 'Tiêm nhắc lại hàng năm 01 liều'
+            });
+        }
+        
+        schedules.forEach(schedule => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="border border-[#e2e8f0] dark:border-[#2d3f33] px-4 py-3">${schedule.target}</td>
+                <td class="border border-[#e2e8f0] dark:border-[#2d3f33] px-4 py-3">${schedule.schedule}</td>
+                <td class="border border-[#e2e8f0] dark:border-[#2d3f33] px-4 py-3">${schedule.note}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function renderProductInfo() {
+        const container = document.getElementById('productInfo');
+        container.innerHTML = '';
+        
+        if (!vaccineData) return;
+        
+        const info = [
+            { label: 'Tên vaccine', value: vaccineData.name },
+            { label: 'Mã vaccine', value: vaccineData.code },
+            { label: 'Nhà sản xuất', value: vaccineData.manufacturer || '-' },
+            { label: 'Xuất xứ', value: vaccineData.origin || '-' },
+            { label: 'Số mũi cần thiết', value: vaccineData.dosesRequired || '-' },
+            { label: 'Khoảng cách giữa các mũi', value: vaccineData.daysBetweenDoses ? `${vaccineData.daysBetweenDoses} ngày` : '-' },
+            { label: 'Nhiệt độ bảo quản', value: vaccineData.storageTemperature || '-' },
+            { label: 'Mô tả', value: vaccineData.description || '-' }
+        ];
+        
+        info.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'border-b border-[#e2e8f0] dark:border-[#2d3f33] pb-2';
+            div.innerHTML = `
+                <p class="text-sm font-semibold mb-1">${item.label}</p>
+                <p class="text-sm text-[#61896f]">${item.value}</p>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    async function loadCenters() {
+        try {
+            console.log('Loading centers for vaccine ID:', vaccineId);
+            const response = await fetch(`/api/vaccines/${vaccineId}/centers`, {
+                credentials: 'include'
+            });
+            
+            console.log('Centers response status:', response.status);
+            
+            if (response.ok) {
+                centers = await response.json();
+                console.log('Centers loaded:', centers);
+                renderCenters();
+            } else {
+                const errorText = await response.text();
+                console.error('Failed to load centers. Status:', response.status, 'Error:', errorText);
+            }
+        } catch (error) {
+            console.error('Error loading centers:', error);
+        }
+    }
+
+    function renderCenters() {
+        const select = document.getElementById('centerSelect');
+        select.innerHTML = '<option value="">Chọn trung tâm</option>';
+        
+        if (!centers || centers.length === 0) {
+            console.warn('No centers found for this vaccine');
+            select.innerHTML = '<option value="">Không có trung tâm nào</option>';
+            return;
+        }
+        
+        centers.forEach(center => {
+            const option = document.createElement('option');
+            option.value = center.id;
+            option.textContent = center.name + (center.stockQuantity ? ` (Còn ${center.stockQuantity} liều)` : '');
+            select.appendChild(option);
+        });
+        
+        if (centers.length > 0) {
+            const availabilityInfo = document.getElementById('availabilityInfo');
+            if (availabilityInfo) {
+                availabilityInfo.classList.remove('hidden');
+            }
+        }
+    }
+
+    async function loadSimilarVaccines() {
+        try {
+            const response = await fetch(`/api/vaccines/${vaccineId}/similar`, {
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                similarVaccines = await response.json();
+                renderSimilarVaccines();
+            }
+        } catch (error) {
+            console.error('Error loading similar vaccines:', error);
+        }
+    }
+
+    function renderSimilarVaccines() {
+        const container = document.getElementById('similarVaccinesContainer');
+        container.innerHTML = '';
+        
+        if (similarVaccines.length === 0) {
+            container.innerHTML = '<p class="text-[#61896f] col-span-full text-center">Không có vaccine tương tự</p>';
+            return;
+        }
+        
+        similarVaccines.forEach(vaccine => {
+            const card = document.createElement('div');
+            card.className = 'bg-white dark:bg-[#1a2e21] rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] p-4 hover:shadow-lg transition-all cursor-pointer';
+            card.onclick = () => window.location.href = `/vaccines/${vaccine.id}`;
+            
+            const originMap = {
+                'Mỹ': 'MỸ',
+                'Pháp': 'PHÁP',
+                'Bỉ': 'BỈ',
+                'Hà Lan': 'HÀ LAN',
+                'Việt Nam': 'VIỆT NAM',
+                'Anh/Thụy Điển': 'ANH',
+                'Nhật Bản': 'NHẬT BẢN',
+                'Ấn Độ': 'ẤN ĐỘ',
+                'Hàn Quốc': 'HÀN QUỐC'
+            };
+            const originBadge = originMap[vaccine.origin] || vaccine.origin?.toUpperCase() || '';
+            
+            card.innerHTML = `
+                <div class="w-full h-32 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+                    ${vaccine.imageUrl ? 
+                        `<img src="${vaccine.imageUrl}" alt="${vaccine.name}" class="w-full h-full object-contain">` :
+                        `<span class="material-symbols-outlined text-4xl text-primary/50">vaccines</span>`
+                    }
+                </div>
+                <div class="flex justify-between items-start mb-2">
+                    <span class="px-2 py-1 rounded text-xs font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">${originBadge}</span>
+                </div>
+                <h4 class="font-bold text-sm mb-1 line-clamp-2">${vaccine.name}</h4>
+                <p class="text-xs text-[#61896f] mb-2 line-clamp-2">${vaccine.description || ''}</p>
+                <p class="text-lg font-bold text-primary">${formatPrice(vaccine.price)}</p>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function formatPrice(price) {
+        if (!price) return '0₫';
+        const priceNum = typeof price === 'number' ? price : parseFloat(price) || 0;
+        return new Intl.NumberFormat('vi-VN').format(priceNum) + '₫';
+    }
+
+    function showError() {
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('errorState').classList.remove('hidden');
+    }
+
+    // Toggle between self-booking and consultation
+    document.getElementById('selfBookingBtn').addEventListener('click', () => {
+        document.getElementById('selfBookingForm').classList.remove('hidden');
+        document.getElementById('consultationForm').classList.add('hidden');
+        document.getElementById('selfBookingBtn').classList.add('bg-primary', 'text-white');
+        document.getElementById('selfBookingBtn').classList.remove('bg-white', 'dark:bg-[#1a2e21]', 'border-2', 'border-primary', 'text-primary');
+        document.getElementById('consultationBtn').classList.remove('bg-primary', 'text-white');
+        document.getElementById('consultationBtn').classList.add('bg-white', 'dark:bg-[#1a2e21]', 'border-2', 'border-primary', 'text-primary');
+    });
+    
+    document.getElementById('consultationBtn').addEventListener('click', () => {
+        document.getElementById('consultationForm').classList.remove('hidden');
+        document.getElementById('selfBookingForm').classList.add('hidden');
+        document.getElementById('consultationBtn').classList.add('bg-primary', 'text-white');
+        document.getElementById('consultationBtn').classList.remove('bg-white', 'dark:bg-[#1a2e21]', 'border-2', 'border-primary', 'text-primary');
+        document.getElementById('selfBookingBtn').classList.remove('bg-primary', 'text-white');
+        document.getElementById('selfBookingBtn').classList.add('bg-white', 'dark:bg-[#1a2e21]', 'border-2', 'border-primary', 'text-primary');
+        
+        // Load family members if needed
+        loadFamilyMembers();
+    });
+    
+    // Handle bookFor radio change
+    document.querySelectorAll('input[name="bookFor"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'family') {
+                document.getElementById('familyMemberSelect').classList.remove('hidden');
+                loadFamilyMembers();
+            } else {
+                document.getElementById('familyMemberSelect').classList.add('hidden');
+            }
+        });
+    });
+    
+    // Load family members
+    async function loadFamilyMembers() {
+        try {
+            const response = await fetch('/api/family-members', {
+                credentials: 'include'
+            });
+            if (response.ok) {
+                const members = await response.json();
+                const select = document.getElementById('bookedForUserId');
+                select.innerHTML = '<option value="">Chọn người thân</option>';
+                members.forEach(member => {
+                    const option = document.createElement('option');
+                    option.value = member.id;
+                    option.textContent = member.fullName;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading family members:', error);
+        }
+    }
+    
+    // Submit consultation request
+    document.getElementById('submitConsultationBtn').addEventListener('click', async () => {
+        const submitBtn = document.getElementById('submitConsultationBtn');
+        const submitText = document.getElementById('consultationSubmitText');
+        const submitSpinner = document.getElementById('consultationSubmitSpinner');
+        const messageDiv = document.getElementById('consultationMessage');
+        const phone = document.getElementById('consultationPhone').value;
+        
+        if (!phone) {
+            messageDiv.className = 'p-3 rounded-xl text-sm font-semibold bg-red-50 text-red-700 border border-red-200';
+            messageDiv.textContent = 'Vui lòng nhập số điện thoại';
+            messageDiv.classList.remove('hidden');
+            return;
+        }
+        
+        // Disable button and show loading
+        submitBtn.disabled = true;
+        submitText.textContent = 'Đang gửi...';
+        submitSpinner.classList.remove('hidden');
+        messageDiv.classList.add('hidden');
+        
+        // Collect form data
+        const bookFor = document.querySelector('input[name="bookFor"]:checked').value;
+        const formData = {
+            bookedForUserId: bookFor === 'family' ? document.getElementById('bookedForUserId').value || null : null,
+            vaccineId: vaccineId || null,
+            consultationPhone: phone,
+            reason: document.getElementById('reason').value || null,
+            notes: document.getElementById('notes').value || null
+        };
+        
+        try {
+            const response = await fetch('/api/appointments/consultation-request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(formData)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                // Success
+                messageDiv.className = 'p-3 rounded-xl text-sm font-semibold bg-green-50 text-green-700 border border-green-200';
+                messageDiv.textContent = 'Gửi yêu cầu tư vấn thành công! Lễ tân sẽ liên hệ với bạn trong thời gian sớm nhất.';
+                messageDiv.classList.remove('hidden');
+                
+                // Reset form
+                document.getElementById('consultationForm').querySelectorAll('input, textarea, select').forEach(el => {
+                    if (el.type !== 'radio') el.value = '';
+                });
+                document.querySelector('input[name="bookFor"][value="self"]').checked = true;
+                document.getElementById('familyMemberSelect').classList.add('hidden');
+            } else {
+                // Error
+                messageDiv.className = 'p-3 rounded-xl text-sm font-semibold bg-red-50 text-red-700 border border-red-200';
+                messageDiv.textContent = result.error || 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+                messageDiv.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error submitting consultation request:', error);
+            messageDiv.className = 'p-3 rounded-xl text-sm font-semibold bg-red-50 text-red-700 border border-red-200';
+            messageDiv.textContent = 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+            messageDiv.classList.remove('hidden');
+        } finally {
+            // Re-enable button
+            submitBtn.disabled = false;
+            submitText.textContent = 'Gửi yêu cầu tư vấn';
+            submitSpinner.classList.add('hidden');
+        }
+    });
+    
+    // Load available slots when center and date are selected
+    document.getElementById('centerSelect').addEventListener('change', () => {
+        const date = document.getElementById('vaccinationDate').value;
+        if (date) {
+            loadAvailableSlots();
+        }
+    });
+    
+    document.getElementById('vaccinationDate').addEventListener('change', () => {
+        const centerId = document.getElementById('centerSelect').value;
+        if (centerId) {
+            loadAvailableSlots();
+        }
+    });
+    
+    // Load available slots
+    async function loadAvailableSlots() {
+        const centerId = document.getElementById('centerSelect').value;
+        const date = document.getElementById('vaccinationDate').value;
+        const slotsContainer = document.getElementById('slotsContainer');
+        const slotsList = document.getElementById('slotsList');
+        const noSlotsMessage = document.getElementById('noSlotsMessage');
+        
+        if (!centerId || !date) {
+            slotsContainer.classList.add('hidden');
+            return;
+        }
+        
+        try {
+            // Format date to YYYY-MM-DD
+            const formattedDate = date;
+            const response = await fetch(`/api/appointment-slots/available/center/${centerId}/date/${formattedDate}`, {
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                availableSlots = await response.json();
+                slotsList.innerHTML = '';
+                selectedSlotId = null;
+                
+                if (availableSlots.length === 0) {
+                    slotsContainer.classList.remove('hidden');
+                    noSlotsMessage.classList.remove('hidden');
+                } else {
+                    slotsContainer.classList.remove('hidden');
+                    noSlotsMessage.classList.add('hidden');
+                    
+                    availableSlots.forEach(slot => {
+                        const slotDiv = document.createElement('div');
+                        const remaining = slot.maxCapacity - slot.currentBookings;
+                        const isAvailable = remaining > 0;
+                        
+                        slotDiv.className = `p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                            isAvailable 
+                                ? 'border-[#e2e8f0] dark:border-[#2d3f33] hover:border-primary hover:bg-primary/5 dark:hover:bg-primary/10' 
+                                : 'border-gray-300 opacity-50 cursor-not-allowed'
+                        } ${selectedSlotId === slot.id ? 'border-primary bg-primary/10 dark:bg-primary/20' : ''}`;
+                        
+                        slotDiv.onclick = () => {
+                            if (isAvailable) {
+                                selectedSlotId = slot.id;
+                                // Update UI
+                                document.querySelectorAll('#slotsList > div').forEach(div => {
+                                    div.classList.remove('border-primary', 'bg-primary/10', 'dark:bg-primary/20');
+                                });
+                                slotDiv.classList.add('border-primary', 'bg-primary/10', 'dark:bg-primary/20');
+                            }
+                        };
+                        
+                        const timeStr = `${slot.startTime.substring(0, 5)} - ${slot.endTime.substring(0, 5)}`;
+                        slotDiv.innerHTML = `
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-semibold">${timeStr}</p>
+                                    <p class="text-xs text-[#61896f]">Còn ${remaining}/${slot.maxCapacity} chỗ</p>
+                                </div>
+                                ${selectedSlotId === slot.id ? '<span class="material-symbols-outlined text-primary">check_circle</span>' : ''}
+                            </div>
+                        `;
+                        
+                        slotsList.appendChild(slotDiv);
+                    });
+                }
+            } else {
+                slotsContainer.classList.add('hidden');
+                console.error('Failed to load slots');
+            }
+        } catch (error) {
+            console.error('Error loading slots:', error);
+            slotsContainer.classList.add('hidden');
+        }
+    }
+    
+    // Handle bookingFor radio change
+    document.querySelectorAll('input[name="bookingFor"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'family') {
+                document.getElementById('bookingFamilyMemberSelect').classList.remove('hidden');
+                loadFamilyMembersForBooking();
+            } else {
+                document.getElementById('bookingFamilyMemberSelect').classList.add('hidden');
+            }
+        });
+    });
+    
+    // Load family members for booking
+    async function loadFamilyMembersForBooking() {
+        try {
+            const response = await fetch('/api/family-members', {
+                credentials: 'include'
+            });
+            if (response.ok) {
+                const members = await response.json();
+                const select = document.getElementById('bookingBookedForUserId');
+                select.innerHTML = '<option value="">Chọn người thân</option>';
+                members.forEach(member => {
+                    const option = document.createElement('option');
+                    option.value = member.id;
+                    option.textContent = member.fullName;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading family members:', error);
+        }
+    }
+    
+    // Book appointment (self-booking)
+    document.getElementById('bookAppointmentBtn').addEventListener('click', async () => {
+        const centerId = document.getElementById('centerSelect').value;
+        const date = document.getElementById('vaccinationDate').value;
+        const slotId = selectedSlotId;
+        const bookingFor = document.querySelector('input[name="bookingFor"]:checked').value;
+        const bookedForUserId = bookingFor === 'family' ? document.getElementById('bookingBookedForUserId').value : null;
+        const phoneNumber = document.getElementById('bookingPhoneNumber').value.trim();
+        const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+        const notes = document.getElementById('bookingNotes').value || null;
+        
+        if (!centerId || !date || !slotId) {
+            showMessage('Vui lòng chọn trung tâm, ngày và khung giờ', 'error');
+            return;
+        }
+        
+        if (bookingFor === 'family' && !bookedForUserId) {
+            showMessage('Vui lòng chọn người thân', 'error');
+            return;
+        }
+        
+        if (!phoneNumber) {
+            showMessage('Vui lòng nhập số điện thoại', 'error');
+            return;
+        }
+        
+        const submitBtn = document.getElementById('bookAppointmentBtn');
+        const submitText = document.getElementById('bookingSubmitText');
+        const submitSpinner = document.getElementById('bookingSubmitSpinner');
+        
+        // Disable button and show loading
+        submitBtn.disabled = true;
+        submitText.textContent = 'Đang đặt lịch...';
+        submitSpinner.classList.remove('hidden');
+        
+        // Store booking data (doseNumber sẽ được tính tự động ở backend)
+        pendingBookingData = {
+            vaccineId: vaccineId,
+            centerId: parseInt(centerId),
+            slotId: parseInt(slotId),
+            bookedForUserId: bookedForUserId ? parseInt(bookedForUserId) : null,
+            phoneNumber: phoneNumber,
+            paymentMethod: paymentMethod,
+            notes: notes
+        };
+        
+        // Check phone verification before booking
+        try {
+            if (bookingFor === 'family') {
+                // Lấy thông tin user hiện tại để kiểm tra số điện thoại
+                const userStatusResponse = await fetch('/api/phone/verification-status', {
+                    credentials: 'include'
+                });
+                
+                let userPhoneVerified = false;
+                let userPhoneNumber = null;
+                
+                if (userStatusResponse.ok) {
+                    const userStatus = await userStatusResponse.json();
+                    userPhoneVerified = userStatus.verified;
+                    userPhoneNumber = userStatus.phoneNumber;
+                }
+                
+                // Kiểm tra số điện thoại trong form có trùng với số của user đã xác thực không
+                if (userPhoneVerified && userPhoneNumber && 
+                    normalizePhoneNumber(userPhoneNumber) === normalizePhoneNumber(phoneNumber)) {
+                    // Số điện thoại trùng với số của user đã xác thực → không cần xác thực lại
+                    await submitBooking();
+                    return;
+                }
+                
+                // Kiểm tra số điện thoại của family member
+                const statusResponse = await fetch(`/api/phone/verification-status/family-member/${bookedForUserId}`, {
+                    credentials: 'include'
+                });
+                if (statusResponse.ok) {
+                    const status = await statusResponse.json();
+                    // Kiểm tra số điện thoại trong form có khớp với số đã xác thực của family member không
+                    if (status.verified && status.phoneNumber && 
+                        normalizePhoneNumber(status.phoneNumber) === normalizePhoneNumber(phoneNumber)) {
+                        // Số điện thoại đã được xác thực cho family member
+                        await submitBooking();
+                        return;
+                    }
+                }
+                
+                // Cần xác thực số điện thoại cho family member
+                currentVerificationType = 'family';
+                currentVerificationId = parseInt(bookedForUserId);
+                // Set phone number in modal
+                document.getElementById('phoneNumberInput').value = phoneNumber;
+                openPhoneVerificationModal();
+                submitBtn.disabled = false;
+                submitText.textContent = 'Đặt lịch ngay';
+                submitSpinner.classList.add('hidden');
+                return;
+            } else {
+                // Check user phone verification
+                const statusResponse = await fetch('/api/phone/verification-status', {
+                    credentials: 'include'
+                });
+                if (statusResponse.ok) {
+                    const status = await statusResponse.json();
+                    // Kiểm tra số điện thoại trong form có khớp với số đã xác thực không
+                    if (status.verified && status.phoneNumber) {
+                        const normalizedStatusPhone = normalizePhoneNumber(status.phoneNumber);
+                        const normalizedFormPhone = normalizePhoneNumber(phoneNumber);
+                        
+                        // Nếu số điện thoại khớp, không cần xác thực lại
+                        if (normalizedStatusPhone === normalizedFormPhone) {
+                            await submitBooking();
+                            return;
+                        }
+                    }
+                }
+                
+                // Need to verify user phone
+                currentVerificationType = 'user';
+                currentVerificationId = null; // Will get from API
+                // Set phone number in modal
+                document.getElementById('phoneNumberInput').value = phoneNumber;
+                openPhoneVerificationModal();
+                submitBtn.disabled = false;
+                submitText.textContent = 'Đặt lịch ngay';
+                submitSpinner.classList.add('hidden');
+                return;
+            }
+        } catch (error) {
+            console.error('Error checking phone verification:', error);
+            // Try to book anyway, let backend handle validation
+            await submitBooking();
+        }
+    });
+
+    // Go to appointment page
+    document.getElementById('goToAppointmentPageBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        if (vaccineId) {
+            window.location.href = `/appointments?vaccineId=${vaccineId}`;
+        } else {
+            window.location.href = '/appointments';
+        }
+    });
+
+    // Load on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        loadVaccineDetail();
+        // Default show self-booking form
+        document.getElementById('selfBookingForm').classList.remove('hidden');
+        document.getElementById('selfBookingBtn').classList.add('bg-primary', 'text-white');
+        document.getElementById('selfBookingBtn').classList.remove('bg-white', 'dark:bg-[#1a2e21]', 'border-2', 'border-primary', 'text-primary');
+        
+        // Load current user phone number if available
+        loadCurrentUserPhone();
+    });
+    
+    // Load current user phone number
+    async function loadCurrentUserPhone() {
+        try {
+            const response = await fetch('/api/phone/verification-status', {
+                credentials: 'include'
+            });
+            if (response.ok) {
+                const status = await response.json();
+                // Chỉ pre-fill nếu số điện thoại đã được xác thực
+                if (status.verified && status.phoneNumber) {
+                    const phoneInput = document.getElementById('bookingPhoneNumber');
+                    if (phoneInput) {
+                        phoneInput.value = status.phoneNumber;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error loading user phone:', error);
+        }
+    }
+    
+    // Normalize phone number (loại bỏ khoảng trắng, dấu gạch ngang)
+    function normalizePhoneNumber(phoneNumber) {
+        if (!phoneNumber) return '';
+        return phoneNumber.replace(/[\s\-\(\)]/g, '').trim();
+    }
+    
+    // Phone Verification Modal Functions
+    function openPhoneVerificationModal() {
+        document.getElementById('phoneVerificationModal').classList.remove('hidden');
+        document.getElementById('phoneNumberStep').classList.remove('hidden');
+        document.getElementById('verificationCodeStep').classList.add('hidden');
+        // Giữ số điện thoại từ form đặt lịch
+        const bookingPhone = document.getElementById('bookingPhoneNumber');
+        if (bookingPhone && bookingPhone.value) {
+            document.getElementById('phoneNumberInput').value = bookingPhone.value;
+        }
+        document.getElementById('verificationCodeInput').value = '';
+        document.getElementById('phoneError').classList.add('hidden');
+        document.getElementById('codeError').classList.add('hidden');
+    }
+
+    function closePhoneVerificationModal() {
+        document.getElementById('phoneVerificationModal').classList.add('hidden');
+    }
+    
+    // Submit booking after phone verification
+    async function submitBooking() {
+        if (!pendingBookingData) return;
+
+        const submitBtn = document.getElementById('bookAppointmentBtn');
+        const submitText = document.getElementById('bookingSubmitText');
+        const submitSpinner = document.getElementById('bookingSubmitSpinner');
+        
+        // Disable button and show loading
+        submitBtn.disabled = true;
+        submitText.textContent = 'Đang đặt lịch...';
+        submitSpinner.classList.remove('hidden');
+
+        try {
+            const response = await fetch('/api/appointments/book', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(pendingBookingData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                // Check payment method
+                if (pendingBookingData.paymentMethod === 'VNPAY' && result.appointmentId) {
+                    // Redirect to VNPay
+                    try {
+                        const paymentResponse = await fetch('/api/payment/create-vnpay-url', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify({ appointmentId: result.appointmentId })
+                        });
+                        
+                        const paymentResult = await paymentResponse.json();
+                        
+                        if (paymentResponse.ok && paymentResult.vnpayUrl) {
+                            // Redirect to VNPay
+                            window.location.href = paymentResult.vnpayUrl;
+                            return;
+                        } else {
+                            showMessage('Không thể tạo link thanh toán VNPay. Vui lòng thử lại.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error creating VNPay URL:', error);
+                        showMessage('Có lỗi xảy ra khi tạo link thanh toán. Vui lòng thử lại.', 'error');
+                    }
+                } else {
+                    // Cash payment - show success message
+                    const messageDiv = document.getElementById('bookingMessage');
+                    messageDiv.className = 'p-3 rounded-xl text-sm font-semibold bg-green-50 text-green-700 border border-green-200';
+                    messageDiv.innerHTML = `
+                        <p class="font-bold mb-2">Đặt lịch thành công!</p>
+                        <p>Mã đặt lịch: <strong>${result.bookingCode}</strong></p>
+                        <p>Ngày: ${new Date(result.appointmentDate).toLocaleDateString('vi-VN')}</p>
+                        <p>Giờ: ${result.appointmentTime.substring(0, 5)}</p>
+                        <p>Trung tâm: ${result.centerName}</p>
+                    `;
+                    messageDiv.classList.remove('hidden');
+                    
+                    // Reset form
+                    document.getElementById('centerSelect').value = '';
+                    document.getElementById('vaccinationDate').value = '';
+                    document.getElementById('bookingPhoneNumber').value = '';
+                    document.getElementById('bookingNotes').value = '';
+                    document.getElementById('slotsContainer').classList.add('hidden');
+                    selectedSlotId = null;
+                    pendingBookingData = null;
+                    
+                    // Reload slots if needed
+                    setTimeout(() => {
+                        messageDiv.classList.add('hidden');
+                    }, 5000);
+                }
+            } else {
+                const messageDiv = document.getElementById('bookingMessage');
+                const errorMessage = result.error || 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+                messageDiv.className = 'p-3 rounded-xl text-sm font-semibold bg-red-50 text-red-700 border border-red-200';
+                messageDiv.textContent = errorMessage;
+                messageDiv.classList.remove('hidden');
+                
+                // Nếu là lỗi phone verification, mở modal verification
+                if (errorMessage.includes('xác thực số điện thoại') || errorMessage.includes('Số điện thoại')) {
+                    if (pendingBookingData.bookedForUserId) {
+                        currentVerificationType = 'family';
+                        currentVerificationId = pendingBookingData.bookedForUserId;
+                    } else {
+                        currentVerificationType = 'user';
+                        currentVerificationId = null;
+                    }
+                    openPhoneVerificationModal();
+                }
+            }
+        } catch (error) {
+            console.error('Error booking appointment:', error);
+            const messageDiv = document.getElementById('bookingMessage');
+            messageDiv.className = 'p-3 rounded-xl text-sm font-semibold bg-red-50 text-red-700 border border-red-200';
+            messageDiv.textContent = 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+            messageDiv.classList.remove('hidden');
+        } finally {
+            // Re-enable button
+            submitBtn.disabled = false;
+            submitText.textContent = 'Đặt lịch ngay';
+            submitSpinner.classList.add('hidden');
+        }
+    }
+    
+    // Show message helper
+    function showMessage(message, type) {
+        const messageDiv = document.getElementById('bookingMessage');
+        messageDiv.className = `p-3 rounded-xl text-sm font-semibold ${
+            type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+        }`;
+        messageDiv.textContent = message;
+        messageDiv.classList.remove('hidden');
+        setTimeout(() => {
+            messageDiv.classList.add('hidden');
+        }, 5000);
+    }
+    
+    // Send verification code (using event delegation to handle dynamic elements)
+    document.addEventListener('click', async (e) => {
+        const sendBtn = e.target.closest('#sendCodeBtn');
+        if (sendBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            let phoneNumber = document.getElementById('phoneNumberInput').value.trim();
+        if (!phoneNumber) {
+            const bookingPhone = document.getElementById('bookingPhoneNumber');
+            if (bookingPhone) {
+                phoneNumber = bookingPhone.value.trim();
+            }
+        }
+        
+        if (!phoneNumber) {
+            document.getElementById('phoneError').textContent = 'Vui lòng nhập số điện thoại';
+            document.getElementById('phoneError').classList.remove('hidden');
+            return;
+        }
+
+        // Cập nhật số điện thoại vào form đặt lịch nếu chưa có
+        const bookingPhone = document.getElementById('bookingPhoneNumber');
+        if (bookingPhone && !bookingPhone.value) {
+            bookingPhone.value = phoneNumber;
+        }
+
+        try {
+            const endpoint = currentVerificationType === 'family' 
+                ? `/api/phone/request-verification/family-member/${currentVerificationId}`
+                : '/api/phone/request-verification';
+            
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ phoneNumber: phoneNumber })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                // Show verification code step
+                document.getElementById('phoneNumberStep').classList.add('hidden');
+                document.getElementById('verificationCodeStep').classList.remove('hidden');
+                document.getElementById('phoneNumberDisplay').textContent = phoneNumber;
+                document.getElementById('verificationCodeInput').focus();
+                
+                // Start countdown timer (5 minutes)
+                startCountdown(300);
+            } else {
+                document.getElementById('phoneError').textContent = result.error || 'Không thể gửi mã xác thực';
+                document.getElementById('phoneError').classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error sending verification code:', error);
+            document.getElementById('phoneError').textContent = 'Có lỗi xảy ra. Vui lòng thử lại.';
+            document.getElementById('phoneError').classList.remove('hidden');
+        }
+        }
+    });
+
+    // Verify code (using event delegation)
+    document.addEventListener('click', async (e) => {
+        const verifyBtn = e.target.closest('#verifyCodeBtn');
+        if (verifyBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            const code = document.getElementById('verificationCodeInput').value.trim();
+        if (!code || code.length !== 6) {
+            document.getElementById('codeError').textContent = 'Vui lòng nhập đầy đủ 6 số';
+            document.getElementById('codeError').classList.remove('hidden');
+            return;
+        }
+
+        try {
+            const endpoint = currentVerificationType === 'family'
+                ? `/api/phone/verify/family-member/${currentVerificationId}`
+                : '/api/phone/verify';
+            
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ code: code })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.verified) {
+                showMessage('Xác thực số điện thoại thành công!', 'success');
+                closePhoneVerificationModal();
+                
+                // Cập nhật số điện thoại vào form đặt lịch từ số đã xác thực
+                let verifiedPhoneNumber = document.getElementById('phoneNumberDisplay').textContent;
+                const bookingPhone = document.getElementById('bookingPhoneNumber');
+                
+                // Nếu là xác thực cho user, reload user info để lấy số điện thoại đã được normalize
+                if (currentVerificationType === 'user') {
+                    const userStatusResponse = await fetch('/api/phone/verification-status', {
+                        credentials: 'include'
+                    });
+                    if (userStatusResponse.ok) {
+                        const userStatus = await userStatusResponse.json();
+                        if (userStatus.verified && userStatus.phoneNumber) {
+                            verifiedPhoneNumber = userStatus.phoneNumber;
+                        }
+                    }
+                } else if (currentVerificationType === 'family') {
+                    // Refresh family member data (số điện thoại đã được lưu vào database)
+                    const familyStatusResponse = await fetch(`/api/phone/verification-status/family-member/${currentVerificationId}`, {
+                        credentials: 'include'
+                    });
+                    if (familyStatusResponse.ok) {
+                        const familyStatus = await familyStatusResponse.json();
+                        if (familyStatus.verified && familyStatus.phoneNumber) {
+                            verifiedPhoneNumber = familyStatus.phoneNumber;
+                        }
+                    }
+                }
+                
+                // Cập nhật số điện thoại vào form đặt lịch
+                if (bookingPhone) {
+                    bookingPhone.value = verifiedPhoneNumber;
+                }
+                
+                // Proceed with booking
+                await submitBooking();
+            } else {
+                document.getElementById('codeError').textContent = result.error || 'Mã xác thực không đúng hoặc đã hết hạn';
+                document.getElementById('codeError').classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error verifying code:', error);
+                document.getElementById('codeError').textContent = 'Có lỗi xảy ra. Vui lòng thử lại.';
+                document.getElementById('codeError').classList.remove('hidden');
+            }
+        }
+    });
+
+    // Resend code (using event delegation)
+    document.addEventListener('click', (e) => {
+        const resendBtn = e.target.closest('#resendCodeBtn');
+        if (resendBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('sendCodeBtn').click();
+        }
+    });
+
+    // Countdown timer
+    let countdownInterval = null;
+    function startCountdown(seconds) {
+        let remaining = seconds;
+        const timerElement = document.getElementById('countdownTimer');
+        
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+        }
+        
+        countdownInterval = setInterval(() => {
+            const minutes = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            timerElement.textContent = `Mã có hiệu lực trong ${minutes}:${String(secs).padStart(2, '0')}`;
+            
+            if (remaining <= 0) {
+                clearInterval(countdownInterval);
+                timerElement.textContent = 'Mã đã hết hạn. Vui lòng gửi lại mã.';
+                timerElement.classList.add('text-red-600');
+            }
+            remaining--;
+        }, 1000);
+    }
+
+    // Close phone verification modal (using event delegation)
+    document.addEventListener('click', (e) => {
+        const closeBtn = e.target.closest('#closePhoneModalBtn');
+        if (closeBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            closePhoneVerificationModal();
+        }
+    });
+
+    // Auto-focus and format verification code input
+    document.getElementById('verificationCodeInput')?.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+        if (e.target.value.length === 6) {
+            // Auto submit when 6 digits entered
+            document.getElementById('verifyCodeBtn').click();
+        }
+    });
+</script>
+
+<!-- Phone Verification Modal -->
+<div id="phoneVerificationModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-xl max-w-md w-full my-8 flex flex-col max-h-[calc(100vh-4rem)] overflow-hidden">
+        <div class="flex justify-between items-center p-6 pb-4 border-b border-[#e2e8f0] dark:border-[#2d3f33] flex-shrink-0">
+            <h3 class="text-xl font-bold">Xác thực số điện thoại</h3>
+            <button id="closePhoneModalBtn" class="text-[#61896f] hover:text-[#111813] dark:hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div id="phoneVerificationContent" class="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
+            <!-- Step 1: Enter Phone Number -->
+            <div id="phoneNumberStep">
+                <p class="text-sm text-[#61896f] mb-4">Vui lòng nhập số điện thoại để nhận mã xác thực</p>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Số điện thoại <span class="text-red-500">*</span></label>
+                    <input type="tel" id="phoneNumberInput" placeholder="0123456789" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white">
+                </div>
+                <div id="phoneError" class="hidden mt-2 text-sm text-red-600"></div>
+                <button id="sendCodeBtn" type="button" class="w-full mt-4 bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-bold transition-all">
+                    Gửi mã xác thực
+                </button>
+            </div>
+            
+            <!-- Step 2: Enter Verification Code -->
+            <div id="verificationCodeStep" class="hidden">
+                <p class="text-sm text-[#61896f] mb-4">Mã xác thực đã được gửi đến số điện thoại <span id="phoneNumberDisplay" class="font-semibold"></span></p>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Mã xác thực (6 số) <span class="text-red-500">*</span></label>
+                    <input type="text" id="verificationCodeInput" maxlength="6" placeholder="000000" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white text-center text-2xl tracking-widest">
+                </div>
+                <div id="codeError" class="hidden mt-2 text-sm text-red-600"></div>
+                <div class="mt-2 text-sm text-[#61896f]">
+                    <span id="countdownTimer" class="font-semibold"></span>
+                </div>
+                <div class="mt-4 flex gap-3">
+                    <button id="verifyCodeBtn" class="flex-1 bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-bold transition-all">
+                        Xác thực
+                    </button>
+                    <button id="resendCodeBtn" class="px-4 py-3 bg-white dark:bg-[#1a2e21] border-2 border-[#e2e8f0] dark:border-[#2d3f33] text-[#111813] dark:text-white hover:bg-[#f0f4f2] dark:hover:bg-[#2d3f33] rounded-xl font-bold transition-all">
+                        Gửi lại
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Load số lượng thông báo chưa đọc
+    async function loadUnreadNotificationCount() {
+        try {
+            const response = await fetch('/api/notifications/unread-count');
+            if (response.ok) {
+                const data = await response.json();
+                const badge = document.getElementById('notificationBadge');
+                if (badge) {
+                    if (data.count > 0) {
+                        badge.textContent = data.count > 99 ? '99+' : data.count;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error loading unread count:', error);
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        loadUnreadNotificationCount();
+        setInterval(loadUnreadNotificationCount, 30000);
+    });
+</script>
+</body>
+</html>
+

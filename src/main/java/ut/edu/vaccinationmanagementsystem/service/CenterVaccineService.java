@@ -32,6 +32,11 @@ public class CenterVaccineService {
         return centerVaccineRepository.findByCenterId(centerId);
     }
     
+    //Lấy danh sách trung tâm có vaccine này
+    public List<CenterVaccine> getCentersByVaccineId(Long vaccineId) {
+        return centerVaccineRepository.findByVaccineId(vaccineId);
+    }
+    
     //Lấy chi tiết center vaccine theo ID
     public CenterVaccine getCenterVaccineById(Long id) {
         return centerVaccineRepository.findById(id)

@@ -16,6 +16,8 @@ public interface CenterVaccineRepository extends JpaRepository<CenterVaccine, Lo
     
     List<CenterVaccine> findByCenterId(Long centerId);
     
+    List<CenterVaccine> findByVaccineId(Long vaccineId);
+    
     Optional<CenterVaccine> findByCenterAndVaccine(VaccinationCenter center, Vaccine vaccine);
     
     boolean existsByCenterAndVaccine(VaccinationCenter center, Vaccine vaccine);

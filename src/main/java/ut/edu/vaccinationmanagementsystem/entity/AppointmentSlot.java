@@ -1,5 +1,7 @@
 package ut.edu.vaccinationmanagementsystem.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -12,13 +14,15 @@ import java.util.List;
  */
 @Entity
 @Table(name = "appointment_slots")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class AppointmentSlot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // ID tự động tăng
     
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "center_id", nullable = false)
+    @JsonIgnoreProperties({"appointmentSlots", "appointments", "workSchedules", "workingHours", "clinicRooms", "vaccines"})
     private VaccinationCenter center; // Trung tâm y tế
     
     @Column(nullable = false)
@@ -42,8 +46,14 @@ public class AppointmentSlot {
     @Column(nullable = false)
     private LocalDateTime createdAt; // Thời gian tạo slot
     
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "room_id", nullable = true)
+    @JsonIgnoreProperties({"appointments", "center"})
+    private ClinicRoom room; // Phòng khám được gán cho slot này (nullable - có thể gán sau)
+    
     // Relationships
     @OneToMany(mappedBy = "slot")
+    @JsonIgnore
     private List<Appointment> appointments; // Danh sách lịch hẹn trong slot này
     
     // Getters and Setters
@@ -121,6 +131,14 @@ public class AppointmentSlot {
     
     public void setAppointments(List<Appointment> appointments) {
         this.appointments = appointments;
+    }
+    
+    public ClinicRoom getRoom() {
+        return room;
+    }
+    
+    public void setRoom(ClinicRoom room) {
+        this.room = room;
     }
 }
 

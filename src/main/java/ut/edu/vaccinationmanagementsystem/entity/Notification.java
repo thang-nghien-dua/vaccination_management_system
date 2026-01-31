@@ -40,6 +40,13 @@ public class Notification {
     @Column(nullable = false)
     private LocalDateTime createdAt; // Thời gian tạo thông báo
     
+    @ManyToOne
+    @JoinColumn(name = "appointment_id", nullable = true)
+    private Appointment appointment; // Lịch hẹn liên quan (nullable vì có thể là thông báo khác)
+    
+    @Column(nullable = false)
+    private Boolean isRead = false; // Đã đọc chưa
+    
     // Getters and Setters
     public Long getId() {
         return id;
@@ -99,6 +106,22 @@ public class Notification {
     
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+    
+    public Appointment getAppointment() {
+        return appointment;
+    }
+    
+    public void setAppointment(Appointment appointment) {
+        this.appointment = appointment;
+    }
+    
+    public Boolean getIsRead() {
+        return isRead;
+    }
+    
+    public void setIsRead(Boolean isRead) {
+        this.isRead = isRead;
     }
 }
 
