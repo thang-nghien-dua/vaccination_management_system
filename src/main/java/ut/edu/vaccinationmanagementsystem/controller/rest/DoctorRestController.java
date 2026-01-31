@@ -101,14 +101,7 @@ public class DoctorRestController {
                                   apt.getAppointmentDate().isAfter(LocalDate.now())))
                     .collect(Collectors.toList());
             
-            // Lọc theo trung tâm của bác sĩ
-            ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = staffInfoRepository.findByUser(currentUser).orElse(null);
-            if (staffInfo != null && staffInfo.getCenter() != null) {
-                Long centerId = staffInfo.getCenter().getId();
-                appointments = appointments.stream()
-                        .filter(apt -> apt.getCenter() != null && apt.getCenter().getId().equals(centerId))
-                        .collect(Collectors.toList());
-            }
+            // Bác sĩ có thể thấy tất cả lịch hẹn từ mọi trung tâm
             
             List<Map<String, Object>> result = appointments.stream().map(apt -> {
                 Map<String, Object> map = new HashMap<>();
@@ -289,16 +282,7 @@ public class DoctorRestController {
             
             Appointment appointment = appointmentOpt.get();
             
-            // Kiểm tra center của bác sĩ phải trùng với center của appointment
-            ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = staffInfoRepository.findByUser(currentUser).orElse(null);
-            if (staffInfo != null && staffInfo.getCenter() != null) {
-                Long userCenterId = staffInfo.getCenter().getId();
-                if (appointment.getCenter() == null || !appointment.getCenter().getId().equals(userCenterId)) {
-                    Map<String, String> error = new HashMap<>();
-                    error.put("error", "Bạn chỉ có thể khám sàng lọc cho bệnh nhân của trung tâm mình");
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
-                }
-            }
+            // Bác sĩ có thể khám sàng lọc cho tất cả bệnh nhân
             
             // Kiểm tra đã có screening chưa
             Optional<Screening> existingScreeningOpt = screeningRepository.findByAppointmentId(appointmentId);
@@ -451,14 +435,7 @@ public class DoctorRestController {
                                   apt.getAppointmentDate().isAfter(LocalDate.now())))
                     .collect(Collectors.toList());
             
-            // Lọc theo trung tâm của bác sĩ
-            ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = staffInfoRepository.findByUser(currentUser).orElse(null);
-            if (staffInfo != null && staffInfo.getCenter() != null) {
-                Long centerId = staffInfo.getCenter().getId();
-                pendingAppointments = pendingAppointments.stream()
-                        .filter(apt -> apt.getCenter() != null && apt.getCenter().getId().equals(centerId))
-                        .collect(Collectors.toList());
-            }
+            // Bác sĩ có thể thấy tất cả lịch hẹn từ mọi trung tâm
             
             Map<String, Object> stats = new HashMap<>();
             stats.put("totalAppointments", pendingAppointments.size());
@@ -488,12 +465,7 @@ public class DoctorRestController {
             User currentUser = getCurrentUser();
             checkDoctorPermission(currentUser);
             
-            // Lấy trung tâm của bác sĩ
-            ut.edu.vaccinationmanagementsystem.entity.StaffInfo staffInfo = staffInfoRepository.findByUser(currentUser).orElse(null);
-            Long centerId = null;
-            if (staffInfo != null && staffInfo.getCenter() != null) {
-                centerId = staffInfo.getCenter().getId();
-            }
+            // Thống kê cho tất cả trung tâm
             
             // Tính toán 7 ngày gần nhất (từ 6 ngày trước đến hôm nay)
             LocalDate today = LocalDate.now();
