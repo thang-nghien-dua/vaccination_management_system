@@ -21,11 +21,7 @@ public class AppointmentSlotController {
     
     @Autowired
     private AppointmentSlotService appointmentSlotService;
-    
-    /**
-     * GET /api/appointment-slots
-     * Xem danh sách tất cả slot
-     */
+
     @GetMapping
     public ResponseEntity<List<AppointmentSlot>> getAllAppointmentSlots() {
         try {
@@ -35,11 +31,7 @@ public class AppointmentSlotController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
-    /**
-     * GET /api/appointment-slots/{id}
-     * Xem chi tiết slot theo ID
-     */
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getAppointmentSlotById(@PathVariable Long id) {
         try {
@@ -56,10 +48,7 @@ public class AppointmentSlotController {
         }
     }
     
-    /**
-     * GET /api/appointment-slots/center/{centerId}
-     * Xem danh sách slot theo center ID
-     */
+
     @GetMapping("/center/{centerId}")
     public ResponseEntity<List<AppointmentSlot>> getAppointmentSlotsByCenterId(@PathVariable Long centerId) {
         try {
@@ -69,11 +58,7 @@ public class AppointmentSlotController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
-    /**
-     * GET /api/appointment-slots/center/{centerId}/date/{date}
-     * Xem danh sách slot theo center ID và ngày
-     */
+
     @GetMapping("/center/{centerId}/date/{date}")
     public ResponseEntity<List<AppointmentSlot>> getAppointmentSlotsByCenterAndDate(
             @PathVariable Long centerId,
@@ -85,11 +70,7 @@ public class AppointmentSlotController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
-    /**
-     * GET /api/appointment-slots/available
-     * Xem danh sách slot trống (tất cả)
-     */
+
     @GetMapping("/available")
     public ResponseEntity<List<AppointmentSlot>> getAvailableSlots() {
         try {
@@ -99,11 +80,7 @@ public class AppointmentSlotController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
-    /**
-     * GET /api/appointment-slots/available/center/{centerId}
-     * Xem danh sách slot trống theo center ID
-     */
+
     @GetMapping("/available/center/{centerId}")
     public ResponseEntity<List<AppointmentSlot>> getAvailableSlotsByCenter(@PathVariable Long centerId) {
         try {
@@ -113,11 +90,7 @@ public class AppointmentSlotController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
-    /**
-     * GET /api/appointment-slots/available/center/{centerId}/date/{date}
-     * Xem danh sách slot trống theo center ID và ngày
-     */
+
     @GetMapping("/available/center/{centerId}/date/{date}")
     public ResponseEntity<List<AppointmentSlot>> getAvailableSlotsByCenterAndDate(
             @PathVariable Long centerId,
@@ -129,11 +102,7 @@ public class AppointmentSlotController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
-    /**
-     * GET /api/appointment-slots/available/center/{centerId}/date-range?startDate={startDate}&endDate={endDate}
-     * Xem danh sách slot trống trong khoảng thời gian
-     */
+
     @GetMapping("/available/center/{centerId}/date-range")
     public ResponseEntity<?> getAvailableSlotsByDateRange(
             @PathVariable Long centerId,
@@ -155,10 +124,7 @@ public class AppointmentSlotController {
         }
     }
     
-    /**
-     * GET /api/appointment-slots/available/center/{centerId}/date/{date}/time-range?startTime={startTime}&endTime={endTime}
-     * Xem danh sách slot trống theo center, ngày và khoảng thời gian
-     */
+
     @GetMapping("/available/center/{centerId}/date/{date}/time-range")
     public ResponseEntity<?> getAvailableSlotsByCenterDateAndTimeRange(
             @PathVariable Long centerId,
@@ -179,11 +145,7 @@ public class AppointmentSlotController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * POST /api/appointment-slots
-     * Tạo slot mới
-     */
+
     @PostMapping
     public ResponseEntity<?> createAppointmentSlot(@RequestBody AppointmentSlotDTO dto) {
         try {
@@ -199,11 +161,7 @@ public class AppointmentSlotController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * PUT /api/appointment-slots/{id}
-     * Cập nhật slot
-     */
+
     @PutMapping("/{id}")
     public ResponseEntity<?> updateAppointmentSlot(@PathVariable Long id, @RequestBody AppointmentSlotDTO dto) {
         try {
@@ -220,10 +178,7 @@ public class AppointmentSlotController {
         }
     }
     
-    /**
-     * DELETE /api/appointment-slots/{id}
-     * Xóa slot
-     */
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteAppointmentSlot(@PathVariable Long id) {
         try {
@@ -241,11 +196,7 @@ public class AppointmentSlotController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * POST /api/appointment-slots/update-availabilities
-     * Tự động cập nhật availability cho tất cả slot (có thể gọi từ cron job)
-     */
+
     @PostMapping("/update-availabilities")
     public ResponseEntity<?> updateAllSlotAvailabilities() {
         try {

@@ -4,9 +4,13 @@ function setupSidebar() {
     const sidebarToggleBtn = document.getElementById('sidebarToggleBtn'); // Hamburger button (in sidebar header)
     const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
-    const mainContent = document.querySelector('main');
+    // Tìm main content - có thể là main hoặc div với class flex-1
+    const mainContent = document.querySelector('main') || document.querySelector('.flex-1.lg\\:ml-72') || document.querySelector('.flex-1.ml-64');
     
-    if (!sidebar) return;
+    if (!sidebar) {
+        console.warn('Sidebar not found');
+        return;
+    }
     
     // Initialize: Sidebar luôn đóng trên mobile, mở trên desktop
     if (window.innerWidth < 1024) {

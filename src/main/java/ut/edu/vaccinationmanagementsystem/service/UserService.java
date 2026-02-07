@@ -17,9 +17,7 @@ import ut.edu.vaccinationmanagementsystem.service.EmailVerificationService;
 
 import java.time.LocalDate;
 
-/**
- * Service xử lý business logic cho User
- */
+
 @Service
 @Transactional
 public class UserService {
@@ -140,9 +138,7 @@ public class UserService {
         }
     }
     
-    /**
-     * Đăng ký lại - Xóa user INACTIVE cũ và tạo user mới
-     */
+
     public User reregister(UserRegisterDTO dto) {
         String emailLower = dto.getEmail().trim().toLowerCase();
         
@@ -230,9 +226,7 @@ public class UserService {
         return userRepository.save(user);
     }
     
-    /**
-     * Normalize số điện thoại (loại bỏ khoảng trắng, dấu gạch ngang, dấu ngoặc đơn)
-     */
+
     private String normalizePhoneNumber(String phoneNumber) {
         if (phoneNumber == null) return "";
         return phoneNumber.replaceAll("[\\s\\-\\(\\)]", "").trim();
@@ -278,10 +272,7 @@ public class UserService {
             return userRepository.save(user);
         }
     }
-    
-    /**
-     * Admin tạo user mới
-     */
+
     public User createUserByAdmin(ut.edu.vaccinationmanagementsystem.dto.AdminUserDTO dto) {
         // Validate
         if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
@@ -348,9 +339,7 @@ public class UserService {
         return savedUser;
     }
     
-    /**
-     * Admin cập nhật user
-     */
+
     public User updateUserByAdmin(Long userId, ut.edu.vaccinationmanagementsystem.dto.AdminUserDTO dto) {
         User user = getUserById(userId);
         
@@ -439,11 +428,7 @@ public class UserService {
         
         return savedUser;
     }
-    
-    /**
-     * Admin xóa user
-     * Xóa tất cả các bản ghi liên quan trước khi xóa user để tránh foreign key constraint
-     */
+
     @Transactional
     public void deleteUserByAdmin(Long userId) {
         User user = getUserById(userId);

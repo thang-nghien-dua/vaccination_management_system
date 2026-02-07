@@ -9,9 +9,7 @@ import ut.edu.vaccinationmanagementsystem.entity.enums.UserStatus;
 import java.util.Collection;
 import java.util.Collections;
 
-/**
- * Custom UserDetails để lưu thông tin User entity
- */
+
 public class CustomUserDetails implements UserDetails {
     
     private final User user;

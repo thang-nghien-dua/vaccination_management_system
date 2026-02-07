@@ -16,25 +16,18 @@ public class FamilyMemberService {
     
     @Autowired
     private FamilyMemberRepository familyMemberRepository;
-    
-    /**
-     * Lấy danh sách người thân của user hiện tại
-     */
+
     public List<FamilyMember> getFamilyMembersByUser(User user) {
         return familyMemberRepository.findByUserOrderByCreatedAtDesc(user);
     }
     
-    /**
-     * Lấy thông tin một người thân theo ID (chỉ lấy được nếu thuộc về user hiện tại)
-     */
+
     public FamilyMember getFamilyMemberById(Long id, User user) {
         return familyMemberRepository.findByIdAndUser(id, user)
                 .orElseThrow(() -> new RuntimeException("Family member not found or you don't have permission to access it"));
     }
     
-    /**
-     * Thêm người thân mới
-     */
+
     @Transactional
     public FamilyMember createFamilyMember(FamilyMemberDTO dto, User user) {
         // Validate
@@ -66,9 +59,7 @@ public class FamilyMemberService {
         return familyMemberRepository.save(familyMember);
     }
     
-    /**
-     * Cập nhật thông tin người thân
-     */
+
     @Transactional
     public FamilyMember updateFamilyMember(Long id, FamilyMemberDTO dto, User user) {
         // Lấy family member (đảm bảo thuộc về user hiện tại)
@@ -110,9 +101,7 @@ public class FamilyMemberService {
         return familyMemberRepository.save(familyMember);
     }
     
-    /**
-     * Xóa người thân
-     */
+
     @Transactional
     public void deleteFamilyMember(Long id, User user) {
         // Lấy family member (đảm bảo thuộc về user hiện tại)
@@ -122,9 +111,7 @@ public class FamilyMemberService {
         familyMemberRepository.delete(familyMember);
     }
     
-    /**
-     * Đếm số lượng người thân của user
-     */
+
     public long countFamilyMembersByUser(User user) {
         return familyMemberRepository.countByUser(user);
     }

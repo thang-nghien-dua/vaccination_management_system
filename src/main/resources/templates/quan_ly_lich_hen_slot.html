@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="light" lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Quản lý Lịch hẹn - VacciCare</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .status-chip {
+            @apply px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111813] dark:text-white antialiased">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/admin-sidebar :: sidebar}"></div>
+        <main class="flex-1 lg:ml-72 flex flex-col overflow-y-auto bg-background-light dark:bg-background-dark">
+            <header
+                class="sticky top-0 z-10 flex items-center justify-between bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
+                <div class="flex flex-1 items-center gap-4">
+                    <h2 class="text-xl font-bold text-[#111813] dark:text-white">Quản lý Lịch hẹn</h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="openBulkCreateModal()"
+                        class="w-full lg:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-500 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/20 transition-all">
+                        <span class="material-symbols-outlined">auto_schedule</span>
+                        Tạo hàng loạt
+                    </button>
+                    <button onclick="openAddSlotModal()"
+                        class="w-full lg:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-primary text-[#111813] font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
+                        <span class="material-symbols-outlined">add</span>
+                        Thêm lịch hẹn
+                    </button>
+                </div>
+            </header>
+            <section class="p-8 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div
+                        class="bg-white dark:bg-white/5 p-6 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm flex items-center gap-4">
+                        <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-600">
+                            <span class="material-symbols-outlined text-3xl">schedule</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-[#61896f] uppercase tracking-wider">Tổng số slot</p>
+                            <h3 id="totalSlots" class="text-2xl font-black">0</h3>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-white/5 p-6 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm flex items-center gap-4">
+                        <div class="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl text-green-600">
+                            <span class="material-symbols-outlined text-3xl">check_circle</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-[#61896f] uppercase tracking-wider">Còn trống</p>
+                            <h3 id="availableSlots" class="text-2xl font-black">0</h3>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-white/5 p-6 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm flex items-center gap-4">
+                        <div class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl text-amber-600">
+                            <span class="material-symbols-outlined text-3xl">event_busy</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-[#61896f] uppercase tracking-wider">Đã đầy</p>
+                            <h3 id="fullSlots" class="text-2xl font-black">0</h3>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-white/5 p-6 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm flex items-center gap-4">
+                        <div class="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl text-purple-600">
+                            <span class="material-symbols-outlined text-3xl">people</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-[#61896f] uppercase tracking-wider">Tổng đã đặt</p>
+                            <h3 id="totalBookings" class="text-2xl font-black">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="flex flex-col lg:flex-row gap-4 items-center justify-between bg-white dark:bg-white/5 p-4 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm">
+                    <div class="flex flex-1 flex-wrap gap-3 w-full lg:w-auto">
+                        <div class="relative flex-1 min-w-[200px]">
+                            <span
+                                class="absolute left-3 top-1/2 -translate-y-1/2 text-[#61896f] material-symbols-outlined">search</span>
+                            <input type="text" id="searchInput" placeholder="Tìm kiếm theo trung tâm..."
+                                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#f0f4f2] dark:border-white/10 bg-white dark:bg-white/5 text-[#111813] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                        </div>
+                        <select id="centerFilter"
+                            class="px-4 py-2.5 rounded-xl border border-[#f0f4f2] dark:border-white/10 bg-white dark:bg-white/5 text-[#111813] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                            <option value="">Tất cả trung tâm</option>
+                        </select>
+                        <select id="statusFilter"
+                            class="px-4 py-2.5 rounded-xl border border-[#f0f4f2] dark:border-white/10 bg-white dark:bg-white/5 text-[#111813] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="available">Còn trống</option>
+                            <option value="full">Đã đầy</option>
+                            <option value="past">Đã qua</option>
+                        </select>
+                        <input type="date" id="dateFilter"
+                            class="px-4 py-2.5 rounded-xl border border-[#f0f4f2] dark:border-white/10 bg-white dark:bg-white/5 text-[#111813] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-white/5 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-[#f0f4f2] dark:bg-white/5">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-bold text-[#61896f] uppercase tracking-wider">Trung tâm</th>
+                                    <th class="px-6 py-4 text-left text-xs font-bold text-[#61896f] uppercase tracking-wider">Ngày</th>
+                                    <th class="px-6 py-4 text-left text-xs font-bold text-[#61896f] uppercase tracking-wider">Thời gian</th>
+                                    <th class="px-6 py-4 text-left text-xs font-bold text-[#61896f] uppercase tracking-wider">Phòng</th>
+                                    <th class="px-6 py-4 text-left text-xs font-bold text-[#61896f] uppercase tracking-wider">Sức chứa</th>
+                                    <th class="px-6 py-4 text-left text-xs font-bold text-[#61896f] uppercase tracking-wider">Đã đặt</th>
+                                    <th class="px-6 py-4 text-left text-xs font-bold text-[#61896f] uppercase tracking-wider">Còn trống</th>
+                                    <th class="px-6 py-4 text-left text-xs font-bold text-[#61896f] uppercase tracking-wider">Trạng thái</th>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-[#61896f] uppercase tracking-wider">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="slotsTableBody" class="divide-y divide-[#f0f4f2] dark:divide-white/10">
+                                <tr>
+                                    <td colspan="9" class="px-6 py-8 text-center text-[#61896f]">Đang tải dữ liệu...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-6 py-4 border-t border-[#f0f4f2] dark:border-white/10 flex items-center justify-between">
+                        <div id="paginationInfo" class="text-sm text-[#61896f]"></div>
+                        <div id="paginationButtons" class="flex gap-2"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal: Thêm/Chỉnh sửa Slot -->
+    <div id="slotModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="bg-white dark:bg-background-dark rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
+            <div class="sticky top-0 bg-white dark:bg-background-dark border-b border-[#f0f4f2] dark:border-white/10 px-6 py-4 flex items-center justify-between">
+                <h3 class="text-xl font-bold text-[#111813] dark:text-white" id="slotModalTitle">Thêm lịch hẹn mới</h3>
+                <button onclick="closeSlotModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined text-[#111813] dark:text-white">close</span>
+                </button>
+            </div>
+            <form id="slotForm" class="p-6 space-y-4">
+                <input type="hidden" id="slotId">
+                <div>
+                    <label class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Trung tâm <span class="text-red-500">*</span></label>
+                    <select id="slotCenterId" required
+                        class="w-full px-4 py-2.5 rounded-xl border border-[#f0f4f2] dark:border-white/10 bg-white dark:bg-white/5 text-[#111813] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                        <option value="">Chọn trung tâm</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Ngày <span class="text-red-500">*</span></label>
+                    <input type="date" id="slotDate" required
+                        class="w-full px-4 py-2.5 rounded-xl border border-[#f0f4f2] dark:border-white/10 bg-white dark:bg-white/5 text-[#111813] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Giờ bắt đầu <span class="text-red-500">*</span></label>
+                        <input type="time" id="slotStartTime" required
+                            class="w-full px-4 py-2.5 rounded-xl border border-[#f0f4f2] dark:border-white/10 bg-white dark:bg-white/5 text-[#111813] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Giờ kết thúc <span class="text-red-500">*</span></label>
+                        <input type="time" id="slotEndTime" required
+                            class="w-full px-4 py-2.5 rounded-xl border border-[#f0f4f2] dark:border-white/10 bg-white dark:bg-white/5 text-[#111813] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Sức chứa tối đa <span class="text-red-500">*</span></label>
+                        <input type="number" id="slotMaxCapacity" min="1" required
+                            class="w-full px-4 py-2.5 rounded-xl border border-[#f0f4f2] dark:border-white/10 bg-white dark:bg-white/5 text-[#111813] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Phòng khám</label>
+                        <select id="slotRoomId"
+                            class="w-full px-4 py-2.5 rounded-xl border border-[#f0f4f2] dark:border-white/10 bg-white dark:bg-white/5 text-[#111813] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                            <option value="">Không chọn</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="submit"
+                        class="flex-1 px-6 py-3 bg-primary text-[#111813] font-bold rounded-xl hover:shadow-lg transition-all">
+                        <span id="slotSubmitText">Thêm</span>
+                    </button>
+                    <button type="button" onclick="closeSlotModal()"
+                        class="px-6 py-3 bg-gray-200 dark:bg-white/10 text-[#111813] dark:text-white font-bold rounded-xl hover:bg-gray-300 dark:hover:bg-white/20 transition-all">
+                        Hủy
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Tạo hàng loạt -->
+    <div id="bulkModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="bg-white dark:bg-background-dark rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto m-4">
+            <div class="sticky top-0 bg-white dark:bg-background-dark border-b border-[#f0f4f2] dark:border-white/10 px-6 py-4 flex items-center justify-between">
+                <h3 class="text-xl font-bold text-[#111813] dark:text-white">Tạo lịch hẹn hàng loạt</h3>
+                <button onclick="closeBulkModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined text-[#111813] dark:text-white">close</span>
+                </button>
+            </div>
+            <form id="bulkForm" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Trung tâm <span class="text-red-500">*</span></label>
+                    <select id="bulkCenterId" required
+                        class="w-full px-4 py-2.5 rounded-xl border border-[#f0f4f2] dark:border-white/10 bg-white dark:bg-white/5 text-[#111813] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                        <option value="">Chọn trung tâm</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Ngày bắt đầu <span class="text-red-500">*</span></label>
+                        <input type="date" id="bulkStartDate" required
+                            class="w-full px-4 py-2.5 rounded-xl border border-[#f0f4f2] dark:border-white/10 bg-white dark:bg-white/5 text-[#111813] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Ngày kết thúc <span class="text-red-500">*</span></label>
+                        <input type="date" id="bulkEndDate" required
+                            class="w-full px-4 py-2.5 rounded-xl border border-[#f0f4f2] dark:border-white/10 bg-white dark:bg-white/5 text-[#111813] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Giờ bắt đầu <span class="text-red-500">*</span></label>
+                        <input type="time" id="bulkStartTime" required
+                            class="w-full px-4 py-2.5 rounded-xl border border-[#f0f4f2] dark:border-white/10 bg-white dark:bg-white/5 text-[#111813] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Giờ kết thúc <span class="text-red-500">*</span></label>
+                        <input type="time" id="bulkEndTime" required
+                            class="w-full px-4 py-2.5 rounded-xl border border-[#f0f4f2] dark:border-white/10 bg-white dark:bg-white/5 text-[#111813] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Độ dài mỗi slot (phút) <span class="text-red-500">*</span></label>
+                        <input type="number" id="bulkSlotDuration" min="15" step="15" value="30" required
+                            class="w-full px-4 py-2.5 rounded-xl border border-[#f0f4f2] dark:border-white/10 bg-white dark:bg-white/5 text-[#111813] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Sức chứa mỗi slot <span class="text-red-500">*</span></label>
+                        <input type="number" id="bulkMaxCapacity" min="1" value="10" required
+                            class="w-full px-4 py-2.5 rounded-xl border border-[#f0f4f2] dark:border-white/10 bg-white dark:bg-white/5 text-[#111813] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-[#111813] dark:text-white mb-2">Phòng khám</label>
+                    <select id="bulkRoomId"
+                        class="w-full px-4 py-2.5 rounded-xl border border-[#f0f4f2] dark:border-white/10 bg-white dark:bg-white/5 text-[#111813] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20">
+                        <option value="">Không chọn</option>
+                    </select>
+                </div>
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                    <p class="text-sm text-blue-800 dark:text-blue-200">
+                        <strong>Lưu ý:</strong> Hệ thống sẽ tạo các slot từ giờ bắt đầu đến giờ kết thúc mỗi ngày, mỗi slot có độ dài như đã chỉ định. 
+                        Ví dụ: 8:00-17:00, mỗi slot 30 phút sẽ tạo 18 slot/ngày (8:00-8:30, 8:30-9:00, ..., 16:30-17:00).
+                    </p>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="submit"
+                        class="flex-1 px-6 py-3 bg-blue-500 text-white font-bold rounded-xl hover:shadow-lg transition-all">
+                        Tạo hàng loạt
+                    </button>
+                    <button type="button" onclick="closeBulkModal()"
+                        class="px-6 py-3 bg-gray-200 dark:bg-white/10 text-[#111813] dark:text-white font-bold rounded-xl hover:bg-gray-300 dark:hover:bg-white/20 transition-all">
+                        Hủy
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allSlots = [];
+        let filteredSlots = [];
+        let allCenters = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        // Load dữ liệu khi trang load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await Promise.all([
+                loadCenters(),
+                loadSlots()
+            ]);
+            
+            // Setup event listeners
+            document.getElementById('searchInput')?.addEventListener('input', debounce(filterSlots, 300));
+            document.getElementById('centerFilter')?.addEventListener('change', filterSlots);
+            document.getElementById('statusFilter')?.addEventListener('change', filterSlots);
+            document.getElementById('dateFilter')?.addEventListener('change', filterSlots);
+            
+            // Form submissions
+            document.getElementById('slotForm')?.addEventListener('submit', handleSlotSubmit);
+            document.getElementById('bulkForm')?.addEventListener('submit', handleBulkSubmit);
+        });
+
+        async function loadCenters() {
+            try {
+                const response = await fetch('/api/centers');
+                if (response.ok) {
+                    allCenters = await response.json();
+                    populateCenterSelects();
+                }
+            } catch (error) {
+                console.error('Error loading centers:', error);
+            }
+        }
+
+        function populateCenterSelects() {
+            const selects = ['centerFilter', 'slotCenterId', 'bulkCenterId'];
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    const currentValue = select.value;
+                    select.innerHTML = selectId === 'centerFilter' 
+                        ? '<option value="">Tất cả trung tâm</option>'
+                        : '<option value="">Chọn trung tâm</option>';
+                    allCenters.forEach(center => {
+                        const option = document.createElement('option');
+                        option.value = center.id;
+                        option.textContent = center.name;
+                        select.appendChild(option);
+                    });
+                    if (currentValue) select.value = currentValue;
+                }
+            });
+        }
+
+        async function loadSlots() {
+            try {
+                const response = await fetch('/api/appointment-slots');
+                if (response.ok) {
+                    allSlots = await response.json();
+                    filteredSlots = [...allSlots];
+                    filterSlots();
+                } else {
+                    showError('Lỗi khi tải dữ liệu');
+                }
+            } catch (error) {
+                console.error('Error loading slots:', error);
+                showError('Lỗi khi tải dữ liệu');
+            }
+        }
+
+        function filterSlots() {
+            const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+            const centerId = document.getElementById('centerFilter')?.value || '';
+            const status = document.getElementById('statusFilter')?.value || '';
+            const date = document.getElementById('dateFilter')?.value || '';
+
+            filteredSlots = allSlots.filter(slot => {
+                const centerName = (slot.center?.name || '').toLowerCase();
+                const matchesSearch = !search || centerName.includes(search);
+                const matchesCenter = !centerId || slot.center?.id == centerId;
+                const matchesDate = !date || slot.date === date;
+                
+                let matchesStatus = true;
+                if (status === 'available') {
+                    matchesStatus = slot.isAvailable && slot.currentBookings < slot.maxCapacity;
+                } else if (status === 'full') {
+                    matchesStatus = slot.currentBookings >= slot.maxCapacity;
+                } else if (status === 'past') {
+                    matchesStatus = new Date(slot.date) < new Date().setHours(0, 0, 0, 0);
+                }
+                
+                return matchesSearch && matchesCenter && matchesDate && matchesStatus;
+            });
+
+            currentPage = 1;
+            renderSlots();
+            updateStats();
+            updatePagination();
+        }
+
+        function renderSlots() {
+            const tbody = document.getElementById('slotsTableBody');
+            if (!tbody) return;
+
+            if (filteredSlots.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-8 text-center text-[#61896f]">Không có dữ liệu</td></tr>';
+                return;
+            }
+
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageSlots = filteredSlots.slice(start, end);
+
+            tbody.innerHTML = pageSlots.map(slot => {
+                const date = new Date(slot.date);
+                const dateStr = date.toLocaleDateString('vi-VN');
+                const startTime = slot.startTime || 'N/A';
+                const endTime = slot.endTime || 'N/A';
+                const available = slot.maxCapacity - slot.currentBookings;
+                const isPast = new Date(slot.date) < new Date().setHours(0, 0, 0, 0);
+                const isFull = slot.currentBookings >= slot.maxCapacity;
+                const statusClass = isPast 
+                    ? 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
+                    : isFull
+                    ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                    : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+                const statusText = isPast ? 'Đã qua' : isFull ? 'Đã đầy' : 'Còn trống';
+
+                return `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                        <td class="px-6 py-4">
+                            <span class="text-sm font-bold text-[#111813] dark:text-white">${slot.center?.name || 'N/A'}</span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-[#61896f]">${dateStr}</td>
+                        <td class="px-6 py-4 text-sm text-[#61896f]">${startTime} - ${endTime}</td>
+                        <td class="px-6 py-4 text-sm text-[#61896f]">${slot.room?.name || 'Chưa gán'}</td>
+                        <td class="px-6 py-4 text-sm text-[#61896f]">${slot.maxCapacity}</td>
+                        <td class="px-6 py-4 text-sm text-[#61896f]">${slot.currentBookings || 0}</td>
+                        <td class="px-6 py-4 text-sm font-bold ${available > 0 ? 'text-green-600' : 'text-red-600'}">${available}</td>
+                        <td class="px-6 py-4">
+                            <span class="status-chip ${statusClass}">${statusText}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex justify-end gap-2">
+                                <button onclick="editSlot(${slot.id})" class="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg text-amber-500 transition-colors" title="Chỉnh sửa">
+                                    <span class="material-symbols-outlined text-lg">edit_square</span>
+                                </button>
+                                <button onclick="deleteSlot(${slot.id})" class="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg text-red-500 transition-colors" title="Xóa">
+                                    <span class="material-symbols-outlined text-lg">delete</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateStats() {
+            const total = filteredSlots.length;
+            const available = filteredSlots.filter(s => s.isAvailable && s.currentBookings < s.maxCapacity && new Date(s.date) >= new Date().setHours(0, 0, 0, 0)).length;
+            const full = filteredSlots.filter(s => s.currentBookings >= s.maxCapacity).length;
+            const totalBookings = filteredSlots.reduce((sum, s) => sum + (s.currentBookings || 0), 0);
+
+            document.getElementById('totalSlots').textContent = total;
+            document.getElementById('availableSlots').textContent = available;
+            document.getElementById('fullSlots').textContent = full;
+            document.getElementById('totalBookings').textContent = totalBookings;
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredSlots.length / itemsPerPage);
+            const container = document.getElementById('paginationButtons');
+            const info = document.getElementById('paginationInfo');
+            
+            if (!container) return;
+
+            if (filteredSlots.length === 0) {
+                container.innerHTML = '';
+                if (info) info.textContent = '';
+                return;
+            }
+
+            if (info) {
+                const start = (currentPage - 1) * itemsPerPage + 1;
+                const end = Math.min(currentPage * itemsPerPage, filteredSlots.length);
+                info.textContent = `Hiển thị ${start}-${end} của ${filteredSlots.length} slot`;
+            }
+
+            container.innerHTML = '';
+
+            // Previous
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors disabled:opacity-50';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.innerHTML = '<span class="material-symbols-outlined text-sm">chevron_left</span>';
+            prevBtn.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderSlots();
+                    updatePagination();
+                }
+            };
+            container.appendChild(prevBtn);
+
+            // Pages
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+            if (endPage - startPage < 4) {
+                if (startPage === 1) endPage = Math.min(totalPages, startPage + 4);
+                else if (endPage === totalPages) startPage = Math.max(1, endPage - 4);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `p-2 rounded-lg font-bold text-xs px-4 transition-colors ${
+                    i === currentPage
+                        ? 'bg-primary text-[#111813]'
+                        : 'bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50'
+                }`;
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => {
+                    currentPage = i;
+                    renderSlots();
+                    updatePagination();
+                };
+                container.appendChild(pageBtn);
+            }
+
+            // Next
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors disabled:opacity-50';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.innerHTML = '<span class="material-symbols-outlined text-sm">chevron_right</span>';
+            nextBtn.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderSlots();
+                    updatePagination();
+                }
+            };
+            container.appendChild(nextBtn);
+        }
+
+        // Modal functions
+        function openAddSlotModal() {
+            document.getElementById('slotModalTitle').textContent = 'Thêm lịch hẹn mới';
+            document.getElementById('slotSubmitText').textContent = 'Thêm';
+            document.getElementById('slotForm').reset();
+            document.getElementById('slotId').value = '';
+            loadRoomsForCenter(null, 'slotRoomId');
+            document.getElementById('slotModal').classList.remove('hidden');
+        }
+
+        function closeSlotModal() {
+            document.getElementById('slotModal').classList.add('hidden');
+        }
+
+        function openBulkCreateModal() {
+            document.getElementById('bulkForm').reset();
+            document.getElementById('bulkModal').classList.remove('hidden');
+        }
+
+        function closeBulkModal() {
+            document.getElementById('bulkModal').classList.add('hidden');
+        }
+
+        async function editSlot(id) {
+            const slot = allSlots.find(s => s.id === id);
+            if (!slot) return;
+
+            document.getElementById('slotModalTitle').textContent = 'Chỉnh sửa lịch hẹn';
+            document.getElementById('slotSubmitText').textContent = 'Cập nhật';
+            document.getElementById('slotId').value = slot.id;
+            document.getElementById('slotCenterId').value = slot.center?.id || '';
+            document.getElementById('slotDate').value = slot.date;
+            document.getElementById('slotStartTime').value = slot.startTime || '';
+            document.getElementById('slotEndTime').value = slot.endTime || '';
+            document.getElementById('slotMaxCapacity').value = slot.maxCapacity || '';
+            await loadRoomsForCenter(slot.center?.id, 'slotRoomId');
+            document.getElementById('slotRoomId').value = slot.room?.id || '';
+            document.getElementById('slotModal').classList.remove('hidden');
+        }
+
+        async function deleteSlot(id) {
+            const slot = allSlots.find(s => s.id === id);
+            if (!slot) return;
+
+            if (!confirm(`Bạn có chắc muốn xóa lịch hẹn này?\nTrung tâm: ${slot.center?.name}\nNgày: ${slot.date}\nThời gian: ${slot.startTime} - ${slot.endTime}`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/appointment-slots/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    await loadSlots();
+                    showSuccess('Xóa lịch hẹn thành công');
+                } else {
+                    const data = await response.json();
+                    showError(data.error || 'Lỗi khi xóa lịch hẹn');
+                }
+            } catch (error) {
+                console.error('Error deleting slot:', error);
+                showError('Lỗi khi xóa lịch hẹn');
+            }
+        }
+
+        async function handleSlotSubmit(e) {
+            e.preventDefault();
+            const slotId = document.getElementById('slotId').value;
+            const isEdit = !!slotId;
+
+            const data = {
+                centerId: parseInt(document.getElementById('slotCenterId').value),
+                date: document.getElementById('slotDate').value,
+                startTime: document.getElementById('slotStartTime').value,
+                endTime: document.getElementById('slotEndTime').value,
+                maxCapacity: parseInt(document.getElementById('slotMaxCapacity').value),
+                roomId: document.getElementById('slotRoomId').value || null
+            };
+
+            try {
+                const url = isEdit ? `/api/appointment-slots/${slotId}` : '/api/appointment-slots';
+                const method = isEdit ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    closeSlotModal();
+                    await loadSlots();
+                    showSuccess(isEdit ? 'Cập nhật lịch hẹn thành công' : 'Thêm lịch hẹn thành công');
+                } else {
+                    const errorData = await response.json();
+                    showError(errorData.error || 'Lỗi khi lưu lịch hẹn');
+                }
+            } catch (error) {
+                console.error('Error saving slot:', error);
+                showError('Lỗi khi lưu lịch hẹn');
+            }
+        }
+
+        async function handleBulkSubmit(e) {
+            e.preventDefault();
+            const centerId = parseInt(document.getElementById('bulkCenterId').value);
+            const startDate = document.getElementById('bulkStartDate').value;
+            const endDate = document.getElementById('bulkEndDate').value;
+            const startTime = document.getElementById('bulkStartTime').value;
+            const endTime = document.getElementById('bulkEndTime').value;
+            const slotDuration = parseInt(document.getElementById('bulkSlotDuration').value);
+            const maxCapacity = parseInt(document.getElementById('bulkMaxCapacity').value);
+            const roomId = document.getElementById('bulkRoomId').value || null;
+
+            if (new Date(startDate) > new Date(endDate)) {
+                showError('Ngày bắt đầu phải trước ngày kết thúc');
+                return;
+            }
+
+            if (startTime >= endTime) {
+                showError('Giờ bắt đầu phải trước giờ kết thúc');
+                return;
+            }
+
+            try {
+                // Generate slots
+                const slots = generateBulkSlots(startDate, endDate, startTime, endTime, slotDuration, maxCapacity, roomId);
+                
+                // Create slots one by one
+                let successCount = 0;
+                let errorCount = 0;
+                const errors = [];
+
+                for (const slot of slots) {
+                    try {
+                        const response = await fetch('/api/appointment-slots', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ...slot, centerId })
+                        });
+
+                        if (response.ok) {
+                            successCount++;
+                        } else {
+                            errorCount++;
+                            const errorData = await response.json();
+                            errors.push(errorData.error || 'Lỗi không xác định');
+                        }
+                    } catch (error) {
+                        errorCount++;
+                        errors.push('Lỗi kết nối');
+                    }
+                }
+
+                closeBulkModal();
+                await loadSlots();
+                
+                if (errorCount === 0) {
+                    showSuccess(`Tạo thành công ${successCount} lịch hẹn`);
+                } else {
+                    showError(`Tạo thành công ${successCount} lịch hẹn, thất bại ${errorCount} lịch hẹn`);
+                }
+            } catch (error) {
+                console.error('Error creating bulk slots:', error);
+                showError('Lỗi khi tạo lịch hẹn hàng loạt');
+            }
+        }
+
+        function generateBulkSlots(startDate, endDate, startTime, endTime, slotDuration, maxCapacity, roomId) {
+            const slots = [];
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            const [endHour, endMinute] = endTime.split(':').map(Number);
+
+            for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+                let currentHour = startHour;
+                let currentMinute = startMinute;
+
+                while (currentHour < endHour || (currentHour === endHour && currentMinute < endMinute)) {
+                    const slotStart = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
+                    
+                    // Calculate end time
+                    let slotEndMinute = currentMinute + slotDuration;
+                    let slotEndHour = currentHour;
+                    if (slotEndMinute >= 60) {
+                        slotEndHour += Math.floor(slotEndMinute / 60);
+                        slotEndMinute = slotEndMinute % 60;
+                    }
+                    const slotEnd = `${String(slotEndHour).padStart(2, '0')}:${String(slotEndMinute).padStart(2, '0')}`;
+
+                    // Check if slot end exceeds the end time
+                    if (slotEndHour > endHour || (slotEndHour === endHour && slotEndMinute > endMinute)) {
+                        break;
+                    }
+
+                    slots.push({
+                        date: date.toISOString().split('T')[0],
+                        startTime: slotStart,
+                        endTime: slotEnd,
+                        maxCapacity,
+                        currentBookings: 0,
+                        roomId
+                    });
+
+                    // Move to next slot
+                    currentMinute += slotDuration;
+                    if (currentMinute >= 60) {
+                        currentHour += Math.floor(currentMinute / 60);
+                        currentMinute = currentMinute % 60;
+                    }
+                }
+            }
+
+            return slots;
+        }
+
+        async function loadRoomsForCenter(centerId, selectId) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+
+            select.innerHTML = '<option value="">Không chọn</option>';
+
+            if (!centerId) return;
+
+            try {
+                const response = await fetch(`/api/centers/${centerId}/rooms`);
+                if (response.ok) {
+                    const rooms = await response.json();
+                    rooms.forEach(room => {
+                        if (room.isActive) {
+                            const option = document.createElement('option');
+                            option.value = room.id;
+                            option.textContent = room.name;
+                            select.appendChild(option);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading rooms:', error);
+            }
+        }
+
+        // Event listeners for center changes
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('slotCenterId')?.addEventListener('change', (e) => {
+                loadRoomsForCenter(e.target.value, 'slotRoomId');
+            });
+            document.getElementById('bulkCenterId')?.addEventListener('change', (e) => {
+                loadRoomsForCenter(e.target.value, 'bulkRoomId');
+            });
+        });
+
+        // Utility functions
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function showSuccess(message) {
+            alert(message); // Có thể thay bằng toast notification
+        }
+
+        function showError(message) {
+            alert(message); // Có thể thay bằng toast notification
+        }
+    </script>
+</body>
+
+</html>
+

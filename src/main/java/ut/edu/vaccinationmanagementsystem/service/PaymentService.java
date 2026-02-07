@@ -22,12 +22,7 @@ public class PaymentService {
     
     @Autowired
     private PromotionRepository promotionRepository;
-    
-    /**
-     * Tính giá cuối cùng của vaccine (sau khi áp dụng promotion)
-     * @param vaccine Vaccine cần tính giá
-     * @return Giá cuối cùng
-     */
+
     public BigDecimal calculateFinalPrice(Vaccine vaccine) {
         BigDecimal basePrice = vaccine.getPrice();
         if (basePrice == null) {
@@ -62,13 +57,7 @@ public class PaymentService {
         
         return finalPrice;
     }
-    
-    /**
-     * Tạo Payment cho Appointment
-     * @param appointment Appointment cần tạo payment
-     * @param paymentMethod Phương thức thanh toán
-     * @return Payment đã được tạo
-     */
+
     public Payment createPayment(Appointment appointment, PaymentMethod paymentMethod) {
         if (appointment.getVaccine() == null) {
             throw new RuntimeException("Appointment must have a vaccine to create payment");
@@ -93,11 +82,7 @@ public class PaymentService {
         return paymentRepository.save(payment);
     }
     
-    /**
-     * Cập nhật Payment sau khi thanh toán thành công qua VNPay
-     * @param payment Payment cần cập nhật
-     * @param transactionId Mã giao dịch từ VNPay
-     */
+
     public void markPaymentAsPaid(Payment payment, String transactionId) {
         payment.setPaymentStatus(PaymentStatus.PAID);
         payment.setTransactionId(transactionId);
@@ -105,31 +90,65 @@ public class PaymentService {
         paymentRepository.save(payment);
     }
     
-    /**
-     * Generate invoice number
-     * Format: INV-YYYYMMDD-HHMMSS-XXXX
-     */
+
     private String generateInvoiceNumber() {
         LocalDateTime now = LocalDateTime.now();
         String dateTime = now.format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
         int random = (int)(Math.random() * 10000);
         return String.format("INV-%s-%04d", dateTime, random);
     }
-    
-    /**
-     * Tìm Payment theo Appointment
-     */
+
     public Payment findByAppointment(Appointment appointment) {
         return paymentRepository.findByAppointment(appointment)
             .orElse(null);
     }
     
-    /**
-     * Tìm Payment theo Transaction ID
-     */
+
     public Payment findByTransactionId(String transactionId) {
         return paymentRepository.findByTransactionId(transactionId)
             .orElse(null);
+    }
+    
+
+    public BigDecimal calculateCancellationFee(BigDecimal originalAmount, long hoursUntilAppointment) {
+        if (originalAmount == null || originalAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+        
+        if (hoursUntilAppointment >= 24) {
+            return BigDecimal.ZERO; // Miễn phí (≥ 24 giờ)
+        } else if (hoursUntilAppointment >= 12) {
+            return originalAmount.multiply(new BigDecimal("0.20")); // 20% (12-24 giờ)
+        } else if (hoursUntilAppointment >= 6) {
+            return originalAmount.multiply(new BigDecimal("0.50")); // 50% (6-12 giờ)
+        } else {
+            return originalAmount; // 100% - không cho hủy hoặc phí 100% (< 6 giờ)
+        }
+    }
+    
+
+    public Payment createCancellationFeePayment(User user, BigDecimal cancellationFee, Appointment cancelledAppointment) {
+        if (cancellationFee == null || cancellationFee.compareTo(BigDecimal.ZERO) <= 0) {
+            return null; // Không có phí hủy
+        }
+        
+        // Vì Payment có OneToOne với Appointment và unique constraint,
+        // ta sẽ chỉ lưu thông tin phí hủy vào Payment cũ của appointment đã hủy
+        // Payment mới cho phí hủy sẽ được tạo thông qua một Appointment đặc biệt
+        // Nhưng để đơn giản, ta chỉ cần đánh dấu trong Payment cũ là có phí hủy chưa thanh toán
+        // User sẽ thanh toán phí hủy thông qua một endpoint riêng
+        
+        // Logic này sẽ được xử lý trong AppointmentService.cancelAppointment()
+        // Ở đây chỉ return null vì Payment đã được cập nhật trong cancelAppointment
+        return null;
+    }
+    
+
+    public void markCancellationFeeAsPaid(Payment payment) {
+        payment.setCancellationFeePaid(true);
+        payment.setPaymentStatus(PaymentStatus.PAID);
+        payment.setPaidAt(LocalDateTime.now());
+        paymentRepository.save(payment);
     }
 }
 

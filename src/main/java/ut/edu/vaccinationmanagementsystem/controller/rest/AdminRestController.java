@@ -71,9 +71,13 @@ public class AdminRestController {
     @Autowired
     private NotificationRepository notificationRepository;
     
-    /**
-     * Lấy thông tin user hiện tại từ SecurityContext
-     */
+    @Autowired
+    private VaccineLotRepository vaccineLotRepository;
+    
+    @Autowired
+    private ScreeningRepository screeningRepository;
+
+     //Lấy thông tin user hiện tại từ SecurityContext
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         
@@ -94,9 +98,8 @@ public class AdminRestController {
         }
     }
     
-    /**
-     * Kiểm tra quyền ADMIN
-     */
+
+     // Kiểm tra quyền ADMIN
     private void checkAdminPermission(User user) {
         if (user == null) {
             throw new RuntimeException("User not authenticated");
@@ -107,10 +110,8 @@ public class AdminRestController {
         }
     }
     
-    /**
-     * GET /api/admin/users
-     * Lấy danh sách tất cả users (cho admin)
-     */
+
+     // Lấy danh sách tất cả users (cho admin)
     @GetMapping("/users")
     public ResponseEntity<?> getAllUsers(
             @RequestParam(required = false) String role,
@@ -181,10 +182,9 @@ public class AdminRestController {
         }
     }
     
-    /**
-     * GET /api/admin/vaccines
-     * Lấy danh sách tất cả vaccines (cho admin)
-     */
+
+    //Lấy danh sách tất cả vaccines (cho admin)
+
     @GetMapping("/vaccines")
     public ResponseEntity<?> getAllVaccines(@RequestParam(required = false) String search) {
         try {
@@ -230,14 +230,26 @@ public class AdminRestController {
                 map.put("imageUrl", vaccine.getImageUrl());
                 map.put("createdAt", vaccine.getCreatedAt());
                 
-                // Tính số lượng tồn kho từ trung tâm tổng
-                Integer stockQuantity = 0;
+                // Tính số lượng tồn kho: ưu tiên từ CenterVaccine, nếu không có thì tính từ VaccineLot
+                LocalDate today = LocalDate.now();
+                
+                // Tính tổng số lượng từ VaccineLot (chỉ tính AVAILABLE, chưa hết hạn, còn hàng)
+                int totalStockFromLots = vaccineLotRepository.findByVaccineId(vaccine.getId())
+                        .stream()
+                        .filter(lot -> lot.getStatus() == ut.edu.vaccinationmanagementsystem.entity.enums.VaccineLotStatus.AVAILABLE)
+                        .filter(lot -> lot.getRemainingQuantity() != null && lot.getRemainingQuantity() > 0)
+                        .filter(lot -> lot.getExpiryDate() != null && lot.getExpiryDate().isAfter(today))
+                        .mapToInt(lot -> lot.getRemainingQuantity() != null ? lot.getRemainingQuantity() : 0)
+                        .sum();
+                
+                // Lấy stock từ CenterVaccine (ưu tiên trung tâm tổng)
+                int stockFromCenterVaccine = 0;
                 if (finalMainCenter != null) {
                     try {
                         Optional<ut.edu.vaccinationmanagementsystem.entity.CenterVaccine> mainCenterVaccine = 
                             centerVaccineRepository.findByCenterAndVaccine(finalMainCenter, vaccine);
                         if (mainCenterVaccine.isPresent()) {
-                            stockQuantity = mainCenterVaccine.get().getStockQuantity() != null 
+                            stockFromCenterVaccine = mainCenterVaccine.get().getStockQuantity() != null 
                                 ? mainCenterVaccine.get().getStockQuantity() 
                                 : 0;
                         }
@@ -245,6 +257,20 @@ public class AdminRestController {
                         System.err.println("Warning: Could not get stock for vaccine " + vaccine.getId() + ": " + e.getMessage());
                     }
                 }
+                
+                // Nếu không có ở trung tâm tổng, tìm ở các trung tâm khác
+                if (stockFromCenterVaccine == 0) {
+                    List<ut.edu.vaccinationmanagementsystem.entity.CenterVaccine> otherCenterVaccines = 
+                        centerVaccineRepository.findByVaccineId(vaccine.getId());
+                    if (!otherCenterVaccines.isEmpty()) {
+                        stockFromCenterVaccine = otherCenterVaccines.stream()
+                                .mapToInt(cv -> cv.getStockQuantity() != null ? cv.getStockQuantity() : 0)
+                                .sum();
+                    }
+                }
+                
+                // Ưu tiên dùng stockQuantity từ CenterVaccine, nếu không có hoặc = 0 thì dùng tổng từ lots
+                Integer stockQuantity = stockFromCenterVaccine > 0 ? stockFromCenterVaccine : totalStockFromLots;
                 map.put("stockQuantity", stockQuantity);
                 
                 return map;
@@ -262,10 +288,8 @@ public class AdminRestController {
         }
     }
     
-    /**
-     * POST /api/admin/vaccines
-     * Tạo vaccine mới (chỉ admin)
-     */
+
+    //Tạo vaccine mới (chỉ admin)
     @PostMapping("/vaccines")
     public ResponseEntity<?> createVaccine(@RequestBody VaccineDTO dto) {
         try {
@@ -299,10 +323,7 @@ public class AdminRestController {
         }
     }
     
-    /**
-     * PUT /api/admin/vaccines/{id}
-     * Cập nhật vaccine (chỉ admin)
-     */
+    //Cập nhật vaccine (chỉ admin)
     @PutMapping("/vaccines/{id}")
     public ResponseEntity<?> updateVaccine(@PathVariable Long id, @RequestBody VaccineDTO dto) {
         try {
@@ -349,10 +370,8 @@ public class AdminRestController {
         }
     }
     
-    /**
-     * DELETE /api/admin/vaccines/{id}
-     * Xóa vaccine (chỉ admin)
-     */
+
+     //Xóa vaccine (chỉ admin)
     @DeleteMapping("/vaccines/{id}")
     public ResponseEntity<?> deleteVaccine(@PathVariable Long id) {
         try {
@@ -380,10 +399,8 @@ public class AdminRestController {
         }
     }
     
-    /**
-     * GET /api/admin/vaccines/{id}
-     * Lấy chi tiết vaccine (chỉ admin)
-     */
+
+     //Lấy chi tiết vaccine (chỉ admin)
     @GetMapping("/vaccines/{id}")
     public ResponseEntity<?> getVaccineById(@PathVariable Long id) {
         try {
@@ -422,10 +439,7 @@ public class AdminRestController {
         }
     }
     
-    /**
-     * GET /api/admin/appointments
-     * Lấy danh sách tất cả appointments (cho admin)
-     */
+    //Lấy danh sách tất cả appointments (cho admin)
     @GetMapping("/appointments")
     public ResponseEntity<?> getAllAppointments(
             @RequestParam(required = false) String status,
@@ -534,10 +548,7 @@ public class AdminRestController {
         }
     }
     
-    /**
-     * GET /api/admin/staff
-     * Lấy danh sách staff (DOCTOR, NURSE, RECEPTIONIST)
-     */
+
     @GetMapping("/staff")
     public ResponseEntity<?> getAllStaff(@RequestParam(required = false) String role) {
         try {
@@ -562,6 +573,9 @@ public class AdminRestController {
                 }
             }
             
+            LocalDate today = LocalDate.now();
+            LocalDate firstDayOfMonth = today.withDayOfMonth(1);
+            
             List<Map<String, Object>> result = staff.stream().map(user -> {
                 Map<String, Object> map = new HashMap<>();
                 map.put("id", user.getId());
@@ -573,6 +587,69 @@ public class AdminRestController {
                 map.put("createAt", user.getCreateAt());
                 map.put("dayOfBirth", user.getDayOfBirth());
                 map.put("gender", user.getGender() != null ? user.getGender().name() : null);
+                
+                // Lấy thông tin StaffInfo (center)
+                Optional<StaffInfo> staffInfoOpt = staffInfoRepository.findByUser(user);
+                if (staffInfoOpt.isPresent()) {
+                    StaffInfo staffInfo = staffInfoOpt.get();
+                    if (staffInfo.getCenter() != null) {
+                        map.put("centerId", staffInfo.getCenter().getId());
+                        map.put("centerName", staffInfo.getCenter().getName());
+                    } else {
+                        map.put("centerId", null);
+                        map.put("centerName", null);
+                    }
+                } else {
+                    map.put("centerId", null);
+                    map.put("centerName", null);
+                }
+                
+                // Tính performance (số ca/tháng) dựa trên role
+                int performanceThisMonth = 0;
+                if (user.getRole() == Role.DOCTOR) {
+                    // Doctor: đếm số screenings trong tháng này
+                    List<Screening> screenings = screeningRepository.findByDoctorIdOrderByScreenedAtDesc(user.getId());
+                    performanceThisMonth = (int) screenings.stream()
+                            .filter(s -> s.getScreenedAt() != null && 
+                                       s.getScreenedAt().toLocalDate().isAfter(firstDayOfMonth.minusDays(1)) &&
+                                       !s.getScreenedAt().toLocalDate().isAfter(today))
+                            .count();
+                } else if (user.getRole() == Role.NURSE) {
+                    // Nurse: đếm số vaccination records trong tháng này
+                    List<VaccinationRecord> records = vaccinationRecordRepository.findAll().stream()
+                            .filter(vr -> vr.getNurse() != null && vr.getNurse().getId().equals(user.getId()))
+                            .filter(vr -> vr.getInjectionDate() != null && 
+                                       vr.getInjectionDate().isAfter(firstDayOfMonth.minusDays(1)) &&
+                                       !vr.getInjectionDate().isAfter(today))
+                            .collect(Collectors.toList());
+                    performanceThisMonth = records.size();
+                } else if (user.getRole() == Role.RECEPTIONIST) {
+                    // Receptionist: đếm số appointments đã xử lý trong tháng này
+                    // Lấy trung tâm của receptionist (nếu có)
+                    Optional<StaffInfo> receptionistInfoOpt = staffInfoRepository.findByUser(user);
+                    final Long finalCenterId;
+                    if (receptionistInfoOpt.isPresent() && receptionistInfoOpt.get().getCenter() != null) {
+                        finalCenterId = receptionistInfoOpt.get().getCenter().getId();
+                    } else {
+                        finalCenterId = null;
+                    }
+                    
+                    // Đếm appointments đã được confirm/check-in trong tháng này tại trung tâm của receptionist
+                    List<Appointment> appointments = appointmentRepository.findAll().stream()
+                            .filter(apt -> apt.getAppointmentDate() != null &&
+                                         apt.getAppointmentDate().isAfter(firstDayOfMonth.minusDays(1)) &&
+                                         !apt.getAppointmentDate().isAfter(today))
+                            .filter(apt -> finalCenterId == null || (apt.getCenter() != null && apt.getCenter().getId().equals(finalCenterId)))
+                            .filter(apt -> apt.getStatus() == AppointmentStatus.CONFIRMED || 
+                                         apt.getStatus() == AppointmentStatus.CHECKED_IN ||
+                                         apt.getStatus() == AppointmentStatus.SCREENING ||
+                                         apt.getStatus() == AppointmentStatus.APPROVED ||
+                                         apt.getStatus() == AppointmentStatus.COMPLETED)
+                            .collect(Collectors.toList());
+                    performanceThisMonth = appointments.size();
+                }
+                map.put("performanceThisMonth", performanceThisMonth);
+                
                 return map;
             }).collect(Collectors.toList());
             
@@ -588,10 +665,7 @@ public class AdminRestController {
         }
     }
     
-    /**
-     * GET /api/admin/centers/{centerId}
-     * Lấy thông tin chi tiết của một trung tâm
-     */
+
     @GetMapping("/centers/{centerId}")
     public ResponseEntity<?> getCenterById(@PathVariable Long centerId) {
         try {
@@ -628,10 +702,7 @@ public class AdminRestController {
         }
     }
     
-    /**
-     * GET /api/admin/centers/{centerId}/staff
-     * Lấy danh sách nhân viên của một trung tâm
-     */
+
     @GetMapping("/centers/{centerId}/staff")
     public ResponseEntity<?> getStaffByCenter(@PathVariable Long centerId) {
         try {
@@ -669,10 +740,7 @@ public class AdminRestController {
         }
     }
     
-    /**
-     * GET /api/admin/centers/{centerId}/staff/stats
-     * Lấy thống kê nhân viên của một trung tâm
-     */
+
     @GetMapping("/centers/{centerId}/staff/stats")
     public ResponseEntity<?> getStaffStatsByCenter(@PathVariable Long centerId) {
         try {
@@ -711,10 +779,7 @@ public class AdminRestController {
         }
     }
     
-    /**
-     * GET /api/admin/dashboard/stats
-     * Lấy thống kê dashboard cho admin (tổng quan)
-     */
+
     @GetMapping("/dashboard/stats")
     public ResponseEntity<?> getDashboardStats() {
         try {
@@ -742,6 +807,57 @@ public class AdminRestController {
                     .filter(apt -> apt.getAppointmentDate() != null && apt.getAppointmentDate().equals(today))
                     .count();
             
+            // Tính phần trăm tăng trưởng người dùng (so sánh tháng này với tháng trước)
+            LocalDate firstDayOfThisMonth = today.withDayOfMonth(1);
+            LocalDate firstDayOfLastMonth = firstDayOfThisMonth.minusMonths(1);
+            LocalDate lastDayOfLastMonth = firstDayOfThisMonth.minusDays(1);
+            
+            long usersThisMonth = userRepository.findAll().stream()
+                    .filter(u -> u.getCreateAt() != null && 
+                            !u.getCreateAt().isBefore(firstDayOfThisMonth) &&
+                            !u.getCreateAt().isAfter(today))
+                    .count();
+            
+            long usersLastMonth = userRepository.findAll().stream()
+                    .filter(u -> u.getCreateAt() != null && 
+                            !u.getCreateAt().isBefore(firstDayOfLastMonth) &&
+                            !u.getCreateAt().isAfter(lastDayOfLastMonth))
+                    .count();
+            
+            double userGrowthPercent = 0.0;
+            if (usersLastMonth > 0) {
+                userGrowthPercent = ((double)(usersThisMonth - usersLastMonth) / usersLastMonth) * 100;
+            } else if (usersThisMonth > 0) {
+                userGrowthPercent = 100.0; // Nếu tháng trước = 0 và tháng này > 0
+            }
+            
+            // Tính phần trăm tăng trưởng lịch hẹn (so sánh tháng này với tháng trước)
+            long appointmentsThisMonth = appointmentRepository.findAll().stream()
+                    .filter(apt -> apt.getAppointmentDate() != null &&
+                            !apt.getAppointmentDate().isBefore(firstDayOfThisMonth) &&
+                            !apt.getAppointmentDate().isAfter(today))
+                    .count();
+            
+            long appointmentsLastMonth = appointmentRepository.findAll().stream()
+                    .filter(apt -> apt.getAppointmentDate() != null &&
+                            !apt.getAppointmentDate().isBefore(firstDayOfLastMonth) &&
+                            !apt.getAppointmentDate().isAfter(lastDayOfLastMonth))
+                    .count();
+            
+            double appointmentGrowthPercent = 0.0;
+            if (appointmentsLastMonth > 0) {
+                appointmentGrowthPercent = ((double)(appointmentsThisMonth - appointmentsLastMonth) / appointmentsLastMonth) * 100;
+            } else if (appointmentsThisMonth > 0) {
+                appointmentGrowthPercent = 100.0; // Nếu tháng trước = 0 và tháng này > 0
+            }
+            
+            // Đếm số tỉnh thành unique từ địa chỉ trung tâm
+            // Giả sử địa chỉ có format: "Số nhà, Đường, Phường/Xã, Quận/Huyện, Tỉnh/TP"
+            // Hoặc đơn giản là đếm số trung tâm active
+            long activeCenters = vaccinationCenterRepository.findAll().stream()
+                    .filter(c -> c.getStatus() == ut.edu.vaccinationmanagementsystem.entity.enums.CenterStatus.ACTIVE)
+                    .count();
+            
             Map<String, Object> stats = new HashMap<>();
             stats.put("totalUsers", totalUsers);
             stats.put("totalCustomers", totalCustomers);
@@ -750,6 +866,9 @@ public class AdminRestController {
             stats.put("todayAppointments", todayAppointments);
             stats.put("totalVaccines", totalVaccines);
             stats.put("totalCenters", totalCenters);
+            stats.put("activeCenters", activeCenters);
+            stats.put("userGrowthPercent", Math.round(userGrowthPercent * 10.0) / 10.0); // Làm tròn 1 chữ số thập phân
+            stats.put("appointmentGrowthPercent", Math.round(appointmentGrowthPercent * 10.0) / 10.0);
             
             return ResponseEntity.ok(stats);
         } catch (RuntimeException e) {
@@ -763,10 +882,7 @@ public class AdminRestController {
         }
     }
     
-    /**
-     * GET /api/admin/users/{id}
-     * Lấy chi tiết user theo ID
-     */
+
     @GetMapping("/users/{id}")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
         try {
@@ -788,6 +904,29 @@ public class AdminRestController {
             result.put("status", user.getStatus().name());
             result.put("createAt", user.getCreateAt());
             
+            // Nếu là staff, thêm thông tin StaffInfo
+            if (user.getRole() == Role.DOCTOR || user.getRole() == Role.NURSE || user.getRole() == Role.RECEPTIONIST) {
+                Optional<StaffInfo> staffInfoOpt = staffInfoRepository.findByUser(user);
+                if (staffInfoOpt.isPresent()) {
+                    StaffInfo staffInfo = staffInfoOpt.get();
+                    result.put("employeeId", staffInfo.getEmployeeId());
+                    result.put("specialization", staffInfo.getSpecialization());
+                    result.put("licenseNumber", staffInfo.getLicenseNumber());
+                    result.put("hireDate", staffInfo.getHireDate());
+                    result.put("department", staffInfo.getDepartment());
+                    if (staffInfo.getCenter() != null) {
+                        result.put("centerId", staffInfo.getCenter().getId());
+                        result.put("centerName", staffInfo.getCenter().getName());
+                    } else {
+                        result.put("centerId", null);
+                        result.put("centerName", null);
+                    }
+                } else {
+                    result.put("centerId", null);
+                    result.put("centerName", null);
+                }
+            }
+            
             return ResponseEntity.ok(result);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
@@ -799,11 +938,7 @@ public class AdminRestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * POST /api/admin/users
-     * Tạo user mới
-     */
+
     @PostMapping("/users")
     public ResponseEntity<?> createUser(@RequestBody AdminUserDTO dto) {
         try {
@@ -833,10 +968,7 @@ public class AdminRestController {
         }
     }
     
-    /**
-     * PUT /api/admin/users/{id}
-     * Cập nhật user
-     */
+
     @PutMapping("/users/{id}")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody AdminUserDTO dto) {
         try {
@@ -866,10 +998,7 @@ public class AdminRestController {
         }
     }
     
-    /**
-     * DELETE /api/admin/users/{id}
-     * Xóa user
-     */
+
     @DeleteMapping("/users/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         try {
@@ -900,26 +1029,7 @@ public class AdminRestController {
         }
     }
     
-    /**
-     * PUT /api/admin/appointments/{id}/status
-     * Cập nhật trạng thái appointment (cho admin)
-     * 
-     * CÁC TRẠNG THÁI VÀ QUYỀN THAY ĐỔI:
-     * - PENDING (Chờ xác nhận): ADMIN, RECEPTIONIST có thể chuyển sang CONFIRMED
-     * - CONFIRMED (Đã xác nhận): ADMIN, RECEPTIONIST có thể chuyển sang CHECKED_IN
-     * - CHECKED_IN (Đã check-in): ADMIN, RECEPTIONIST có thể chuyển sang SCREENING
-     * - SCREENING (Đang khám sàng lọc): ADMIN, DOCTOR có thể chuyển sang APPROVED/REJECTED
-     * - APPROVED (Đủ điều kiện): ADMIN, DOCTOR có thể chuyển sang INJECTING
-     * - REJECTED (Từ chối): ADMIN, DOCTOR có thể chuyển sang CANCELLED
-     * - INJECTING (Đang tiêm): ADMIN, NURSE có thể chuyển sang MONITORING
-     * - MONITORING (Đang theo dõi): ADMIN, NURSE có thể chuyển sang COMPLETED
-     * - COMPLETED (Hoàn thành): ADMIN có thể xem, không nên thay đổi
-     * - CANCELLED (Đã hủy): ADMIN có thể xem, không nên thay đổi
-     * - RESCHEDULED (Đã đổi lịch): ADMIN có thể xem, không nên thay đổi
-     * 
-     * LƯU Ý: ADMIN có quyền thay đổi bất kỳ trạng thái nào, nhưng nên tuân theo workflow
-     * Khi chuyển sang COMPLETED, hệ thống sẽ kiểm tra xem đã có VaccinationRecord chưa
-     */
+
     @PutMapping("/appointments/{id}/status")
     public ResponseEntity<?> updateAppointmentStatus(
             @PathVariable Long id,
@@ -1007,10 +1117,7 @@ public class AdminRestController {
         }
     }
     
-    /**
-     * DELETE /api/admin/appointments/{id}
-     * Xóa appointment (cho admin)
-     */
+
     @DeleteMapping("/appointments/{id}")
     public ResponseEntity<?> deleteAppointment(@PathVariable Long id) {
         try {
@@ -1066,10 +1173,6 @@ public class AdminRestController {
         }
     }
 
-    /**
-     * GET /api/admin/staff-all
-     * Lấy danh sách tất cả nhân viên và trạng thái gán trung tâm
-     */
     @GetMapping("/staff-all")
     public ResponseEntity<?> getAllStaffWithAssignment() {
         try {
@@ -1117,11 +1220,7 @@ public class AdminRestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * POST /api/admin/centers/{centerId}/staff/assign
-     * Gán danh sách nhân viên vào trung tâm
-     */
+
     @PostMapping("/centers/{centerId}/staff/assign")
     public ResponseEntity<?> assignStaffToCenter(@PathVariable Long centerId, @RequestBody List<Long> userIds) {
         try {
@@ -1156,11 +1255,7 @@ public class AdminRestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * POST /api/admin/staff/unassign/{userId}
-     * Hủy gán nhân viên khỏi trung tâm
-     */
+
     @PostMapping("/staff/unassign/{userId}")
     public ResponseEntity<?> unassignStaff(@PathVariable Long userId) {
         try {
@@ -1185,11 +1280,7 @@ public class AdminRestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * GET /api/admin/notifications/stats
-     * Lấy thống kê notifications cho admin
-     */
+
     @GetMapping("/notifications/stats")
     public ResponseEntity<?> getNotificationStats() {
         try {
@@ -1230,11 +1321,7 @@ public class AdminRestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * GET /api/admin/notifications/trend
-     * Lấy xu hướng gửi thông báo trong 7 ngày qua
-     */
+
     @GetMapping("/notifications/trend")
     public ResponseEntity<?> getNotificationTrend(@RequestParam(defaultValue = "7") int days) {
         try {
@@ -1279,11 +1366,7 @@ public class AdminRestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * GET /api/admin/notifications/classification
-     * Lấy phân loại thông báo theo type
-     */
+
     @GetMapping("/notifications/classification")
     public ResponseEntity<?> getNotificationClassification() {
         try {
@@ -1325,11 +1408,7 @@ public class AdminRestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * GET /api/admin/notifications
-     * Lấy danh sách tất cả notifications (cho admin)
-     */
+
     @GetMapping("/notifications")
     public ResponseEntity<?> getAllNotifications(
             @RequestParam(required = false) String search,
@@ -1406,11 +1485,7 @@ public class AdminRestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * GET /api/admin/dashboard/recent-appointments
-     * Lấy danh sách lịch hẹn gần đây
-     */
+
     @GetMapping("/dashboard/recent-appointments")
     public ResponseEntity<?> getRecentAppointments(@RequestParam(defaultValue = "5") int limit) {
         try {
@@ -1438,14 +1513,18 @@ public class AdminRestController {
                 map.put("appointmentTime", apt.getAppointmentTime());
                 map.put("status", apt.getStatus().name());
                 
-                // Thông tin bệnh nhân
+                // Thông tin bệnh nhân - ưu tiên: familyMember > bookedForUser > bookedByUser > guest
                 Map<String, Object> patientInfo = new HashMap<>();
-                if (apt.getBookedForUser() != null) {
-                    patientInfo.put("fullName", apt.getBookedForUser().getFullName());
-                } else if (apt.getFamilyMember() != null) {
+                if (apt.getFamilyMember() != null) {
                     patientInfo.put("fullName", apt.getFamilyMember().getFullName());
+                } else if (apt.getBookedForUser() != null) {
+                    patientInfo.put("fullName", apt.getBookedForUser().getFullName());
                 } else if (apt.getBookedByUser() != null) {
                     patientInfo.put("fullName", apt.getBookedByUser().getFullName());
+                } else if (apt.getGuestFullName() != null) {
+                    patientInfo.put("fullName", apt.getGuestFullName());
+                } else {
+                    patientInfo.put("fullName", "Khách");
                 }
                 map.put("patientInfo", patientInfo);
                 
@@ -1468,11 +1547,7 @@ public class AdminRestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * GET /api/admin/dashboard/recent-users
-     * Lấy danh sách người dùng mới
-     */
+
     @GetMapping("/dashboard/recent-users")
     public ResponseEntity<?> getRecentUsers(@RequestParam(defaultValue = "5") int limit) {
         try {
@@ -1509,19 +1584,17 @@ public class AdminRestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * GET /api/admin/dashboard/popular-vaccines
-     * Lấy danh sách vaccine phổ biến nhất
-     */
+
     @GetMapping("/dashboard/popular-vaccines")
     public ResponseEntity<?> getPopularVaccines(@RequestParam(defaultValue = "10") int limit) {
         try {
             User currentUser = getCurrentUser();
             checkAdminPermission(currentUser);
             
+            // Lấy vaccine với số lượng đã tiêm từ VaccinationRecord
             List<Object[]> results = vaccinationRecordRepository.findVaccinesWithVaccinationCount();
             
+            // Chỉ lấy vaccine có count > 0 (đã được tiêm ít nhất 1 lần)
             List<Map<String, Object>> vaccines = results.stream()
                     .map(result -> {
                         Vaccine vaccine = (Vaccine) result[0];
@@ -1533,6 +1606,7 @@ public class AdminRestController {
                         map.put("count", count);
                         return map;
                     })
+                    .filter(v -> (Long) v.get("count") > 0) // Chỉ lấy vaccine đã được tiêm
                     .sorted((a, b) -> Long.compare((Long) b.get("count"), (Long) a.get("count")))
                     .limit(limit)
                     .collect(Collectors.toList());
@@ -1542,7 +1616,7 @@ public class AdminRestController {
             if (total > 0) {
                 vaccines = vaccines.stream().map(v -> {
                     double percentage = ((Long) v.get("count") * 100.0) / total;
-                    v.put("percentage", Math.round(percentage));
+                    v.put("percentage", Math.round(percentage * 10.0) / 10.0); // Làm tròn 1 chữ số thập phân
                     return v;
                 }).collect(Collectors.toList());
             }
@@ -1562,11 +1636,7 @@ public class AdminRestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * GET /api/admin/dashboard/appointments-revenue-trend
-     * Lấy xu hướng lịch hẹn và doanh thu trong 30 ngày
-     */
+
     @GetMapping("/dashboard/appointments-revenue-trend")
     public ResponseEntity<?> getAppointmentsRevenueTrend(@RequestParam(defaultValue = "30") int days) {
         try {
@@ -1633,39 +1703,106 @@ public class AdminRestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * GET /api/admin/dashboard/inventory-alerts
-     * Lấy cảnh báo tồn kho (vaccine sắp hết hoặc hết hàng)
-     */
+
     @GetMapping("/dashboard/inventory-alerts")
     public ResponseEntity<?> getInventoryAlerts(@RequestParam(defaultValue = "10") int limit) {
         try {
             User currentUser = getCurrentUser();
             checkAdminPermission(currentUser);
             
-            List<CenterVaccine> centerVaccines = centerVaccineRepository.findAll();
+            LocalDate today = LocalDate.now();
             
-            // Lọc vaccine có stockQuantity <= 50 hoặc null
-            List<Map<String, Object>> alerts = centerVaccines.stream()
-                    .filter(cv -> cv.getStockQuantity() == null || cv.getStockQuantity() <= 50)
+            // Lấy trung tâm tổng (centerId = 1) để ưu tiên kiểm tra
+            ut.edu.vaccinationmanagementsystem.entity.VaccinationCenter tempMainCenter = vaccinationCenterRepository.findById(1L).orElse(null);
+            if (tempMainCenter == null) {
+                // Nếu không có centerId = 1, lấy trung tâm đầu tiên
+                List<ut.edu.vaccinationmanagementsystem.entity.VaccinationCenter> centers = vaccinationCenterRepository.findAll();
+                if (!centers.isEmpty()) {
+                    tempMainCenter = centers.get(0);
+                }
+            }
+            
+            // Tạo biến final để sử dụng trong lambda
+            final ut.edu.vaccinationmanagementsystem.entity.VaccinationCenter mainCenter = tempMainCenter;
+            
+            // Lấy tất cả vaccine
+            List<Vaccine> allVaccines = vaccineRepository.findAll();
+            
+            // Tính tổng stock cho mỗi vaccine và tạo cảnh báo
+            List<Map<String, Object>> alerts = allVaccines.stream()
+                    .map(vaccine -> {
+                        // Tính tổng số lượng từ VaccineLot (chỉ tính AVAILABLE, chưa hết hạn, còn hàng)
+                        int totalStockFromLots = vaccineLotRepository.findByVaccineId(vaccine.getId())
+                                .stream()
+                                .filter(lot -> lot.getStatus() == ut.edu.vaccinationmanagementsystem.entity.enums.VaccineLotStatus.AVAILABLE)
+                                .filter(lot -> lot.getRemainingQuantity() != null && lot.getRemainingQuantity() > 0)
+                                .filter(lot -> lot.getExpiryDate() != null && lot.getExpiryDate().isAfter(today))
+                                .mapToInt(lot -> lot.getRemainingQuantity() != null ? lot.getRemainingQuantity() : 0)
+                                .sum();
+                        
+                        // Lấy stock từ CenterVaccine (ưu tiên trung tâm tổng)
+                        int stockFromCenterVaccine = 0;
+                        VaccinationCenter centerForAlert = null;
+                        
+                        if (mainCenter != null) {
+                            Optional<CenterVaccine> mainCenterVaccine = centerVaccineRepository.findByCenterAndVaccine(mainCenter, vaccine);
+                            if (mainCenterVaccine.isPresent()) {
+                                stockFromCenterVaccine = mainCenterVaccine.get().getStockQuantity() != null 
+                                    ? mainCenterVaccine.get().getStockQuantity() 
+                                    : 0;
+                                centerForAlert = mainCenter;
+                            }
+                        }
+                        
+                        // Nếu không có ở trung tâm tổng, tìm ở các trung tâm khác
+                        if (centerForAlert == null) {
+                            List<CenterVaccine> otherCenterVaccines = centerVaccineRepository.findByVaccineId(vaccine.getId());
+                            if (!otherCenterVaccines.isEmpty()) {
+                                CenterVaccine firstCV = otherCenterVaccines.get(0);
+                                stockFromCenterVaccine = firstCV.getStockQuantity() != null ? firstCV.getStockQuantity() : 0;
+                                centerForAlert = firstCV.getCenter();
+                            }
+                        }
+                        
+                        // Ưu tiên dùng stockQuantity từ CenterVaccine, nếu không có thì dùng tổng từ lots
+                        int actualStock = stockFromCenterVaccine > 0 ? stockFromCenterVaccine : totalStockFromLots;
+                        
+                        Map<String, Object> alert = new HashMap<>();
+                        alert.put("vaccineId", vaccine.getId());
+                        alert.put("vaccineName", vaccine.getName());
+                        if (centerForAlert != null) {
+                            alert.put("centerId", centerForAlert.getId());
+                            alert.put("centerName", centerForAlert.getName());
+                        } else {
+                            alert.put("centerId", null);
+                            alert.put("centerName", "Chưa gán trung tâm");
+                        }
+                        alert.put("stockQuantity", actualStock);
+                        alert.put("status", actualStock == 0 ? "OUT_OF_STOCK" : (actualStock <= 50 ? "LOW_STOCK" : null));
+                        
+                        return alert;
+                    })
+                    .filter(alert -> {
+                        // Chỉ lấy các vaccine có status là OUT_OF_STOCK hoặc LOW_STOCK
+                        String status = (String) alert.get("status");
+                        return status != null;
+                    })
                     .sorted((a, b) -> {
-                        int stockA = a.getStockQuantity() != null ? a.getStockQuantity() : 0;
-                        int stockB = b.getStockQuantity() != null ? b.getStockQuantity() : 0;
+                        // Sắp xếp: OUT_OF_STOCK trước, sau đó LOW_STOCK, sắp xếp theo stockQuantity tăng dần
+                        String statusA = (String) a.get("status");
+                        String statusB = (String) b.get("status");
+                        int stockA = (Integer) a.get("stockQuantity");
+                        int stockB = (Integer) b.get("stockQuantity");
+                        
+                        if ("OUT_OF_STOCK".equals(statusA) && !"OUT_OF_STOCK".equals(statusB)) {
+                            return -1;
+                        }
+                        if (!"OUT_OF_STOCK".equals(statusA) && "OUT_OF_STOCK".equals(statusB)) {
+                            return 1;
+                        }
                         return Integer.compare(stockA, stockB);
                     })
                     .limit(limit)
-                    .map(cv -> {
-                        Map<String, Object> alert = new HashMap<>();
-                        alert.put("id", cv.getId());
-                        alert.put("vaccineId", cv.getVaccine().getId());
-                        alert.put("vaccineName", cv.getVaccine().getName());
-                        alert.put("centerId", cv.getCenter().getId());
-                        alert.put("centerName", cv.getCenter().getName());
-                        alert.put("stockQuantity", cv.getStockQuantity() != null ? cv.getStockQuantity() : 0);
-                        alert.put("status", cv.getStockQuantity() == null || cv.getStockQuantity() == 0 ? "OUT_OF_STOCK" : "LOW_STOCK");
-                        return alert;
-                    })
                     .collect(Collectors.toList());
             
             return ResponseEntity.ok(alerts);

@@ -42,10 +42,7 @@ public class AuthController {
     @Autowired
     private PasswordResetService passwordResetService;
     
-    /**
-     * POST /api/auth/register
-     * Đăng ký tài khoản mới
-     */
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody UserRegisterDTO dto) {
         try {
@@ -85,11 +82,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * POST /api/auth/reregister
-     * Đăng ký lại - Xóa user INACTIVE cũ và tạo user mới
-     */
+
     @PostMapping("/reregister")
     public ResponseEntity<?> reregister(@RequestBody UserRegisterDTO dto) {
         try {
@@ -112,11 +105,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * POST /api/auth/login
-     * Đăng nhập bằng email/password
-     */
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserLoginDTO dto, HttpServletRequest request, HttpServletResponse response) {
         try {
@@ -187,11 +176,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * POST /api/auth/logout
-     * Đăng xuất
-     */
+
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -203,11 +188,7 @@ public class AuthController {
         message.put("message", "Logout successful");
         return ResponseEntity.ok(message);
     }
-    
-    /**
-     * GET /api/auth/oauth2/google
-     * Redirect đến Google OAuth2 login
-     */
+
     @GetMapping("/oauth2/google")
     public ResponseEntity<?> googleLogin() {
         Map<String, String> message = new HashMap<>();
@@ -215,11 +196,7 @@ public class AuthController {
         message.put("url", "/oauth2/authorization/google");
         return ResponseEntity.ok(message);
     }
-    
-    /**
-     * GET /api/auth/oauth2/facebook
-     * Redirect đến Facebook OAuth2 login
-     */
+
     @GetMapping("/oauth2/facebook")
     public ResponseEntity<?> facebookLogin() {
         Map<String, String> message = new HashMap<>();
@@ -227,12 +204,7 @@ public class AuthController {
         message.put("url", "/oauth2/authorization/facebook");
         return ResponseEntity.ok(message);
     }
-    
-    /**
-     * GET /api/auth/verify-email
-     * Xác thực email bằng token
-     * Redirect đến trang thành công hoặc lỗi
-     */
+
     @GetMapping("/verify-email")
     public org.springframework.web.servlet.ModelAndView verifyEmail(@RequestParam String token) {
         try {
@@ -247,11 +219,7 @@ public class AuthController {
             return mav;
         }
     }
-    
-    /**
-     * POST /api/auth/resend-verification
-     * Gửi lại email xác thực
-     */
+
     @PostMapping("/resend-verification")
     public ResponseEntity<?> resendVerificationEmail(@RequestBody Map<String, String> request) {
         try {
@@ -274,11 +242,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
-    
-    /**
-     * POST /api/auth/forgot-password
-     * Yêu cầu reset password
-     */
+
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
         try {
@@ -301,11 +265,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
-    
-    /**
-     * POST /api/auth/reset-password
-     * Đặt lại mật khẩu bằng token
-     */
+
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
         try {

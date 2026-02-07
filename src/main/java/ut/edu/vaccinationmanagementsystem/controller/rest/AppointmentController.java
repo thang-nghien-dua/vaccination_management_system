@@ -9,14 +9,18 @@ import org.springframework.web.bind.annotation.*;
 import ut.edu.vaccinationmanagementsystem.dto.BookAppointmentDTO;
 import ut.edu.vaccinationmanagementsystem.dto.ConsultationRequestDTO;
 import ut.edu.vaccinationmanagementsystem.entity.Appointment;
+import ut.edu.vaccinationmanagementsystem.entity.Payment;
 import ut.edu.vaccinationmanagementsystem.entity.User;
 import ut.edu.vaccinationmanagementsystem.entity.enums.AppointmentStatus;
 import ut.edu.vaccinationmanagementsystem.repository.AppointmentRepository;
+import ut.edu.vaccinationmanagementsystem.repository.StaffInfoRepository;
 import ut.edu.vaccinationmanagementsystem.repository.UserRepository;
 import ut.edu.vaccinationmanagementsystem.service.AppointmentService;
 import ut.edu.vaccinationmanagementsystem.service.CustomOAuth2User;
 import ut.edu.vaccinationmanagementsystem.service.CustomUserDetails;
+import ut.edu.vaccinationmanagementsystem.service.PaymentService;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,12 +41,11 @@ public class AppointmentController {
     private AppointmentRepository appointmentRepository;
     
     @Autowired
-    private ut.edu.vaccinationmanagementsystem.repository.StaffInfoRepository staffInfoRepository;
+    private StaffInfoRepository staffInfoRepository;
     
-    /**
-     * POST /api/appointments/consultation-request
-     * Tạo yêu cầu tư vấn (hỗ trợ cả user đã đăng nhập và guest)
-     */
+    @Autowired
+    private PaymentService paymentService;
+
     @PostMapping("/consultation-request")
     public ResponseEntity<?> createConsultationRequest(@RequestBody ConsultationRequestDTO dto) {
         try {
@@ -75,11 +78,7 @@ public class AppointmentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * POST /api/appointments/book
-     * Đặt lịch trực tiếp (chỉ dành cho user đã đăng nhập)
-     */
+
     @PostMapping("/book")
     public ResponseEntity<?> bookAppointment(@RequestBody BookAppointmentDTO dto) {
         try {
@@ -145,11 +144,110 @@ public class AppointmentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * PUT /api/appointments/{id}/cancel
-     * Hủy lịch hẹn (chỉ cho phép hủy nếu trạng thái là PENDING)
-     */
+
+    @GetMapping("/{id}/cancellation-fee")
+    public ResponseEntity<?> getCancellationFee(@PathVariable Long id) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            
+            if (authentication == null || !authentication.isAuthenticated() || 
+                authentication.getName().equals("anonymousUser")) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "User must be authenticated");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+            
+            User currentUser = null;
+            if (authentication.getPrincipal() instanceof CustomOAuth2User) {
+                CustomOAuth2User customOAuth2User = (CustomOAuth2User) authentication.getPrincipal();
+                currentUser = customOAuth2User.getUser();
+            } else if (authentication.getPrincipal() instanceof CustomUserDetails) {
+                CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+                currentUser = customUserDetails.getUser();
+            } else {
+                String email = authentication.getName();
+                Optional<User> userOpt = userRepository.findByEmail(email);
+                if (userOpt.isPresent()) {
+                    currentUser = userOpt.get();
+                }
+            }
+            
+            if (currentUser == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "User not found");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+            
+            Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+            
+            // Kiểm tra quyền
+            if (appointment.getBookedByUser() == null || !appointment.getBookedByUser().getId().equals(currentUser.getId())) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Bạn không có quyền xem thông tin lịch hẹn này");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+            }
+            
+            Map<String, Object> response = new HashMap<>();
+            
+            if (appointment.getStatus() == AppointmentStatus.CONFIRMED && 
+                appointment.getAppointmentDate() != null && 
+                appointment.getAppointmentTime() != null &&
+                appointment.getPayment() != null) {
+                
+                java.time.LocalDateTime appointmentDateTime = java.time.LocalDateTime.of(
+                    appointment.getAppointmentDate(), appointment.getAppointmentTime());
+                java.time.LocalDateTime now = java.time.LocalDateTime.now();
+                long hoursUntilAppointment = java.time.Duration.between(now, appointmentDateTime).toHours();
+                
+                if (hoursUntilAppointment < 6) {
+                    response.put("canCancel", false);
+                    response.put("message", "Không thể hủy lịch hẹn trong vòng 6 giờ trước giờ hẹn");
+                    response.put("hoursUntilAppointment", hoursUntilAppointment);
+                } else {
+                    response.put("canCancel", true);
+                    java.math.BigDecimal originalAmount = appointment.getPayment().getAmount();
+                    java.math.BigDecimal cancellationFee = paymentService.calculateCancellationFee(
+                        originalAmount, hoursUntilAppointment);
+                    
+                    response.put("cancellationFee", cancellationFee);
+                    response.put("originalAmount", originalAmount);
+                    response.put("hoursUntilAppointment", hoursUntilAppointment);
+                    // Tính phần trăm phí
+                    int feePercentage = 0;
+                    if (hoursUntilAppointment >= 24) {
+                        feePercentage = 0;
+                    } else if (hoursUntilAppointment >= 12) {
+                        feePercentage = 20;
+                    } else if (hoursUntilAppointment >= 6) {
+                        feePercentage = 50;
+                    } else {
+                        feePercentage = 100;
+                    }
+                    response.put("feePercentage", feePercentage);
+                }
+            } else if (appointment.getStatus() == AppointmentStatus.PENDING) {
+                response.put("canCancel", true);
+                response.put("cancellationFee", java.math.BigDecimal.ZERO);
+                response.put("message", "Hủy miễn phí cho lịch hẹn chưa xác nhận");
+            } else {
+                response.put("canCancel", false);
+                response.put("message", "Không thể hủy lịch hẹn với trạng thái hiện tại");
+            }
+            
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
     @PutMapping("/{id}/cancel")
     public ResponseEntity<?> cancelAppointment(@PathVariable Long id) {
         try {
@@ -186,11 +284,25 @@ public class AppointmentController {
             
             Appointment appointment = appointmentService.cancelAppointment(id, currentUser);
             
+            
+            Payment payment = appointment.getPayment();
+            BigDecimal cancellationFee = null;
+            if (payment != null && payment.getCancellationFee() != null) {
+                cancellationFee = payment.getCancellationFee();
+            }
+            
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Hủy lịch hẹn thành công");
             response.put("appointmentId", appointment.getId());
             response.put("bookingCode", appointment.getBookingCode());
             response.put("status", appointment.getStatus().name());
+            if (cancellationFee != null) {
+                response.put("cancellationFee", cancellationFee);
+                response.put("hasCancellationFee", true);
+                response.put("cancellationFeePaid", payment.getCancellationFeePaid() != null && payment.getCancellationFeePaid());
+            } else {
+                response.put("hasCancellationFee", false);
+            }
             
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
@@ -204,11 +316,7 @@ public class AppointmentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * GET /api/appointments/approved
-     * Danh sách appointments đã phê duyệt (status = APPROVED)
-     */
+
     @GetMapping("/approved")
     public ResponseEntity<?> getApprovedAppointments() {
         try {
@@ -250,14 +358,7 @@ public class AppointmentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * GET /api/appointments/today
-     * Xem lịch hẹn hôm nay (cho Receptionist)
-     * Query params: 
-     *   - status (optional) - Lọc theo trạng thái
-     *   - date (optional) - Ngày cần xem (format: YYYY-MM-DD), nếu không có thì mặc định là hôm nay
-     */
+
     @GetMapping("/today")
     public ResponseEntity<?> getTodayAppointments(
             @RequestParam(required = false) String status,
@@ -328,7 +429,21 @@ public class AppointmentController {
                 dto.put("guestDayOfBirth", apt.getGuestDayOfBirth());
                 dto.put("guestGender", apt.getGuestGender());
                 
-                // Patient info - ưu tiên: bookedForUser > bookedByUser
+                // Patient info - ưu tiên: familyMember > bookedForUser > bookedByUser
+                // (familyMember là người thân sẽ được tiêm, nên ưu tiên cao nhất)
+                
+                // Family member info (nếu có - đây là người sẽ được tiêm khi đặt cho người thân)
+                if (apt.getFamilyMember() != null) {
+                    Map<String, Object> member = new HashMap<>();
+                    member.put("id", apt.getFamilyMember().getId());
+                    member.put("fullName", apt.getFamilyMember().getFullName());
+                    member.put("phoneNumber", apt.getFamilyMember().getPhoneNumber());
+                    member.put("dateOfBirth", apt.getFamilyMember().getDateOfBirth());
+                    member.put("gender", apt.getFamilyMember().getGender());
+                    dto.put("familyMember", member);
+                }
+                
+                // BookedForUser info (người được đặt lịch cho - nếu không phải family member)
                 if (apt.getBookedForUser() != null) {
                     Map<String, Object> user = new HashMap<>();
                     user.put("id", apt.getBookedForUser().getId());
@@ -338,8 +453,9 @@ public class AppointmentController {
                     user.put("dayOfBirth", apt.getBookedForUser().getDayOfBirth());
                     user.put("gender", apt.getBookedForUser().getGender());
                     dto.put("bookedForUser", user);
-                } else if (apt.getBookedByUser() != null) {
-                    // Fallback: nếu bookedForUser null, dùng bookedByUser
+                } else if (apt.getBookedByUser() != null && apt.getFamilyMember() == null) {
+                    // Fallback: nếu bookedForUser null và không có familyMember, dùng bookedByUser
+                    // (chỉ dùng khi đặt cho chính mình)
                     Map<String, Object> user = new HashMap<>();
                     user.put("id", apt.getBookedByUser().getId());
                     user.put("fullName", apt.getBookedByUser().getFullName());
@@ -348,16 +464,6 @@ public class AppointmentController {
                     user.put("dayOfBirth", apt.getBookedByUser().getDayOfBirth());
                     user.put("gender", apt.getBookedByUser().getGender());
                     dto.put("bookedForUser", user);
-                }
-                
-                if (apt.getFamilyMember() != null) {
-                    Map<String, Object> member = new HashMap<>();
-                    member.put("id", apt.getFamilyMember().getId());
-                    member.put("fullName", apt.getFamilyMember().getFullName());
-                    member.put("phoneNumber", apt.getFamilyMember().getPhoneNumber());
-                    member.put("dateOfBirth", apt.getFamilyMember().getDateOfBirth());
-                    member.put("gender", apt.getFamilyMember().getGender());
-                    dto.put("familyMember", member);
                 }
                 
                 // Vaccine info
@@ -417,11 +523,7 @@ public class AppointmentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * POST /api/appointments/{id}/confirm
-     * Xác nhận lịch hẹn (cho Receptionist)
-     */
+
     @PostMapping("/{id}/confirm")
     public ResponseEntity<?> confirmAppointment(@PathVariable Long id) {
         try {
@@ -495,11 +597,7 @@ public class AppointmentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * POST /api/appointments/{id}/cancel-by-receptionist
-     * Hủy lịch hẹn bởi Receptionist
-     */
+
     @PostMapping("/{id}/cancel-by-receptionist")
     public ResponseEntity<?> cancelAppointmentByReceptionist(@PathVariable Long id, @RequestBody(required = false) Map<String, String> requestBody) {
         try {
@@ -554,11 +652,7 @@ public class AppointmentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * POST /api/appointments/{id}/check-in
-     * Check-in khách hàng (cho Receptionist)
-     */
+
     @PostMapping("/{id}/check-in")
     public ResponseEntity<?> checkInAppointment(@PathVariable Long id) {
         try {
@@ -636,12 +730,7 @@ public class AppointmentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * GET /api/appointments/search
-     * Tìm kiếm appointment theo số điện thoại hoặc booking code (cho Receptionist)
-     * Query params: phone (optional), bookingCode (optional)
-     */
+
     @GetMapping("/search")
     public ResponseEntity<?> searchAppointments(
             @RequestParam(required = false) String phone,
@@ -714,7 +803,21 @@ public class AppointmentController {
                 dto.put("guestDayOfBirth", apt.getGuestDayOfBirth());
                 dto.put("guestGender", apt.getGuestGender());
                 
-                // Patient info - ưu tiên: bookedForUser > bookedByUser
+                // Patient info - ưu tiên: familyMember > bookedForUser > bookedByUser
+                // (familyMember là người thân sẽ được tiêm, nên ưu tiên cao nhất)
+                
+                // Family member info (nếu có - đây là người sẽ được tiêm khi đặt cho người thân)
+                if (apt.getFamilyMember() != null) {
+                    Map<String, Object> member = new HashMap<>();
+                    member.put("id", apt.getFamilyMember().getId());
+                    member.put("fullName", apt.getFamilyMember().getFullName());
+                    member.put("phoneNumber", apt.getFamilyMember().getPhoneNumber());
+                    member.put("dateOfBirth", apt.getFamilyMember().getDateOfBirth());
+                    member.put("gender", apt.getFamilyMember().getGender());
+                    dto.put("familyMember", member);
+                }
+                
+                // BookedForUser info (người được đặt lịch cho - nếu không phải family member)
                 if (apt.getBookedForUser() != null) {
                     Map<String, Object> user = new HashMap<>();
                     user.put("id", apt.getBookedForUser().getId());
@@ -724,8 +827,9 @@ public class AppointmentController {
                     user.put("dayOfBirth", apt.getBookedForUser().getDayOfBirth());
                     user.put("gender", apt.getBookedForUser().getGender());
                     dto.put("bookedForUser", user);
-                } else if (apt.getBookedByUser() != null) {
-                    // Fallback: nếu bookedForUser null, dùng bookedByUser
+                } else if (apt.getBookedByUser() != null && apt.getFamilyMember() == null) {
+                    // Fallback: nếu bookedForUser null và không có familyMember, dùng bookedByUser
+                    // (chỉ dùng khi đặt cho chính mình)
                     Map<String, Object> user = new HashMap<>();
                     user.put("id", apt.getBookedByUser().getId());
                     user.put("fullName", apt.getBookedByUser().getFullName());
@@ -734,16 +838,6 @@ public class AppointmentController {
                     user.put("dayOfBirth", apt.getBookedByUser().getDayOfBirth());
                     user.put("gender", apt.getBookedByUser().getGender());
                     dto.put("bookedForUser", user);
-                }
-                
-                if (apt.getFamilyMember() != null) {
-                    Map<String, Object> member = new HashMap<>();
-                    member.put("id", apt.getFamilyMember().getId());
-                    member.put("fullName", apt.getFamilyMember().getFullName());
-                    member.put("phoneNumber", apt.getFamilyMember().getPhoneNumber());
-                    member.put("dateOfBirth", apt.getFamilyMember().getDateOfBirth());
-                    member.put("gender", apt.getFamilyMember().getGender());
-                    dto.put("familyMember", member);
                 }
                 
                 // Vaccine info
@@ -806,11 +900,7 @@ public class AppointmentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * POST /api/appointments/walk-in
-     * Đăng ký walk-in (không đặt trước) - cho Receptionist
-     */
+
     @PostMapping("/walk-in")
     public ResponseEntity<?> createWalkInAppointment(@RequestBody Map<String, Object> requestBody) {
         try {
@@ -992,11 +1082,7 @@ public class AppointmentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    /**
-     * GET /api/appointments/{id}/detail
-     * Lấy chi tiết appointment (cho Receptionist)
-     */
+
     @GetMapping("/{id}/detail")
     public ResponseEntity<?> getAppointmentDetail(@PathVariable Long id) {
         try {
@@ -1015,8 +1101,18 @@ public class AppointmentController {
             response.put("requiresConsultation", appointment.getRequiresConsultation());
             response.put("consultationPhone", appointment.getConsultationPhone());
             
-            // Patient info - ưu tiên: bookedForUser > bookedByUser > familyMember > guest
-            if (appointment.getBookedForUser() != null) {
+            // Patient info - ưu tiên: familyMember > bookedForUser > bookedByUser > guest
+            // (familyMember là người thân sẽ được tiêm, nên ưu tiên cao nhất)
+            if (appointment.getFamilyMember() != null) {
+                Map<String, Object> patient = new HashMap<>();
+                patient.put("id", appointment.getFamilyMember().getId());
+                patient.put("fullName", appointment.getFamilyMember().getFullName());
+                patient.put("phoneNumber", appointment.getFamilyMember().getPhoneNumber());
+                patient.put("dayOfBirth", appointment.getFamilyMember().getDateOfBirth());
+                patient.put("gender", appointment.getFamilyMember().getGender());
+                response.put("patient", patient);
+                response.put("patientType", "FAMILY_MEMBER");
+            } else if (appointment.getBookedForUser() != null) {
                 Map<String, Object> patient = new HashMap<>();
                 patient.put("id", appointment.getBookedForUser().getId());
                 patient.put("fullName", appointment.getBookedForUser().getFullName());
@@ -1027,7 +1123,8 @@ public class AppointmentController {
                 response.put("patient", patient);
                 response.put("patientType", "USER");
             } else if (appointment.getBookedByUser() != null) {
-                // Fallback: nếu bookedForUser null, dùng bookedByUser (người đặt lịch cho chính mình)
+                // Fallback: nếu bookedForUser null và không có familyMember, dùng bookedByUser
+                // (chỉ dùng khi đặt cho chính mình)
                 Map<String, Object> patient = new HashMap<>();
                 patient.put("id", appointment.getBookedByUser().getId());
                 patient.put("fullName", appointment.getBookedByUser().getFullName());
@@ -1037,15 +1134,6 @@ public class AppointmentController {
                 patient.put("gender", appointment.getBookedByUser().getGender());
                 response.put("patient", patient);
                 response.put("patientType", "USER");
-            } else if (appointment.getFamilyMember() != null) {
-                Map<String, Object> patient = new HashMap<>();
-                patient.put("id", appointment.getFamilyMember().getId());
-                patient.put("fullName", appointment.getFamilyMember().getFullName());
-                patient.put("phoneNumber", appointment.getFamilyMember().getPhoneNumber());
-                patient.put("dayOfBirth", appointment.getFamilyMember().getDateOfBirth());
-                patient.put("gender", appointment.getFamilyMember().getGender());
-                response.put("patient", patient);
-                response.put("patientType", "FAMILY_MEMBER");
             } else {
                 // Guest info
                 Map<String, Object> patient = new HashMap<>();
@@ -1104,16 +1192,12 @@ public class AppointmentController {
             error.put("error", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
         } catch (Exception e) {
-            e.printStackTrace();
             Map<String, String> error = new HashMap<>();
             error.put("error", "Internal server error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
 
-    /**
-     * Lấy current user từ Authentication
-     */
     private User getCurrentUserFromAuth(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated() || 
             authentication.getName().equals("anonymousUser")) {

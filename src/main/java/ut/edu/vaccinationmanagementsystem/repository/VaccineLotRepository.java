@@ -59,5 +59,15 @@ public interface VaccineLotRepository extends JpaRepository<VaccineLot, Long> {
            "LOWER(vl.lotNumber) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(vl.supplier) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<VaccineLot> searchByKeyword(@Param("keyword") String keyword);
+    
+    // Tìm lô vaccine có sẵn theo vaccine ID, sắp xếp theo FIFO (hết hạn trước)
+    @Query("SELECT vl FROM VaccineLot vl WHERE " +
+           "vl.vaccine.id = :vaccineId AND " +
+           "vl.status = 'AVAILABLE' AND " +
+           "vl.remainingQuantity > 0 AND " +
+           "vl.expiryDate > :today " +
+           "ORDER BY vl.expiryDate ASC, vl.remainingQuantity ASC")
+    List<VaccineLot> findAvailableLotsByVaccineIdOrderByExpiryDate(@Param("vaccineId") Long vaccineId, 
+                                                                    @Param("today") LocalDate today);
 }
 

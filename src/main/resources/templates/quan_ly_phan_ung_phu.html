@@ -202,16 +202,36 @@
                         const response = await fetch('/api/adverse-reactions', {
                             credentials: 'include'
                         });
-                        if (!response.ok) throw new Error('Failed to load reactions');
-                        allReactions = await response.json();
+                        
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({ error: 'Failed to load reactions' }));
+                            throw new Error(errorData.error || `HTTP ${response.status}: Failed to load reactions`);
+                        }
+                        
+                        const data = await response.json();
+                        
+                        // Kiểm tra xem response có phải là array không
+                        if (!Array.isArray(data)) {
+                            console.error('Invalid response format:', data);
+                            throw new Error('Invalid response format from server');
+                        }
+                        
+                        allReactions = data;
+                        console.log('Loaded reactions:', allReactions.length);
+                        
                         filterReactions();
                         updateStats();
                     } catch (error) {
                         console.error('Error loading reactions:', error);
                         const tbody = document.getElementById('reactionsTableBody');
                         if (tbody) {
-                            tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Lỗi khi tải dữ liệu</td></tr>';
+                            tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Lỗi khi tải dữ liệu: ${error.message}</td></tr>`;
                         }
+                        // Reset stats
+                        document.getElementById('totalReactions').textContent = '0';
+                        document.getElementById('unresolvedReactions').textContent = '0';
+                        document.getElementById('resolvedReactions').textContent = '0';
+                        document.getElementById('severeReactions').textContent = '0';
                     }
                 }
 
@@ -221,18 +241,18 @@
                     const reactionTypeFilter = document.getElementById('reactionTypeFilter')?.value || '';
                     const statusFilter = document.getElementById('statusFilter')?.value || '';
 
-                    let filtered = allReactions;
+                    let filtered = allReactions || [];
 
                     // Filter by search
                     if (searchInput.trim()) {
                         const searchLower = searchInput.toLowerCase().trim();
                         filtered = filtered.filter(r => {
-                            const userName = r.user?.fullName || '';
-                            const vaccineName = r.vaccine?.name || '';
-                            const symptoms = r.symptoms || '';
-                            return userName.toLowerCase().includes(searchLower) ||
-                                vaccineName.toLowerCase().includes(searchLower) ||
-                                symptoms.toLowerCase().includes(searchLower);
+                            const userName = (r.user?.fullName || '').toLowerCase();
+                            const vaccineName = (r.vaccine?.name || '').toLowerCase();
+                            const symptoms = (r.symptoms || '').toLowerCase();
+                            return userName.includes(searchLower) ||
+                                vaccineName.includes(searchLower) ||
+                                symptoms.includes(searchLower);
                         });
                     }
 
@@ -256,8 +276,9 @@
                     const tbody = document.getElementById('reactionsTableBody');
                     if (!tbody) return;
 
-                    if (reactions.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-[#61896f]">Không có dữ liệu</td></tr>';
+                    if (!reactions || reactions.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-[#61896f]"><span class="material-symbols-outlined text-4xl mb-2 inline-block">inbox</span><p class="mt-2">Không có dữ liệu phản ứng phụ</p><p class="text-xs mt-1 text-[#61896f]/70">Dữ liệu sẽ được hiển thị khi có phản ứng phụ được báo cáo</p></td></tr>';
+                        updatePagination(0);
                         return;
                     }
 
@@ -346,17 +367,36 @@
                 // Update pagination
                 function updatePagination(total) {
                     const totalPages = Math.ceil(total / itemsPerPage);
-                    document.getElementById('paginationText').textContent = `Hiển thị ${Math.min((currentPage - 1) * itemsPerPage + 1, total)}-${Math.min(currentPage * itemsPerPage, total)} trên tổng số ${total} kết quả`;
+                    const start = total > 0 ? Math.min((currentPage - 1) * itemsPerPage + 1, total) : 0;
+                    const end = total > 0 ? Math.min(currentPage * itemsPerPage, total) : 0;
+                    document.getElementById('paginationText').textContent = `Hiển thị ${start}-${end} trên tổng số ${total} kết quả`;
 
                     const paginationDiv = document.getElementById('paginationButtons');
                     if (!paginationDiv) return;
+
+                    if (total === 0 || totalPages === 0) {
+                        paginationDiv.innerHTML = '';
+                        return;
+                    }
 
                     let html = '';
                     if (currentPage > 1) {
                         html += `<button onclick="goToPage(${currentPage - 1})" class="size-8 flex items-center justify-center rounded border border-[#dbe6df] dark:border-white/10 hover:bg-[#f0f4f2] dark:hover:bg-white/10"><span class="material-symbols-outlined text-sm">chevron_left</span></button>`;
                     }
 
-                    for (let i = 1; i <= totalPages; i++) {
+                    // Hiển thị tối đa 5 trang
+                    let startPage = Math.max(1, currentPage - 2);
+                    let endPage = Math.min(totalPages, currentPage + 2);
+
+                    if (endPage - startPage < 4) {
+                        if (startPage === 1) {
+                            endPage = Math.min(totalPages, startPage + 4);
+                        } else if (endPage === totalPages) {
+                            startPage = Math.max(1, endPage - 4);
+                        }
+                    }
+
+                    for (let i = startPage; i <= endPage; i++) {
                         if (i === currentPage) {
                             html += `<button class="size-8 flex items-center justify-center rounded bg-primary text-[#111813] font-bold text-xs">${i}</button>`;
                         } else {

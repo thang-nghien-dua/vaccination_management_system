@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Quản lý Lịch hẹn - Hệ thống Quản lý Tiêm chủng</title>
+    <title>Quản lý Lịch hẹn - VacciCare</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap"
         rel="stylesheet" />
@@ -49,15 +49,6 @@
                 class="sticky top-0 z-10 flex items-center justify-between bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
                 <div class="flex flex-1 items-center gap-4">
                     <h2 class="text-xl font-bold text-[#111813] dark:text-white">Quản lý Lịch hẹn</h2>
-                </div>
-                <div class="flex items-center gap-4 pl-4">
-                    <button class="relative p-2 rounded-lg bg-[#f0f4f2] dark:bg-white/5 text-[#111813] dark:text-white">
-                        <span class="material-symbols-outlined text-[20px]">notifications</span>
-                        <span
-                            class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-background-dark"></span>
-                    </button>
-                    <div class="h-6 w-px bg-[#f0f4f2] dark:bg-white/10"></div>
-                    <p class="text-sm font-medium text-[#61896f] uppercase tracking-widest" id="currentDate"></p>
                 </div>
             </header>
             <section class="p-8 space-y-6">
@@ -136,9 +127,7 @@
                         </table>
                     </div>
                     <div
-                        class="px-6 py-4 bg-gray-50 dark:bg-white/5 border-t border-[#f0f4f2] dark:border-white/10 flex items-center justify-between">
-                        <p id="paginationText" class="text-[11px] font-bold text-[#61896f] uppercase tracking-wider">
-                            Đang tải...</p>
+                        class="px-6 py-4 bg-gray-50 dark:bg-white/5 border-t border-[#f0f4f2] dark:border-white/10 flex items-center justify-end">
                         <div class="flex gap-2" id="paginationControls">
                         </div>
                     </div>
@@ -221,13 +210,6 @@
                 const pageSize = 10;
                 let allAppointments = [];
 
-                // Set current date
-                const today = new Date();
-                const dateStr = today.toLocaleDateString('vi-VN');
-                const currentDateEl = document.getElementById('currentDate');
-                if (currentDateEl) {
-                    currentDateEl.textContent = 'Hôm nay: ' + dateStr;
-                }
 
                 // Filter và search
                 window.handleSearch = function () {
@@ -355,54 +337,65 @@
                 // Update pagination
                 function updatePagination() {
                     const totalPages = Math.ceil(allAppointments.length / pageSize);
-                    const start = (currentPage - 1) * pageSize + 1;
-                    const end = Math.min(currentPage * pageSize, allAppointments.length);
-
-                    const paginationText = document.getElementById('paginationText');
-                    if (paginationText) {
-                        paginationText.textContent = `Hiển thị ${start}-${end} của ${allAppointments.length} lịch hẹn`;
-                    }
-
                     const paginationControls = document.getElementById('paginationControls');
-                    if (paginationControls) {
-                        let html = '';
+                    if (!paginationControls) return;
+
+                    // Clear existing buttons
+                    paginationControls.innerHTML = '';
+
+                    // Previous button
+                    const prevBtn = document.createElement('button');
+                    prevBtn.className = 'p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors disabled:opacity-50';
+                    prevBtn.disabled = currentPage === 1;
+                    prevBtn.innerHTML = '<span class="material-symbols-outlined text-sm">chevron_left</span>';
+                    prevBtn.onclick = () => {
                         if (currentPage > 1) {
-                            html += `<button onclick="changePage(${currentPage - 1})" class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors">
-                    <span class="material-symbols-outlined text-sm">chevron_left</span>
-                </button>`;
-                        } else {
-                            html += `<button disabled class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 opacity-50">
-                    <span class="material-symbols-outlined text-sm">chevron_left</span>
-                </button>`;
+                            currentPage--;
+                            renderAppointments();
+                            updatePagination();
                         }
+                    };
+                    paginationControls.appendChild(prevBtn);
 
-                        for (let i = 1; i <= totalPages && i <= 5; i++) {
-                            if (i === currentPage) {
-                                html += `<button class="p-2 rounded-lg bg-primary text-[#111813] font-bold text-xs px-4">${i}</button>`;
-                            } else {
-                                html += `<button onclick="changePage(${i})" class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors text-xs px-4">${i}</button>`;
-                            }
-                        }
-
-                        if (currentPage < totalPages) {
-                            html += `<button onclick="changePage(${currentPage + 1})" class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors">
-                    <span class="material-symbols-outlined text-sm">chevron_right</span>
-                </button>`;
-                        } else {
-                            html += `<button disabled class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 opacity-50">
-                    <span class="material-symbols-outlined text-sm">chevron_right</span>
-                </button>`;
-                        }
-
-                        paginationControls.innerHTML = html;
+                    // Page number buttons
+                    const maxVisiblePages = 5;
+                    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                    if (endPage - startPage < maxVisiblePages - 1) {
+                        startPage = Math.max(1, endPage - maxVisiblePages + 1);
                     }
+
+                    for (let i = startPage; i <= endPage; i++) {
+                        const pageBtn = document.createElement('button');
+                        pageBtn.className = `p-2 rounded-lg font-bold text-xs px-4 transition-colors ${
+                            i === currentPage
+                                ? 'bg-primary text-[#111813]'
+                                : 'bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50'
+                        }`;
+                        pageBtn.textContent = i.toString();
+                        pageBtn.onclick = () => {
+                            currentPage = i;
+                            renderAppointments();
+                            updatePagination();
+                        };
+                        paginationControls.appendChild(pageBtn);
+                    }
+
+                    // Next button
+                    const nextBtn = document.createElement('button');
+                    nextBtn.className = 'p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors disabled:opacity-50';
+                    nextBtn.disabled = currentPage === totalPages;
+                    nextBtn.innerHTML = '<span class="material-symbols-outlined text-sm">chevron_right</span>';
+                    nextBtn.onclick = () => {
+                        if (currentPage < totalPages) {
+                            currentPage++;
+                            renderAppointments();
+                            updatePagination();
+                        }
+                    };
+                    paginationControls.appendChild(nextBtn);
                 }
 
-                window.changePage = function (page) {
-                    currentPage = page;
-                    renderAppointments();
-                    updatePagination();
-                };
 
                 let currentAppointmentId = null;
                 let currentStatusUpdateId = null;

@@ -88,7 +88,7 @@ public class VaccinationCenterService {
         
         return vaccinationCenterRepository.save(center);
     }
-    
+
     //Xóa trung tâm
     public void deleteCenter(Long id) {
         VaccinationCenter center = getCenterById(id);

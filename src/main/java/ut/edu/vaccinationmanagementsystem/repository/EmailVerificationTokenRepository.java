@@ -9,19 +9,11 @@ import java.util.Optional;
 
 @Repository
 public interface EmailVerificationTokenRepository extends JpaRepository<EmailVerificationToken, Long> {
-    /**
-     * Tìm token theo token string
-     */
+
     Optional<EmailVerificationToken> findByToken(String token);
-    
-    /**
-     * Tìm token theo user
-     */
+
     Optional<EmailVerificationToken> findByUser(User user);
-    
-    /**
-     * Xóa token đã hết hạn
-     */
+
     void deleteByExpiresAtBefore(java.time.LocalDateTime now);
 }
 

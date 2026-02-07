@@ -9,9 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
-/**
- * Custom OAuth2User để lưu thông tin User entity
- */
+
 public class CustomOAuth2User implements OAuth2User {
     
     private final OAuth2User oAuth2User;

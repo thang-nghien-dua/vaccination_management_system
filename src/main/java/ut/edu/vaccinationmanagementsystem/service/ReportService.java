@@ -14,9 +14,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Service xử lý logic báo cáo và thống kê
- */
 @Service
 @Transactional
 public class ReportService {
@@ -39,9 +36,7 @@ public class ReportService {
     @Autowired
     private AppointmentSlotRepository appointmentSlotRepository;
     
-    /**
-     * Báo cáo tiêm chủng
-     */
+
     public Map<String, Object> getVaccinationReport(LocalDate startDate, LocalDate endDate) {
         List<VaccinationRecord> records = vaccinationRecordRepository.findAll();
         
@@ -109,9 +104,7 @@ public class ReportService {
         return report;
     }
     
-    /**
-     * Báo cáo vaccine
-     */
+
     public Map<String, Object> getVaccineReport() {
         List<Vaccine> vaccines = vaccineRepository.findAll();
         List<VaccinationRecord> records = vaccinationRecordRepository.findAll();
@@ -170,10 +163,7 @@ public class ReportService {
         
         return report;
     }
-    
-    /**
-     * Báo cáo khách hàng
-     */
+
     public Map<String, Object> getCustomerReport(LocalDate startDate, LocalDate endDate) {
         List<User> customers = userRepository.findAll().stream()
                 .filter(user -> user.getRole() == ut.edu.vaccinationmanagementsystem.entity.enums.Role.CUSTOMER)

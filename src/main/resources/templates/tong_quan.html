@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Dashboard Quản trị Hệ thống Toàn diện - Hệ thống Quản lý Tiêm chủng</title>
+    <title>Dashboard Quản trị Hệ thống Toàn diện - VacciCare</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap"
         rel="stylesheet" />
@@ -57,16 +57,6 @@
                 <div class="flex flex-1 items-center gap-4">
                     <h2 class="text-xl font-bold">Tổng quan Hệ thống</h2>
                 </div>
-                <div class="flex items-center gap-4 pl-4">
-                    <a th:href="@{/admin/notifications}"
-                        class="relative p-2 rounded-lg bg-[#f0f4f2] dark:bg-white/5 text-[#111813] dark:text-white inline-block">
-                        <span class="material-symbols-outlined text-[20px]">notifications</span>
-                        <span
-                            class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-background-dark"></span>
-                    </a>
-                    <div class="h-6 w-px bg-[#f0f4f2] dark:bg-white/10"></div>
-                    <p class="text-sm font-medium text-[#61896f] uppercase tracking-widest" id="currentDate"></p>
-                </div>
             </header>
             <section class="px-8 pt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 <div class="stat-card border-l-4 border-blue-500">
@@ -74,7 +64,7 @@
                         <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-600">
                             <span class="material-symbols-outlined">group</span>
                         </div>
-                        <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">+12%</span>
+                        <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded" id="userGrowthBadge">-</span>
                     </div>
                     <p class="text-[#61896f] text-xs font-bold uppercase tracking-wider mb-1">Tổng người dùng</p>
                     <h3 class="text-2xl font-black mb-2" id="totalUsers">0</h3>
@@ -93,7 +83,7 @@
                     </div>
                     <p class="text-[#61896f] text-xs font-bold uppercase tracking-wider mb-1">Tổng lịch hẹn</p>
                     <h3 class="text-2xl font-black mb-2" id="totalAppointments">0</h3>
-                    <p class="text-[10px] text-[#61896f]">Tăng 5% so với tháng trước</p>
+                    <p class="text-[10px] text-[#61896f]" id="appointmentGrowthText">-</p>
                 </div>
                 <div class="stat-card border-l-4 border-primary">
                     <div class="flex justify-between items-start mb-4">
@@ -105,7 +95,7 @@
                     </div>
                     <p class="text-[#61896f] text-xs font-bold uppercase tracking-wider mb-1">Vaccine đã tiêm</p>
                     <h3 class="text-2xl font-black mb-2" id="totalVaccinations">0</h3>
-                    <p class="text-[10px] text-[#61896f]">Đạt 92% kế hoạch năm</p>
+                    <p class="text-[10px] text-[#61896f]">Tổng số mũi tiêm</p>
                 </div>
                 <div class="stat-card border-l-4 border-amber-500">
                     <div class="flex justify-between items-start mb-4">
@@ -127,7 +117,7 @@
                     </div>
                     <p class="text-[#61896f] text-xs font-bold uppercase tracking-wider mb-1">Trung tâm hoạt động</p>
                     <h3 class="text-2xl font-black mb-2" id="totalCenters">0</h3>
-                    <p class="text-[10px] text-[#61896f]">Trên 12 tỉnh thành</p>
+                    <p class="text-[10px] text-[#61896f]" id="activeCentersText">-</p>
                 </div>
             </section>
             <section class="px-8 pt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -230,10 +220,6 @@
                 // Set current date
                 const today = new Date();
                 const dateStr = today.toLocaleDateString('vi-VN');
-                const currentDateEl = document.getElementById('currentDate');
-                if (currentDateEl) {
-                    currentDateEl.textContent = 'Hôm nay: ' + dateStr;
-                }
 
                 // Load dashboard stats
                 async function loadDashboardStats() {
@@ -281,6 +267,50 @@
                             const totalCentersEl = document.getElementById('totalCenters');
                             if (totalCentersEl) {
                                 totalCentersEl.textContent = stats.totalCenters;
+                            }
+                        }
+                        
+                        // Update user growth badge
+                        if (stats.userGrowthPercent !== undefined) {
+                            const userGrowthBadge = document.getElementById('userGrowthBadge');
+                            if (userGrowthBadge) {
+                                const growth = stats.userGrowthPercent;
+                                if (growth > 0) {
+                                    userGrowthBadge.textContent = `+${growth.toFixed(1)}%`;
+                                    userGrowthBadge.className = 'text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded';
+                                } else if (growth < 0) {
+                                    userGrowthBadge.textContent = `${growth.toFixed(1)}%`;
+                                    userGrowthBadge.className = 'text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded';
+                                } else {
+                                    userGrowthBadge.textContent = '0%';
+                                    userGrowthBadge.className = 'text-[10px] font-bold text-gray-600 bg-gray-50 px-1.5 py-0.5 rounded';
+                                }
+                            }
+                        }
+                        
+                        // Update appointment growth text
+                        if (stats.appointmentGrowthPercent !== undefined) {
+                            const appointmentGrowthText = document.getElementById('appointmentGrowthText');
+                            if (appointmentGrowthText) {
+                                const growth = stats.appointmentGrowthPercent;
+                                if (growth > 0) {
+                                    appointmentGrowthText.textContent = `Tăng ${growth.toFixed(1)}% so với tháng trước`;
+                                    appointmentGrowthText.className = 'text-[10px] text-green-600';
+                                } else if (growth < 0) {
+                                    appointmentGrowthText.textContent = `Giảm ${Math.abs(growth).toFixed(1)}% so với tháng trước`;
+                                    appointmentGrowthText.className = 'text-[10px] text-red-600';
+                                } else {
+                                    appointmentGrowthText.textContent = 'Không thay đổi so với tháng trước';
+                                    appointmentGrowthText.className = 'text-[10px] text-[#61896f]';
+                                }
+                            }
+                        }
+                        
+                        // Update active centers text
+                        if (stats.activeCenters !== undefined && stats.totalCenters !== undefined) {
+                            const activeCentersText = document.getElementById('activeCentersText');
+                            if (activeCentersText) {
+                                activeCentersText.textContent = `${stats.activeCenters} trung tâm đang hoạt động`;
                             }
                         }
                     } catch (error) {
@@ -410,37 +440,73 @@
 
                         // Render donut chart
                         const chartContainer = document.getElementById('popularVaccinesChart');
-                        if (chartContainer && vaccines.length > 0) {
-                            const colors = ['#13ec5b', '#3b82f6', '#f59e0b', '#9ca3af'];
-                            let svgCircles = '';
-                            let currentOffset = 0;
-                            const circumference = 276; // 2 * PI * 44 (r=44%)
-
-                            vaccines.forEach((vaccine, index) => {
-                                const percentage = vaccine.percentage || 0;
-                                const dashArray = (percentage / 100) * circumference;
-                                const color = colors[index % colors.length];
-
-                                svgCircles += `
-                                <circle cx="50%" cy="50%" fill="transparent" r="44%" 
-                                    stroke="${color}" 
-                                    stroke-dasharray="${dashArray} ${circumference}" 
-                                    stroke-dashoffset="${-currentOffset}" 
-                                    stroke-linecap="round" 
-                                    stroke-width="16">
-                                </circle>
-                            `;
-                                currentOffset += dashArray;
-                            });
-
+                        if (!chartContainer) return;
+                        
+                        // Lọc vaccine có dữ liệu
+                        const vaccinesWithData = vaccines.filter(v => (v.percentage || 0) > 0);
+                        
+                        if (vaccinesWithData.length === 0) {
                             chartContainer.innerHTML = `
-                            <svg class="absolute inset-0 size-full -rotate-90">${svgCircles}</svg>
-                            <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                <span class="text-2xl font-black">${total > 0 ? total : '0'}</span>
-                                <span class="text-[10px] text-[#61896f] font-bold">Dữ liệu thực</span>
-                            </div>
-                        `;
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span class="text-2xl font-black">0</span>
+                                    <span class="text-[10px] text-[#61896f] font-bold">Chưa có dữ liệu</span>
+                                </div>
+                            `;
+                            return;
                         }
+
+                        // Tính tổng phần trăm và đảm bảo tổng = 100%
+                        let totalPercentage = vaccinesWithData.reduce((sum, v) => sum + (v.percentage || 0), 0);
+                        
+                        // Điều chỉnh vaccine cuối cùng để tổng = 100%
+                        if (Math.abs(totalPercentage - 100) > 0.01 && vaccinesWithData.length > 0) {
+                            const lastVaccine = vaccinesWithData[vaccinesWithData.length - 1];
+                            const otherPercentage = totalPercentage - (lastVaccine.percentage || 0);
+                            lastVaccine.percentage = Math.max(0, 100 - otherPercentage);
+                        }
+
+                        const colors = ['#13ec5b', '#3b82f6', '#f59e0b', '#9ca3af'];
+                        
+                        // Tính circumference cho SVG circle
+                        // Với r="44%" trong viewBox="0 0 200 200", radius = 88
+                        // circumference = 2 * PI * 88 ≈ 553
+                        const radius = 88; // 44% của 200
+                        const circumference = 2 * Math.PI * radius;
+
+                        // Render các segment
+                        let svgCircles = '';
+                        let currentOffset = 0;
+                        
+                        vaccinesWithData.forEach((vaccine, index) => {
+                            const percentage = vaccine.percentage || 0;
+                            const arcLength = (percentage / 100) * circumference;
+                            const color = colors[index % colors.length];
+
+                            // stroke-dasharray: arcLength là độ dài segment, circumference là tổng
+                            // stroke-dashoffset: đặt segment ở vị trí đúng (bắt đầu từ currentOffset)
+                            svgCircles += `
+                            <circle cx="100" cy="100" fill="transparent" r="${radius}" 
+                                stroke="${color}" 
+                                stroke-dasharray="${arcLength} ${circumference}" 
+                                stroke-dashoffset="${currentOffset}" 
+                                stroke-linecap="round" 
+                                stroke-width="16">
+                            </circle>
+                        `;
+                            
+                            // Cập nhật offset cho segment tiếp theo
+                            currentOffset -= arcLength;
+                        });
+
+                        chartContainer.innerHTML = `
+                        <svg class="absolute inset-0 size-full -rotate-90" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet">
+                            ${svgCircles}
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span class="text-2xl font-black">${total > 0 ? total : '0'}</span>
+                            <span class="text-[10px] text-[#61896f] font-bold">Dữ liệu thực</span>
+                        </div>
+                    `;
 
                         // Render legend
                         const legendContainer = document.getElementById('popularVaccinesLegend');
@@ -568,13 +634,23 @@
                         const response = await fetch('/api/admin/dashboard/inventory-alerts?limit=3', {
                             credentials: 'include'
                         });
-                        if (!response.ok) throw new Error('Failed to load inventory alerts');
+                        if (!response.ok) {
+                            console.error('Failed to load inventory alerts:', response.status, response.statusText);
+                            const container = document.getElementById('inventoryAlertsList');
+                            if (container) {
+                                container.innerHTML = '<div class="p-3 text-center text-red-500 text-xs">Lỗi khi tải cảnh báo</div>';
+                            }
+                            return;
+                        }
+                        
                         const alerts = await response.json();
-
                         const container = document.getElementById('inventoryAlertsList');
-                        if (!container) return;
+                        if (!container) {
+                            console.error('Container inventoryAlertsList not found');
+                            return;
+                        }
 
-                        if (alerts.length === 0) {
+                        if (!alerts || alerts.length === 0) {
                             container.innerHTML = '<div class="p-3 text-center text-[#61896f] text-xs">Không có cảnh báo</div>';
                             return;
                         }
@@ -586,9 +662,10 @@
                             const statusText = isOutOfStock ? 'HẾT HÀNG' : 'Sắp hết hàng';
                             const statusTextColor = isOutOfStock ? 'text-red-500' : 'text-amber-600';
                             const stockQuantity = alert.stockQuantity || 0;
+                            const hoverClass = isOutOfStock ? 'hover:bg-red-50/30' : 'hover:bg-amber-50/30';
 
                             return `
-                            <div class="p-3 flex items-center gap-3 hover:${isOutOfStock ? 'bg-red-50/30' : 'bg-amber-50/30'} transition-colors">
+                            <div class="p-3 flex items-center gap-3 ${hoverClass} transition-colors">
                                 <div class="${bgColor} p-1.5 rounded-lg ${textColor} shrink-0">
                                     <span class="material-symbols-outlined text-sm">inventory_2</span>
                                 </div>
@@ -605,6 +682,10 @@
                         }).join('');
                     } catch (error) {
                         console.error('Error loading inventory alerts:', error);
+                        const container = document.getElementById('inventoryAlertsList');
+                        if (container) {
+                            container.innerHTML = '<div class="p-3 text-center text-red-500 text-xs">Lỗi khi tải cảnh báo</div>';
+                        }
                     }
                 }
 

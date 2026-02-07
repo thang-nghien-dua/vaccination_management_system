@@ -15,9 +15,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Service xử lý business logic cho VaccineLot
- */
 @Service
 @Transactional
 public class VaccineLotService {

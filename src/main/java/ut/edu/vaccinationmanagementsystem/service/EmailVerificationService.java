@@ -12,9 +12,7 @@ import ut.edu.vaccinationmanagementsystem.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * Service quản lý email verification token
- */
+
 @Service
 @Transactional
 public class EmailVerificationService {
@@ -28,9 +26,7 @@ public class EmailVerificationService {
     @Autowired
     private UserRepository userRepository;
     
-    /**
-     * Tạo token xác thực email cho user
-     */
+
     public EmailVerificationToken createVerificationToken(User user) {
         // Xóa token cũ nếu có
         tokenRepository.findByUser(user).ifPresent(tokenRepository::delete);
@@ -51,9 +47,7 @@ public class EmailVerificationService {
         return token;
     }
     
-    /**
-     * Xác thực email bằng token
-     */
+
     public boolean verifyEmail(String tokenString) {
         EmailVerificationToken token = tokenRepository.findByToken(tokenString)
                 .orElseThrow(() -> new RuntimeException("Invalid verification token"));
@@ -79,9 +73,7 @@ public class EmailVerificationService {
         return true;
     }
     
-    /**
-     * Gửi lại email xác thực
-     */
+
     public void resendVerificationEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));

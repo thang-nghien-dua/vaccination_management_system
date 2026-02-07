@@ -16,9 +16,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
-/**
- * Service xử lý business logic cho AppointmentSlot
- */
 @Service
 @Transactional
 public class AppointmentSlotService {

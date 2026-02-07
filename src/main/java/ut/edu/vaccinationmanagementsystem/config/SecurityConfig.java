@@ -47,11 +47,13 @@ public class SecurityConfig {
                 .requestMatchers("/verify-email-success").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/oauth2/**").permitAll()
-                .requestMatchers("/api/vaccines/**").permitAll() // Tạm thời cho phép xem vaccine
+                .requestMatchers("/api/vaccines/**").permitAll() // Cho phép xem vaccine API
                 .requestMatchers("/api/appointment-slots/available/**").permitAll()
-                .requestMatchers("/api/appointments/consultation-request").permitAll() // Cho phép guest gửi yêu cầu tư vấn // Tạm thời cho phép xem slot trống
+                .requestMatchers("/api/appointments/consultation-request").permitAll() // Cho phép guest gửi yêu cầu tư vấn
+                .requestMatchers("/public/vaccines/**").permitAll() // Cho phép xem chi tiết vaccine công khai (cho trang about)
+                .requestMatchers("/vaccines/*").permitAll() // Cho phép xem chi tiết vaccine (public) - pattern /vaccines/{id}
                 // Protected endpoints - cần đăng nhập
-                .requestMatchers("/home", "/profile", "/family-members", "/vaccines", "/vaccines/**", "/vaccination-history", "/appointments", "/notifications").authenticated()
+                .requestMatchers("/home", "/profile", "/family-members", "/vaccines", "/vaccination-history", "/appointments", "/notifications").authenticated()
                 // Doctor endpoints
                 .requestMatchers("/doctor/**").hasRole("DOCTOR")
                 // Nurse endpoints

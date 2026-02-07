@@ -10,20 +10,22 @@ import java.util.List;
 
 @Repository
 public interface AdverseReactionRepository extends JpaRepository<AdverseReaction, Long> {
-    /**
-     * Tìm tất cả phản ứng phụ của một vaccination record
-     */
+
     List<AdverseReaction> findByVaccinationRecordId(Long vaccinationRecordId);
-    
-    /**
-     * Tìm tất cả phản ứng phụ chưa được xử lý (resolved = false)
-     */
+
     @Query("SELECT ar FROM AdverseReaction ar WHERE ar.resolved = false ORDER BY ar.occurredAt DESC")
     List<AdverseReaction> findUnresolvedReactions();
-    
-    /**
-     * Tìm tất cả phản ứng phụ đã được xử lý bởi một user cụ thể
-     */
+
     List<AdverseReaction> findByHandledById(Long handledById);
+
+    @Query("SELECT DISTINCT ar FROM AdverseReaction ar " +
+           "LEFT JOIN FETCH ar.vaccinationRecord vr " +
+           "LEFT JOIN FETCH vr.user " +
+           "LEFT JOIN FETCH vr.vaccine " +
+           "LEFT JOIN FETCH vr.appointment a " +
+           "LEFT JOIN FETCH a.center " +
+           "LEFT JOIN FETCH ar.handledBy " +
+           "ORDER BY ar.occurredAt DESC")
+    List<AdverseReaction> findAllWithRelationships();
 }
 

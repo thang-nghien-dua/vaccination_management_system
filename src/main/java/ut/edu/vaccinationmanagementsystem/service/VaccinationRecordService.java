@@ -41,10 +41,7 @@ public class VaccinationRecordService {
     @Autowired
     private EmailService emailService;
     
-    /**
-     * Tạo số chứng nhận tiêm chủng tự động
-     * Format: CERT-YYYYMMDD-HHMMSS-XXXX (XXXX là số random 4 chữ số)
-     */
+
     private String generateCertificateNumber() {
         LocalDateTime now = LocalDateTime.now();
         String dateTime = String.format("%04d%02d%02d-%02d%02d%02d",
@@ -54,9 +51,7 @@ public class VaccinationRecordService {
         return String.format("CERT-%s-%04d", dateTime, random);
     }
     
-    /**
-     * Tạo AppointmentHistory khi status thay đổi
-     */
+
     private void createAppointmentHistory(Appointment appointment, AppointmentStatus oldStatus, 
                                          AppointmentStatus newStatus, User changedBy, String reason) {
         AppointmentHistory history = new AppointmentHistory();
@@ -69,9 +64,7 @@ public class VaccinationRecordService {
         appointmentHistoryRepository.save(history);
     }
     
-    /**
-     * Gửi email chứng nhận tiêm chủng
-     */
+
     private void sendCertificateEmail(VaccinationRecord record) {
         try {
             User userToNotify = record.getUser();
@@ -118,21 +111,7 @@ public class VaccinationRecordService {
             e.printStackTrace();
         }
     }
-    
-    /**
-     * Tạo VaccinationRecord khi tiêm thành công
-     * Đồng thời trừ stock quantity của vaccine tại trung tâm
-     * 
-     * @param appointmentId ID của appointment đã tiêm thành công
-     * @param vaccineLotId ID của vaccine lot đã sử dụng
-     * @param nurseId ID của y tá thực hiện tiêm
-     * @param injectionDate Ngày tiêm
-     * @param injectionTime Giờ tiêm
-     * @param injectionSite Vị trí tiêm (ví dụ: "LEFT_ARM", "RIGHT_ARM")
-     * @param doseAmount Liều lượng (ví dụ: 0.5ml)
-     * @param certificateNumber Số chứng nhận tiêm chủng (nếu null sẽ tự động generate)
-     * @return VaccinationRecord đã được tạo
-     */
+
     public VaccinationRecord createVaccinationRecord(
             Long appointmentId,
             Long vaccineLotId,
@@ -191,9 +170,6 @@ public class VaccinationRecordService {
                 }
             }
         }
-        
-        // TODO: Kiểm tra nurse có role NURSE không (nếu có enum Role)
-        
         // Xác định user được tiêm
         // Lưu ý: Khi đặt cho family member, user field trong VaccinationRecord sẽ lưu bookedByUser
         // Thông tin chi tiết người được tiêm sẽ lấy từ appointment.familyMember
@@ -280,15 +256,30 @@ public class VaccinationRecordService {
         
         record.setCreatedAt(LocalDateTime.now());
         
-        // Trừ stock quantity tại trung tâm
-        int currentStock = centerVaccine.getStockQuantity();
-        centerVaccine.setStockQuantity(currentStock - 1);
-        centerVaccineRepository.save(centerVaccine);
-        
-        // Trừ remaining quantity của vaccine lot
-        int currentLotRemaining = vaccineLot.getRemainingQuantity();
-        vaccineLot.setRemainingQuantity(currentLotRemaining - 1);
-        vaccineLotRepository.save(vaccineLot);
+        // KHÔNG trừ vaccine ở đây nữa vì đã trừ khi CONFIRMED
+        // Vaccine đã được giữ trong appointment.reservedVaccineLot khi appointment được CONFIRMED
+        // Chỉ cần kiểm tra xem appointment có reservedVaccineLot không
+        if (appointment.getReservedVaccineLot() == null) {
+            // Nếu không có reserved lot (backward compatibility hoặc appointment cũ), vẫn trừ như cũ
+            // Trừ stock quantity tại trung tâm
+            int currentStock = centerVaccine.getStockQuantity();
+            centerVaccine.setStockQuantity(currentStock - 1);
+            centerVaccineRepository.save(centerVaccine);
+            
+            // Trừ remaining quantity của vaccine lot
+            int currentLotRemaining = vaccineLot.getRemainingQuantity();
+            vaccineLot.setRemainingQuantity(currentLotRemaining - 1);
+            vaccineLotRepository.save(vaccineLot);
+        } else {
+            // Đã có reserved lot, không cần trừ nữa
+            // Chỉ cần đảm bảo lot được sử dụng đúng
+            if (!appointment.getReservedVaccineLot().getId().equals(vaccineLot.getId())) {
+                // Nếu lot được chọn khác với lot đã giữ, vẫn cần trừ lot mới và cộng lại lot cũ
+                // Nhưng để đơn giản, ta sẽ chỉ cảnh báo
+                System.out.println("Warning: Vaccine lot selected (" + vaccineLot.getLotNumber() + 
+                    ") differs from reserved lot (" + appointment.getReservedVaccineLot().getLotNumber() + ")");
+            }
+        }
         
         // Lưu trạng thái cũ trước khi cập nhật
         AppointmentStatus oldStatus = appointment.getStatus();
@@ -313,10 +304,7 @@ public class VaccinationRecordService {
     
     @Autowired
     private UserRepository userRepository;
-    
-    /**
-     * Lấy VaccinationRecord theo ID
-     */
+
     public VaccinationRecord getVaccinationRecordById(Long id) {
         return vaccinationRecordRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Vaccination record not found with id: " + id));

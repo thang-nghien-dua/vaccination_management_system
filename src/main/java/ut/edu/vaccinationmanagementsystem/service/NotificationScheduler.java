@@ -12,9 +12,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
-/**
- * Scheduled task để kiểm tra và tạo thông báo nhắc nhở lịch hẹn sắp tới
- */
+
 @Component
 public class NotificationScheduler {
     
@@ -24,11 +22,7 @@ public class NotificationScheduler {
     @Autowired
     private NotificationService notificationService;
     
-    /**
-     * Chạy mỗi giờ để kiểm tra appointments sắp tới và tạo thông báo nhắc nhở
-     * - 1 ngày trước (24 giờ)
-     * - 2 giờ trước
-     */
+
     @Scheduled(cron = "0 0 * * * ?") // Chạy mỗi giờ
     public void checkUpcomingAppointments() {
         LocalDateTime now = LocalDateTime.now();
@@ -70,10 +64,7 @@ public class NotificationScheduler {
         }
     }
     
-    /**
-     * Chạy mỗi phút để kiểm tra appointments mới đặt và gửi nhắc nhở sau 5 phút
-     * TEST MODE: Nhắc nhở 5 phút sau khi đặt lịch (để test nhanh)
-     */
+
     @Scheduled(cron = "0 * * * * ?") // Chạy mỗi phút
     public void checkNewAppointments() {
         LocalDateTime now = LocalDateTime.now();

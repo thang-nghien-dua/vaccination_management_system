@@ -4,13 +4,14 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Thông báo của tôi - Hệ thống Tiêm chủng</title>
+    <title>Thông báo của tôi - VacciCare</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap"
         rel="stylesheet" />
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
+    <script src="/js/sidebar.js"></script>
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -59,7 +60,10 @@
 </head>
 
 <body class="bg-background-light dark:bg-background-dark min-h-screen text-[#111813] dark:text-white">
-    <div class="flex h-screen overflow-hidden">
+    <div class="flex min-h-screen">
+        <!-- Sidebar Overlay (mobile) -->
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden"></div>
+        
         <!-- Sidebar Navigation - Load based on user role -->
         <th:block
             th:with="roleName=${forcedRole != null ? forcedRole : (currentUser != null and currentUser.role != null ? currentUser.role.name() : 'CUSTOMER')}">

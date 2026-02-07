@@ -14,9 +14,6 @@ import ut.edu.vaccinationmanagementsystem.entity.enums.UserStatus;
 
 import java.io.IOException;
 
-/**
- * Handler xử lý sau khi đăng nhập OAuth2 thành công
- */
 @Component
 public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     

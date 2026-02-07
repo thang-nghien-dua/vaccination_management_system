@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Quản lý Danh mục Vaccine Admin - Hệ thống Quản lý Tiêm chủng</title>
+    <title>Quản lý Danh mục Vaccine Admin - VacciCare</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap"
         rel="stylesheet" />
@@ -55,13 +55,7 @@
                     <h2 class="text-xl font-bold text-[#111813] dark:text-white">Quản lý Danh mục Vaccine</h2>
                 </div>
                 <div class="flex items-center gap-4 pl-4">
-                    <button class="relative p-2 rounded-lg bg-[#f0f4f2] dark:bg-white/5 text-[#111813] dark:text-white">
-                        <span class="material-symbols-outlined text-[20px]">notifications</span>
-                        <span
-                            class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-background-dark"></span>
-                    </button>
-                    <div class="h-6 w-px bg-[#f0f4f2] dark:bg-white/10"></div>
-                    <p class="text-sm font-medium text-[#61896f] uppercase tracking-widest">Hôm nay: 24/05/2024</p>
+                    <p class="text-sm font-medium text-[#61896f] uppercase tracking-widest" id="currentDate"></p>
                 </div>
             </header>
             <section class="p-8 space-y-6">
@@ -131,24 +125,9 @@
                         </table>
                     </div>
                     <div
-                        class="px-6 py-4 bg-gray-50 dark:bg-white/5 border-t border-[#f0f4f2] dark:border-white/10 flex items-center justify-between">
-                        <p id="vaccinesPaginationText"
-                            class="text-[11px] font-bold text-[#61896f] uppercase tracking-wider">Đang tải...</p>
-                        <div class="flex gap-2">
-                            <button
-                                class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                                disabled="">
-                                <span class="material-symbols-outlined text-sm">chevron_left</span>
-                            </button>
-                            <button class="p-2 rounded-lg bg-primary text-[#111813] font-bold text-xs px-4">1</button>
-                            <button
-                                class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors text-xs px-4">2</button>
-                            <button
-                                class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors text-xs px-4">3</button>
-                            <button
-                                class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors">
-                                <span class="material-symbols-outlined text-sm">chevron_right</span>
-                            </button>
+                        class="px-6 py-4 bg-gray-50 dark:bg-white/5 border-t border-[#f0f4f2] dark:border-white/10 flex items-center justify-end">
+                        <div class="flex gap-2" id="vaccinesPaginationButtons">
+                            <!-- Pagination buttons will be generated dynamically -->
                         </div>
                     </div>
                 </div>
@@ -295,10 +274,134 @@
         </div>
     </div>
 
+    <!-- Modal Quản lý Lô Vaccine -->
+    <div id="vaccineLotsModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden items-center justify-center">
+        <div class="bg-white dark:bg-white/10 rounded-2xl border border-[#f0f4f2] dark:border-white/10 shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white dark:bg-white/10 border-b border-[#f0f4f2] dark:border-white/10 px-6 py-4 flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-[#111813] dark:text-white">Quản lý Lô Vaccine</h3>
+                    <p class="text-sm text-[#61896f] mt-1">
+                        Vaccine: <span id="lotsModalVaccineName" class="font-bold">-</span> 
+                        (<span id="lotsModalVaccineCode" class="font-mono">-</span>)
+                    </p>
+                </div>
+                <button onclick="closeVaccineLotsModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-6">
+                <!-- Form Thêm Lô Vaccine Mới -->
+                <div id="addLotForm" class="bg-[#f6f8f6] dark:bg-white/5 rounded-xl p-4 border border-[#f0f4f2] dark:border-white/10">
+                    <h4 class="text-lg font-bold text-[#111813] dark:text-white mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">add_circle</span>
+                        Thêm lô vaccine mới
+                    </h4>
+                    <form id="addLotFormElement" class="space-y-4">
+                        <input type="hidden" id="addLotVaccineId" name="vaccineId">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Số lô <span class="text-red-500">*</span></label>
+                                <input type="text" id="lotNumber" name="lotNumber" required
+                                    class="w-full px-4 py-2 bg-white dark:bg-white/5 border border-[#f0f4f2] dark:border-white/10 rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all"
+                                    placeholder="Ví dụ: LOT-2024-001">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Số lượng ban đầu <span class="text-red-500">*</span></label>
+                                <input type="number" id="lotQuantity" name="quantity" required min="1"
+                                    class="w-full px-4 py-2 bg-white dark:bg-white/5 border border-[#f0f4f2] dark:border-white/10 rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all"
+                                    placeholder="1000">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Số lượng còn lại <span class="text-red-500">*</span></label>
+                                <input type="number" id="lotRemainingQuantity" name="remainingQuantity" required min="0"
+                                    class="w-full px-4 py-2 bg-white dark:bg-white/5 border border-[#f0f4f2] dark:border-white/10 rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all"
+                                    placeholder="1000">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Nhà cung cấp</label>
+                                <input type="text" id="lotSupplier" name="supplier"
+                                    class="w-full px-4 py-2 bg-white dark:bg-white/5 border border-[#f0f4f2] dark:border-white/10 rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all"
+                                    placeholder="Ví dụ: Pfizer Vietnam">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Ngày sản xuất <span class="text-red-500">*</span></label>
+                                <input type="date" id="lotManufacturingDate" name="manufacturingDate" required
+                                    class="w-full px-4 py-2 bg-white dark:bg-white/5 border border-[#f0f4f2] dark:border-white/10 rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Ngày hết hạn <span class="text-red-500">*</span></label>
+                                <input type="date" id="lotExpiryDate" name="expiryDate" required
+                                    class="w-full px-4 py-2 bg-white dark:bg-white/5 border border-[#f0f4f2] dark:border-white/10 rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Ngày nhập kho <span class="text-red-500">*</span></label>
+                                <input type="date" id="lotImportDate" name="importDate" required
+                                    class="w-full px-4 py-2 bg-white dark:bg-white/5 border border-[#f0f4f2] dark:border-white/10 rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-[#111813] dark:text-white mb-2">Trạng thái <span class="text-red-500">*</span></label>
+                                <select id="lotStatus" name="status" required
+                                    class="w-full px-4 py-2 bg-white dark:bg-white/5 border border-[#f0f4f2] dark:border-white/10 rounded-xl text-sm focus:ring-2 focus:ring-primary/50 transition-all">
+                                    <option value="AVAILABLE">Sẵn sàng (AVAILABLE)</option>
+                                    <option value="EXPIRED">Hết hạn (EXPIRED)</option>
+                                    <option value="DEPLETED">Hết hàng (DEPLETED)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex gap-3 pt-4 border-t border-[#f0f4f2] dark:border-white/10">
+                            <button type="submit" class="flex-1 px-6 py-2.5 bg-primary text-[#111813] font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
+                                <span class="material-symbols-outlined text-lg align-middle mr-2">save</span>
+                                Thêm lô vaccine
+                            </button>
+                            <button type="button" onclick="document.getElementById('addLotFormElement').reset()" 
+                                class="px-6 py-2.5 bg-gray-100 dark:bg-white/10 text-[#111813] dark:text-white font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-white/20 transition-colors">
+                                Làm mới
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Danh sách Lô Vaccine -->
+                <div>
+                    <h4 class="text-lg font-bold text-[#111813] dark:text-white mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">inventory</span>
+                        Danh sách lô vaccine
+                    </h4>
+                    <div class="bg-white dark:bg-white/5 rounded-xl border border-[#f0f4f2] dark:border-white/10 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-50 dark:bg-white/5 border-b border-[#f0f4f2] dark:border-white/10">
+                                        <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Số lô</th>
+                                        <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Số lượng ban đầu</th>
+                                        <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Số lượng còn lại</th>
+                                        <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Ngày SX</th>
+                                        <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Ngày HH</th>
+                                        <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Nhà cung cấp</th>
+                                        <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Ngày nhập</th>
+                                        <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f]">Trạng thái</th>
+                                        <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-[#61896f] text-right">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vaccineLotsTableBody" class="divide-y divide-[#f0f4f2] dark:divide-white/10">
+                                    <!-- Dữ liệu sẽ được load từ API -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script th:inline="javascript">
             /*<![CDATA[*/
             (function () {
                 let allVaccines = [];
+                let filteredVaccines = [];
+                let currentPage = 1;
+                const pageSize = 10;
 
                 // Hàm loại bỏ dấu tiếng Việt
                 function removeVietnameseTones(str) {
@@ -323,6 +426,8 @@
                         });
                         if (!response.ok) throw new Error('Failed to load vaccines');
                         allVaccines = await response.json();
+                        filteredVaccines = allVaccines;
+                        currentPage = 1;
                         filterVaccines();
                     } catch (error) {
                         console.error('Error loading vaccines:', error);
@@ -366,21 +471,28 @@
                         }
                     }
 
-                    renderVaccines(filtered);
-                    updatePagination(filtered.length);
+                    filteredVaccines = filtered;
+                    currentPage = 1; // Reset về trang đầu khi filter
+                    renderVaccines();
+                    updatePagination();
                 }
 
                 // Render vaccines table
-                function renderVaccines(vaccines) {
+                function renderVaccines() {
                     const tbody = document.getElementById('vaccinesTableBody');
                     if (!tbody) return;
 
-                    if (vaccines.length === 0) {
+                    const start = (currentPage - 1) * pageSize;
+                    const end = start + pageSize;
+                    const pageVaccines = filteredVaccines.slice(start, end);
+
+                    if (pageVaccines.length === 0) {
                         tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-[#61896f]">Không có dữ liệu</td></tr>';
+                        updatePagination();
                         return;
                     }
 
-                    tbody.innerHTML = vaccines.map(vaccine => {
+                    tbody.innerHTML = pageVaccines.map(vaccine => {
                         const statusColors = {
                             'AVAILABLE': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
                             'UNAVAILABLE': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
@@ -443,12 +555,69 @@
                 }
 
                 // Update pagination
-                function updatePagination(total) {
-                    const paginationText = document.getElementById('vaccinesPaginationText');
-                    if (paginationText) {
-                        const end = Math.min(10, total);
-                        paginationText.textContent = `Hiển thị 1-${end} của ${total} danh mục vaccine`;
+                function updatePagination() {
+                    const total = filteredVaccines.length;
+                    const totalPages = Math.ceil(total / pageSize);
+
+                    // Update pagination buttons
+                    const paginationContainer = document.getElementById('vaccinesPaginationButtons');
+                    if (!paginationContainer) return;
+
+                    // Clear existing buttons except container
+                    const buttons = paginationContainer.querySelectorAll('button');
+                    buttons.forEach(btn => btn.remove());
+
+                    // Previous button
+                    const prevBtn = document.createElement('button');
+                    prevBtn.className = 'p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors disabled:opacity-50';
+                    prevBtn.disabled = currentPage === 1;
+                    prevBtn.innerHTML = '<span class="material-symbols-outlined text-sm">chevron_left</span>';
+                    prevBtn.onclick = () => {
+                        if (currentPage > 1) {
+                            currentPage--;
+                            renderVaccines();
+                            updatePagination();
+                        }
+                    };
+                    paginationContainer.appendChild(prevBtn);
+
+                    // Page number buttons
+                    const maxVisiblePages = 5;
+                    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                    if (endPage - startPage < maxVisiblePages - 1) {
+                        startPage = Math.max(1, endPage - maxVisiblePages + 1);
                     }
+
+                    for (let i = startPage; i <= endPage; i++) {
+                        const pageBtn = document.createElement('button');
+                        pageBtn.className = `p-2 rounded-lg font-bold text-xs px-4 transition-colors ${
+                            i === currentPage
+                                ? 'bg-primary text-[#111813]'
+                                : 'bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50'
+                        }`;
+                        pageBtn.textContent = i.toString();
+                        pageBtn.onclick = () => {
+                            currentPage = i;
+                            renderVaccines();
+                            updatePagination();
+                        };
+                        paginationContainer.appendChild(pageBtn);
+                    }
+
+                    // Next button
+                    const nextBtn = document.createElement('button');
+                    nextBtn.className = 'p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors disabled:opacity-50';
+                    nextBtn.disabled = currentPage === totalPages;
+                    nextBtn.innerHTML = '<span class="material-symbols-outlined text-sm">chevron_right</span>';
+                    nextBtn.onclick = () => {
+                        if (currentPage < totalPages) {
+                            currentPage++;
+                            renderVaccines();
+                            updatePagination();
+                        }
+                    };
+                    paginationContainer.appendChild(nextBtn);
                 }
 
                 // Modal functions
@@ -611,9 +780,131 @@
                     }
                 };
 
-                window.viewVaccineLots = function (vaccineId) {
-                    // TODO: Implement view vaccine lots modal
-                    alert('Chức năng xem lô vaccine sẽ được triển khai sau');
+                window.viewVaccineLots = async function (vaccineId) {
+                    try {
+                        // Load vaccine info
+                        const vaccineResponse = await fetch(`/api/admin/vaccines/${vaccineId}`, {
+                            credentials: 'include'
+                        });
+                        if (!vaccineResponse.ok) throw new Error('Failed to load vaccine');
+                        const vaccine = await vaccineResponse.json();
+                        
+                        // Load vaccine lots
+                        const lotsResponse = await fetch(`/api/vaccine-lots/vaccine/${vaccineId}`, {
+                            credentials: 'include'
+                        });
+                        if (!lotsResponse.ok) throw new Error('Failed to load vaccine lots');
+                        const lots = await lotsResponse.json();
+                        
+                        // Set vaccine info in modal
+                        document.getElementById('lotsModalVaccineName').textContent = vaccine.name || 'N/A';
+                        document.getElementById('lotsModalVaccineCode').textContent = vaccine.code || 'N/A';
+                        document.getElementById('addLotVaccineId').value = vaccineId;
+                        
+                        // Render lots table
+                        renderVaccineLotsTable(lots);
+                        
+                        // Show modal
+                        document.getElementById('vaccineLotsModal').classList.remove('hidden');
+                        document.getElementById('vaccineLotsModal').classList.add('flex');
+                    } catch (error) {
+                        console.error('Error loading vaccine lots:', error);
+                        alert('Lỗi khi tải danh sách lô vaccine: ' + error.message);
+                    }
+                };
+                
+                function renderVaccineLotsTable(lots) {
+                    const tbody = document.getElementById('vaccineLotsTableBody');
+                    if (!tbody) return;
+                    
+                    if (lots.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-4 text-center text-[#61896f]">Chưa có lô vaccine nào</td></tr>';
+                        return;
+                    }
+                    
+                    const today = new Date();
+                    tbody.innerHTML = lots.map(lot => {
+                        const expiryDate = lot.expiryDate ? new Date(lot.expiryDate) : null;
+                        const isExpired = expiryDate && expiryDate < today;
+                        const isLowStock = lot.remainingQuantity <= 50;
+                        
+                        const statusColors = {
+                            'AVAILABLE': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+                            'EXPIRED': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+                            'DEPLETED': 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
+                        };
+                        const statusColor = statusColors[lot.status] || 'bg-gray-100 text-gray-700';
+                        
+                        return `
+                            <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors ${isExpired ? 'bg-red-50/50' : ''}">
+                                <td class="px-6 py-4">
+                                    <span class="text-sm font-bold font-mono">${lot.lotNumber || 'N/A'}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-xs font-semibold">${lot.quantity ? lot.quantity.toLocaleString('vi-VN') : '0'} liều</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-xs font-semibold ${isLowStock ? 'text-red-600 font-bold' : ''}">${lot.remainingQuantity ? lot.remainingQuantity.toLocaleString('vi-VN') : '0'} liều</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-xs">${lot.manufacturingDate ? new Date(lot.manufacturingDate).toLocaleDateString('vi-VN') : 'N/A'}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-xs ${isExpired ? 'text-red-600 font-bold' : ''}">${lot.expiryDate ? new Date(lot.expiryDate).toLocaleDateString('vi-VN') : 'N/A'}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-xs">${lot.supplier || 'N/A'}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-xs">${lot.importDate ? new Date(lot.importDate).toLocaleDateString('vi-VN') : 'N/A'}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="status-chip ${statusColor}">${lot.status || 'N/A'}</span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button onclick="deleteVaccineLot(${lot.id}, '${lot.lotNumber}')" 
+                                        class="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg text-red-500 transition-colors" 
+                                        title="Xóa lô vaccine">
+                                        <span class="material-symbols-outlined text-lg">delete</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+                
+                window.closeVaccineLotsModal = function () {
+                    document.getElementById('vaccineLotsModal').classList.add('hidden');
+                    document.getElementById('vaccineLotsModal').classList.remove('flex');
+                    document.getElementById('addLotForm').reset();
+                    document.getElementById('addLotForm').classList.remove('hidden');
+                    document.getElementById('addLotForm').classList.add('block');
+                };
+                
+                window.deleteVaccineLot = async function (lotId, lotNumber) {
+                    if (!confirm(`Bạn có chắc muốn XÓA lô vaccine "${lotNumber}"?\n\nLưu ý: Hành động này không thể hoàn tác!`)) return;
+                    
+                    try {
+                        const response = await fetch(`/api/vaccine-lots/${lotId}`, {
+                            method: 'DELETE',
+                            credentials: 'include'
+                        });
+                        
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({ error: 'Failed to delete vaccine lot' }));
+                            throw new Error(errorData.error || 'Failed to delete vaccine lot');
+                        }
+                        
+                        alert('Xóa lô vaccine thành công!');
+                        // Reload lots
+                        const vaccineId = document.getElementById('addLotVaccineId').value;
+                        if (vaccineId) {
+                            await viewVaccineLots(vaccineId);
+                        }
+                    } catch (error) {
+                        console.error('Error deleting vaccine lot:', error);
+                        alert('Lỗi khi xóa lô vaccine: ' + error.message);
+                    }
                 };
 
                 // Form submission
@@ -731,7 +1022,101 @@
                     });
                 });
 
+                // Form submission for adding vaccine lot
+                document.getElementById('addLotFormElement')?.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(e.target);
+                    const vaccineId = document.getElementById('addLotVaccineId').value;
+                    
+                    if (!vaccineId) {
+                        alert('Lỗi: Không tìm thấy ID vaccine');
+                        return;
+                    }
+                    
+                    // Validate dates
+                    const manufacturingDate = formData.get('manufacturingDate');
+                    const expiryDate = formData.get('expiryDate');
+                    const importDate = formData.get('importDate');
+                    
+                    if (new Date(expiryDate) <= new Date(manufacturingDate)) {
+                        alert('Ngày hết hạn phải sau ngày sản xuất!');
+                        return;
+                    }
+                    
+                    // Validate remainingQuantity <= quantity
+                    const quantity = parseInt(formData.get('quantity'));
+                    const remainingQuantity = parseInt(formData.get('remainingQuantity'));
+                    if (remainingQuantity > quantity) {
+                        alert('Số lượng còn lại không được lớn hơn số lượng ban đầu!');
+                        return;
+                    }
+                    
+                    const lotData = {
+                        lotNumber: formData.get('lotNumber').trim(),
+                        vaccineId: parseInt(vaccineId),
+                        quantity: quantity,
+                        remainingQuantity: remainingQuantity,
+                        manufacturingDate: manufacturingDate,
+                        expiryDate: expiryDate,
+                        supplier: formData.get('supplier')?.trim() || null,
+                        importDate: importDate,
+                        status: formData.get('status')
+                    };
+                    
+                    try {
+                        const response = await fetch('/api/vaccine-lots', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify(lotData)
+                        });
+                        
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({ error: 'Failed to create vaccine lot' }));
+                            throw new Error(errorData.error || 'Failed to create vaccine lot');
+                        }
+                        
+                        const result = await response.json();
+                        alert('Thêm lô vaccine thành công!');
+                        document.getElementById('addLotFormElement').reset();
+                        
+                        // Reload lots
+                        await viewVaccineLots(vaccineId);
+                        
+                        // Reload vaccines to update stock
+                        loadVaccines();
+                    } catch (error) {
+                        console.error('Error creating vaccine lot:', error);
+                        alert('Lỗi khi thêm lô vaccine: ' + error.message);
+                    }
+                });
+                
+                // Close modal when clicking outside
+                document.getElementById('vaccineLotsModal')?.addEventListener('click', function (e) {
+                    if (e.target === this) {
+                        closeVaccineLotsModal();
+                    }
+                });
+                
                 document.addEventListener('DOMContentLoaded', function () {
+                    // Set current date
+                    const today = new Date();
+                    const dateStr = today.toLocaleDateString('vi-VN');
+                    const currentDateEl = document.getElementById('currentDate');
+                    if (currentDateEl) {
+                        currentDateEl.textContent = 'Hôm nay: ' + dateStr;
+                    }
+                    
+                    // Set default dates for lot form
+                    const todayStr = today.toISOString().split('T')[0];
+                    const lotImportDate = document.getElementById('lotImportDate');
+                    if (lotImportDate) {
+                        lotImportDate.value = todayStr;
+                    }
+                    
                     loadVaccines();
                 });
             })();

@@ -8,9 +8,7 @@ import java.util.List;
 
 @Repository
 public interface AppointmentHistoryRepository extends JpaRepository<AppointmentHistory, Long> {
-    /**
-     * Tìm tất cả lịch sử thay đổi của một appointment
-     */
+
     List<AppointmentHistory> findByAppointmentIdOrderByChangedAtDesc(Long appointmentId);
 }
 

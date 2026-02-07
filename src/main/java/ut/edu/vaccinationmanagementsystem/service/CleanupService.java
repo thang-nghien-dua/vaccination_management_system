@@ -13,9 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Service để cleanup dữ liệu cũ
- */
+
 @Service
 public class CleanupService {
     
@@ -28,10 +26,7 @@ public class CleanupService {
     @Autowired
     private UserService userService;
     
-    /**
-     * Xóa user INACTIVE sau 30 ngày không xác thực
-     * Chạy mỗi ngày lúc 2 giờ sáng
-     */
+
     @Scheduled(cron = "0 0 2 * * ?") // Chạy mỗi ngày lúc 2 giờ sáng
     @Transactional
     public void cleanupInactiveUsers() {
@@ -59,10 +54,7 @@ public class CleanupService {
         }
     }
     
-    /**
-     * Xóa token đã hết hạn
-     * Chạy mỗi ngày lúc 3 giờ sáng
-     */
+
     @Scheduled(cron = "0 0 3 * * ?") // Chạy mỗi ngày lúc 3 giờ sáng
     @Transactional
     public void cleanupExpiredTokens() {

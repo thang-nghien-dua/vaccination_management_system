@@ -14,9 +14,6 @@ import ut.edu.vaccinationmanagementsystem.entity.enums.UserStatus;
 
 import java.util.Map;
 
-/**
- * Custom OAuth2UserService để xử lý thông tin user từ Google/Facebook
- */
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     
@@ -110,10 +107,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
     }
     
-    /**
-     * Map gender từ OAuth2 provider format sang Gender enum
-     * Google/Facebook: "male" -> MALE, "female" -> FEMALE, khác -> null
-     */
+
     private Gender mapGenderFromProvider(String genderStr) {
         if (genderStr == null || genderStr.isEmpty()) {
             return null;

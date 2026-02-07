@@ -13,9 +13,6 @@ import ut.edu.vaccinationmanagementsystem.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * Service quản lý reset password
- */
 @Service
 @Transactional
 public class PasswordResetService {
@@ -31,10 +28,7 @@ public class PasswordResetService {
     
     @Autowired
     private PasswordEncoder passwordEncoder;
-    
-    /**
-     * Tạo token reset password cho user
-     */
+
     public PasswordResetToken createPasswordResetToken(User user) {
         // Xóa token cũ nếu có
         tokenRepository.findByUser(user).ifPresent(tokenRepository::delete);
@@ -54,10 +48,7 @@ public class PasswordResetService {
         
         return token;
     }
-    
-    /**
-     * Xác thực token reset password
-     */
+
     public PasswordResetToken validateToken(String tokenString) {
         PasswordResetToken token = tokenRepository.findByToken(tokenString)
                 .orElseThrow(() -> new RuntimeException("Invalid reset password token"));
@@ -73,10 +64,7 @@ public class PasswordResetService {
         
         return token;
     }
-    
-    /**
-     * Reset password bằng token
-     */
+
     public void resetPassword(String tokenString, String newPassword) {
         // Validate token
         PasswordResetToken token = validateToken(tokenString);
@@ -99,9 +87,7 @@ public class PasswordResetService {
         userRepository.save(user);
     }
     
-    /**
-     * Gửi lại email reset password
-     */
+
     public void resendPasswordResetEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));

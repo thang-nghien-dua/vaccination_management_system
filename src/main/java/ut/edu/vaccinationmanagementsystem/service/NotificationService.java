@@ -40,21 +40,16 @@ public class NotificationService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
     
-    /**
-     * Tạo thông báo nhắc nhở lịch hẹn sắp tới
-     */
+
     public void createAppointmentReminderNotification(Appointment appointment, int daysBefore, int hoursBefore, int minutesBefore) {
         createAppointmentReminderNotification(appointment, daysBefore, hoursBefore, minutesBefore, false);
     }
     
-    /**
-     * Tạo thông báo nhắc nhở lịch hẹn sắp tới
-     * @param isAfterBooking true nếu là nhắc nhở sau khi đặt lịch, false nếu là nhắc nhở trước giờ hẹn
-     */
+
     public void createAppointmentReminderNotification(Appointment appointment, int daysBefore, int hoursBefore, int minutesBefore, boolean isAfterBooking) {
         User user = getNotificationUser(appointment);
         if (user == null) {
-            return; // Không có user để gửi thông báo
+            return;
         }
         
         String reminderText = "";
@@ -90,9 +85,7 @@ public class NotificationService {
         }
     }
     
-    /**
-     * Tạo thông báo khi đặt lịch thành công
-     */
+
     public void createAppointmentCreatedNotification(Appointment appointment) {
         User user = getNotificationUser(appointment);
         if (user == null) {
@@ -113,10 +106,7 @@ public class NotificationService {
             e.printStackTrace();
         }
     }
-    
-    /**
-     * Tạo thông báo khi lịch hẹn bị hủy
-     */
+
     public void createAppointmentCancelledNotification(Appointment appointment) {
         User user = getNotificationUser(appointment);
         if (user == null) {
@@ -137,10 +127,7 @@ public class NotificationService {
             e.printStackTrace();
         }
     }
-    
-    /**
-     * Tạo IN_APP notification
-     */
+
     private void createInAppNotification(User user, Appointment appointment, String title, String content) {
         // Kiểm tra xem đã có thông báo với cùng title và appointment chưa để tránh trùng lặp
         // (Cho phép nhiều loại notification khác nhau cho cùng appointment, nhưng không cho phép trùng title)
@@ -157,7 +144,7 @@ public class NotificationService {
         notification.setType(NotificationType.IN_APP);
         notification.setTitle(title);
         notification.setContent(content);
-        notification.setStatus(NotificationStatus.SENT); // IN_APP được gửi ngay
+        notification.setStatus(NotificationStatus.SENT);
         notification.setIsRead(false);
         notification.setCreatedAt(LocalDateTime.now());
         notification.setSentAt(LocalDateTime.now());
@@ -165,9 +152,7 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
     
-    /**
-     * Tạo và gửi EMAIL notification
-     */
+
     private void createAndSendEmailNotification(User user, Appointment appointment, String title, String content) {
         // Kiểm tra xem đã có thông báo này chưa để tránh trùng lặp
         Optional<Notification> existing = notificationRepository.findByAppointmentIdAndType(
@@ -199,10 +184,7 @@ public class NotificationService {
         
         notificationRepository.save(notification);
     }
-    
-    /**
-     * Gửi email
-     */
+
     private void sendEmail(String toEmail, String subject, String content) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
@@ -215,10 +197,7 @@ public class NotificationService {
             throw new RuntimeException("Failed to send email", e);
         }
     }
-    
-    /**
-     * Lấy user để gửi thông báo (bookedForUser hoặc bookedByUser)
-     */
+
     private User getNotificationUser(Appointment appointment) {
         if (appointment.getBookedForUser() != null) {
             return appointment.getBookedForUser();
@@ -226,16 +205,11 @@ public class NotificationService {
         return appointment.getBookedByUser();
     }
     
-    /**
-     * Build nội dung thông báo nhắc nhở
-     */
+
     private String buildAppointmentReminderContent(Appointment appointment, String reminderText) {
         return buildAppointmentReminderContent(appointment, reminderText, false);
     }
-    
-    /**
-     * Build nội dung thông báo nhắc nhở
-     */
+
     private String buildAppointmentReminderContent(Appointment appointment, String reminderText, boolean isAfterBooking) {
         StringBuilder sb = new StringBuilder();
         sb.append("Xin chào,\n\n");
@@ -274,10 +248,7 @@ public class NotificationService {
         
         return sb.toString();
     }
-    
-    /**
-     * Build nội dung thông báo đặt lịch thành công
-     */
+
     private String buildAppointmentCreatedContent(Appointment appointment) {
         StringBuilder sb = new StringBuilder();
         sb.append("Xin chào,\n\n");
@@ -307,14 +278,11 @@ public class NotificationService {
         
         sb.append("Bạn sẽ nhận được thông báo nhắc nhở trước lịch hẹn.\n\n");
         sb.append("Trân trọng,\n");
-        sb.append("Hệ thống Tiêm chủng Quốc gia");
+        sb.append("Hệ thống Tiêm chủng VacciCare");
         
         return sb.toString();
     }
-    
-    /**
-     * Build nội dung thông báo hủy lịch
-     */
+
     private String buildAppointmentCancelledContent(Appointment appointment) {
         StringBuilder sb = new StringBuilder();
         sb.append("Xin chào,\n\n");
@@ -337,28 +305,19 @@ public class NotificationService {
         
         sb.append("Nếu bạn muốn đặt lịch mới, vui lòng truy cập hệ thống.\n\n");
         sb.append("Trân trọng,\n");
-        sb.append("Hệ thống Tiêm chủng Quốc gia");
+        sb.append("Hệ thống Tiêm chủng VacciCare");
         
         return sb.toString();
     }
-    
-    /**
-     * Lấy danh sách thông báo của user
-     */
+
     public List<Notification> getUserNotifications(Long userId) {
         return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
-    
-    /**
-     * Lấy số lượng thông báo chưa đọc
-     */
+
     public long getUnreadCount(Long userId) {
         return notificationRepository.countByUserIdAndIsReadFalse(userId);
     }
-    
-    /**
-     * Đánh dấu thông báo đã đọc
-     */
+
     public void markAsRead(Long notificationId, Long userId) {
         Optional<Notification> notificationOpt = notificationRepository.findById(notificationId);
         if (notificationOpt.isPresent()) {
@@ -370,9 +329,7 @@ public class NotificationService {
         }
     }
     
-    /**
-     * Xóa thông báo
-     */
+
     public void deleteNotification(Long notificationId, Long userId) {
         Optional<Notification> notificationOpt = notificationRepository.findById(notificationId);
         if (notificationOpt.isPresent()) {
@@ -382,10 +339,7 @@ public class NotificationService {
             }
         }
     }
-    
-    /**
-     * Đánh dấu tất cả thông báo đã đọc
-     */
+
     public void markAllAsRead(Long userId) {
         List<Notification> unreadNotifications = notificationRepository.findByUserIdAndIsReadFalseOrderByCreatedAtDesc(userId);
         for (Notification notification : unreadNotifications) {
@@ -393,10 +347,7 @@ public class NotificationService {
         }
         notificationRepository.saveAll(unreadNotifications);
     }
-    
-    /**
-     * Tạo thông báo mới
-     */
+
     public Notification createNotification(Long userId, Long appointmentId, NotificationType type, 
                                           String title, String content) {
         User user = userRepository.findById(userId)
@@ -442,11 +393,7 @@ public class NotificationService {
     
     @Autowired
     private UserRepository userRepository;
-    
-    /**
-     * Gửi thông báo nhắc lịch cho tất cả appointments sắp tới
-     * Có thể gọi từ cron job hoặc manual
-     */
+
     public int sendAppointmentReminders() {
         LocalDateTime now = LocalDateTime.now();
         List<Appointment> appointments = appointmentRepository.findAll();

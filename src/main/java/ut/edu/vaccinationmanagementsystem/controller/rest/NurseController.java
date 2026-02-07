@@ -114,17 +114,26 @@ public class NurseController {
                     .limit(10) // Giới hạn 10 bệnh nhân đầu tiên
                     .map(apt -> {
                         Map<String, Object> patient = new HashMap<>();
-                        if (apt.getBookedForUser() != null) {
+                        // Ưu tiên: familyMember > bookedForUser > bookedByUser > guest
+                        if (apt.getFamilyMember() != null) {
+                            patient.put("id", apt.getId());
+                            patient.put("fullName", apt.getFamilyMember().getFullName());
+                            patient.put("phoneNumber", apt.getFamilyMember().getPhoneNumber());
+                            patient.put("appointmentDate", apt.getAppointmentDate());
+                            patient.put("appointmentTime", apt.getAppointmentTime());
+                            patient.put("vaccineName", apt.getVaccine() != null ? apt.getVaccine().getName() : "N/A");
+                        } else if (apt.getBookedForUser() != null) {
                             patient.put("id", apt.getId());
                             patient.put("fullName", apt.getBookedForUser().getFullName());
                             patient.put("phoneNumber", apt.getBookedForUser().getPhoneNumber());
                             patient.put("appointmentDate", apt.getAppointmentDate());
                             patient.put("appointmentTime", apt.getAppointmentTime());
                             patient.put("vaccineName", apt.getVaccine() != null ? apt.getVaccine().getName() : "N/A");
-                        } else if (apt.getFamilyMember() != null) {
+                        } else if (apt.getBookedByUser() != null) {
+                            // Fallback: nếu bookedForUser null, dùng bookedByUser (người đặt lịch cho chính mình)
                             patient.put("id", apt.getId());
-                            patient.put("fullName", apt.getFamilyMember().getFullName());
-                            patient.put("phoneNumber", apt.getFamilyMember().getPhoneNumber());
+                            patient.put("fullName", apt.getBookedByUser().getFullName());
+                            patient.put("phoneNumber", apt.getBookedByUser().getPhoneNumber());
                             patient.put("appointmentDate", apt.getAppointmentDate());
                             patient.put("appointmentTime", apt.getAppointmentTime());
                             patient.put("vaccineName", apt.getVaccine() != null ? apt.getVaccine().getName() : "N/A");
@@ -316,16 +325,62 @@ public class NurseController {
                 dto.put("nextDoseDate", record.getNextDoseDate());
                 dto.put("createdAt", record.getCreatedAt());
                 
-                // Patient info
-                if (record.getUser() != null) {
-                    Map<String, Object> user = new HashMap<>();
-                    user.put("id", record.getUser().getId());
-                    user.put("fullName", record.getUser().getFullName());
-                    user.put("email", record.getUser().getEmail());
-                    user.put("phoneNumber", record.getUser().getPhoneNumber());
-                    user.put("dayOfBirth", record.getUser().getDayOfBirth());
-                    user.put("gender", record.getUser().getGender());
-                    dto.put("user", user);
+                // Patient info - ưu tiên: familyMember > bookedForUser > bookedByUser > user từ record
+                Map<String, Object> patientInfo = new HashMap<>();
+                if (record.getAppointment() != null) {
+                    Appointment appointment = record.getAppointment();
+                    if (appointment.getFamilyMember() != null) {
+                        // Người thân được tiêm
+                        patientInfo.put("id", appointment.getFamilyMember().getId());
+                        patientInfo.put("fullName", appointment.getFamilyMember().getFullName());
+                        patientInfo.put("phoneNumber", appointment.getFamilyMember().getPhoneNumber());
+                        patientInfo.put("dayOfBirth", appointment.getFamilyMember().getDateOfBirth());
+                        patientInfo.put("gender", appointment.getFamilyMember().getGender() != null ? appointment.getFamilyMember().getGender().name() : null);
+                        patientInfo.put("email", null);
+                        patientInfo.put("isFamilyMember", true);
+                        if (appointment.getBookedByUser() != null) {
+                            patientInfo.put("bookedByUserId", appointment.getBookedByUser().getId());
+                            patientInfo.put("bookedByUserName", appointment.getBookedByUser().getFullName());
+                        }
+                    } else if (appointment.getBookedForUser() != null) {
+                        // User được đặt cho
+                        patientInfo.put("id", appointment.getBookedForUser().getId());
+                        patientInfo.put("fullName", appointment.getBookedForUser().getFullName());
+                        patientInfo.put("email", appointment.getBookedForUser().getEmail());
+                        patientInfo.put("phoneNumber", appointment.getBookedForUser().getPhoneNumber());
+                        patientInfo.put("dayOfBirth", appointment.getBookedForUser().getDayOfBirth());
+                        patientInfo.put("gender", appointment.getBookedForUser().getGender() != null ? appointment.getBookedForUser().getGender().name() : null);
+                        patientInfo.put("isFamilyMember", false);
+                    } else if (appointment.getBookedByUser() != null) {
+                        // Fallback: người đặt lịch cho chính mình
+                        patientInfo.put("id", appointment.getBookedByUser().getId());
+                        patientInfo.put("fullName", appointment.getBookedByUser().getFullName());
+                        patientInfo.put("email", appointment.getBookedByUser().getEmail());
+                        patientInfo.put("phoneNumber", appointment.getBookedByUser().getPhoneNumber());
+                        patientInfo.put("dayOfBirth", appointment.getBookedByUser().getDayOfBirth());
+                        patientInfo.put("gender", appointment.getBookedByUser().getGender() != null ? appointment.getBookedByUser().getGender().name() : null);
+                        patientInfo.put("isFamilyMember", false);
+                    } else {
+                        // Guest
+                        patientInfo.put("fullName", appointment.getGuestFullName());
+                        patientInfo.put("phoneNumber", appointment.getConsultationPhone());
+                        patientInfo.put("dayOfBirth", appointment.getGuestDayOfBirth());
+                        patientInfo.put("gender", appointment.getGuestGender() != null ? appointment.getGuestGender().name() : null);
+                        patientInfo.put("email", appointment.getGuestEmail());
+                        patientInfo.put("isFamilyMember", false);
+                    }
+                } else if (record.getUser() != null) {
+                    // Fallback: nếu không có appointment, dùng user từ record
+                    patientInfo.put("id", record.getUser().getId());
+                    patientInfo.put("fullName", record.getUser().getFullName());
+                    patientInfo.put("email", record.getUser().getEmail());
+                    patientInfo.put("phoneNumber", record.getUser().getPhoneNumber());
+                    patientInfo.put("dayOfBirth", record.getUser().getDayOfBirth());
+                    patientInfo.put("gender", record.getUser().getGender() != null ? record.getUser().getGender().name() : null);
+                    patientInfo.put("isFamilyMember", false);
+                }
+                if (!patientInfo.isEmpty()) {
+                    dto.put("user", patientInfo);
                 }
                 
                 // Vaccine info

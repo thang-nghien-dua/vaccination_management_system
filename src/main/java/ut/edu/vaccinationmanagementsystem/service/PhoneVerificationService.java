@@ -13,9 +13,6 @@ import ut.edu.vaccinationmanagementsystem.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.Random;
 
-/**
- * Service xử lý xác thực số điện thoại
- */
 @Service
 public class PhoneVerificationService {
     
@@ -33,9 +30,7 @@ public class PhoneVerificationService {
     private static final int CODE_LENGTH = 6;
     private static final int CODE_EXPIRY_MINUTES = 5;
     
-    /**
-     * Gửi mã xác thực cho user
-     */
+
     @Transactional
     public void sendVerificationCodeForUser(Long userId, String phoneNumber) throws SmsException {
         User user = userRepository.findById(userId)
@@ -77,9 +72,7 @@ public class PhoneVerificationService {
         log.info("Verification code sent to user {} phone: {}", userId, phoneNumber);
     }
     
-    /**
-     * Gửi mã xác thực cho family member
-     */
+
     @Transactional
     public void sendVerificationCodeForFamilyMember(Long familyMemberId, String phoneNumber) throws SmsException {
         FamilyMember familyMember = familyMemberRepository.findById(familyMemberId)
@@ -121,9 +114,7 @@ public class PhoneVerificationService {
         log.info("Verification code sent to family member {} phone: {}", familyMemberId, phoneNumber);
     }
     
-    /**
-     * Xác thực mã OTP cho user
-     */
+
     @Transactional
     public boolean verifyCodeForUser(Long userId, String code) {
         User user = userRepository.findById(userId)
@@ -159,9 +150,7 @@ public class PhoneVerificationService {
         return true;
     }
     
-    /**
-     * Xác thực mã OTP cho family member
-     */
+
     @Transactional
     public boolean verifyCodeForFamilyMember(Long familyMemberId, String code) {
         FamilyMember familyMember = familyMemberRepository.findById(familyMemberId)
@@ -193,9 +182,7 @@ public class PhoneVerificationService {
         return true;
     }
     
-    /**
-     * Kiểm tra số điện thoại đã được xác thực chưa (cho user)
-     */
+
     public boolean isPhoneVerifiedForUser(Long userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
@@ -204,12 +191,7 @@ public class PhoneVerificationService {
             && user.getPhoneNumber() != null && !user.getPhoneNumber().trim().isEmpty();
     }
     
-    /**
-     * Kiểm tra số điện thoại cụ thể đã được xác thực chưa (cho user)
-     * @param userId User ID
-     * @param phoneNumber Số điện thoại cần kiểm tra
-     * @return true nếu số điện thoại đã được xác thực và khớp với số trong form
-     */
+
     public boolean isPhoneVerifiedForUser(Long userId, String phoneNumber) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
@@ -226,9 +208,7 @@ public class PhoneVerificationService {
             && normalizedUserPhone.equals(normalizedInputPhone);
     }
     
-    /**
-     * Kiểm tra số điện thoại đã được xác thực chưa (cho family member)
-     */
+
     public boolean isPhoneVerifiedForFamilyMember(Long familyMemberId) {
         FamilyMember familyMember = familyMemberRepository.findById(familyMemberId)
             .orElseThrow(() -> new RuntimeException("Family member not found"));
@@ -237,12 +217,7 @@ public class PhoneVerificationService {
             && familyMember.getPhoneNumber() != null && !familyMember.getPhoneNumber().trim().isEmpty();
     }
     
-    /**
-     * Kiểm tra số điện thoại cụ thể đã được xác thực chưa (cho family member)
-     * @param familyMemberId Family member ID
-     * @param phoneNumber Số điện thoại cần kiểm tra
-     * @return true nếu số điện thoại đã được xác thực và khớp với số trong form
-     */
+
     public boolean isPhoneVerifiedForFamilyMember(Long familyMemberId, String phoneNumber) {
         FamilyMember familyMember = familyMemberRepository.findById(familyMemberId)
             .orElseThrow(() -> new RuntimeException("Family member not found"));
@@ -259,18 +234,13 @@ public class PhoneVerificationService {
             && normalizedMemberPhone.equals(normalizedInputPhone);
     }
     
-    /**
-     * Normalize số điện thoại (loại bỏ khoảng trắng, dấu gạch ngang, dấu ngoặc đơn)
-     * Public để có thể dùng ở nơi khác nếu cần
-     */
+
     public String normalizePhoneNumber(String phoneNumber) {
         if (phoneNumber == null) return "";
         return phoneNumber.replaceAll("[\\s\\-\\(\\)]", "").trim();
     }
     
-    /**
-     * Generate mã OTP 6 số
-     */
+    
     private String generateCode() {
         Random random = new Random();
         return String.format("%06d", random.nextInt(1000000));

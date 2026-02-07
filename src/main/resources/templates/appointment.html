@@ -149,6 +149,38 @@
         </header>
 
         <div class="p-8 space-y-6 w-full">
+            <!-- Unpaid Cancellation Fee Alert -->
+            <div id="unpaidFeeAlert" class="hidden bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-2xl shadow-lg p-6">
+                <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0 size-12 bg-yellow-400 dark:bg-yellow-600 rounded-xl flex items-center justify-center">
+                        <span class="material-symbols-outlined text-white text-2xl">warning</span>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold text-yellow-900 dark:text-yellow-200 mb-2">
+                            ⚠️ Bạn có phí hủy lịch chưa thanh toán
+                        </h3>
+                        <p class="text-sm text-yellow-800 dark:text-yellow-300 mb-4">
+                            Bạn cần thanh toán phí hủy trước khi có thể đặt lịch mới.
+                        </p>
+                        <div id="unpaidFeeList" class="space-y-2 mb-4"></div>
+                        <div class="flex items-center gap-4">
+                            <div class="flex-1">
+                                <p class="text-sm font-semibold text-yellow-900 dark:text-yellow-200">
+                                    Tổng phí cần thanh toán: <span id="totalUnpaidFee" class="text-lg text-red-600 dark:text-red-400 font-bold">0 VNĐ</span>
+                                </p>
+                            </div>
+                            <button id="payAllFeesBtn" class="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95">
+                                <span class="material-symbols-outlined">payment</span>
+                                <span>Thanh toán tất cả</span>
+                            </button>
+                        </div>
+                    </div>
+                    <button id="closeUnpaidFeeAlert" class="flex-shrink-0 p-2 rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-800 transition-colors">
+                        <span class="material-symbols-outlined text-yellow-900 dark:text-yellow-200">close</span>
+                    </button>
+                </div>
+            </div>
+            
             <!-- Filter Form -->
             <div class="bg-white dark:bg-[#1a2e21] rounded-2xl shadow-lg border-2 border-primary/20 dark:border-primary/30 p-6 relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-primary-light to-primary-dark"></div>
@@ -563,6 +595,23 @@
                 <label class="block text-sm font-semibold mb-2">Ghi chú (tùy chọn)</label>
                 <textarea id="bookingNotes" rows="2" class="w-full px-4 py-3 rounded-xl border-2 border-[#e2e8f0] dark:border-[#2d3f33] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none bg-white dark:bg-[#1a2e21] text-[#111813] dark:text-white" placeholder="Thông tin bổ sung..."></textarea>
             </div>
+            <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-800 rounded-xl">
+                <div class="flex items-start gap-2">
+                    <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-lg">info</span>
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold text-yellow-800 dark:text-yellow-300 mb-1">Lưu ý về phí hủy lịch:</p>
+                        <ul class="text-xs text-yellow-700 dark:text-yellow-400 space-y-1 list-disc list-inside">
+                            <li>Hủy trước <strong>≥ 24 giờ</strong>: Miễn phí</li>
+                            <li>Hủy trong <strong>12-24 giờ</strong>: Phí hủy 20% giá vaccine</li>
+                            <li>Hủy trong <strong>6-12 giờ</strong>: Phí hủy 50% giá vaccine</li>
+                            <li>Hủy trong <strong>&lt; 6 giờ</strong>: Không thể hủy</li>
+                        </ul>
+                        <p class="text-xs text-yellow-700 dark:text-yellow-400 mt-2">
+                            <strong>Lưu ý:</strong> Phí hủy phải được thanh toán bằng VNPay để đặt lịch mới.
+                        </p>
+                    </div>
+                </div>
+            </div>
         `;
 
         // Handle bookingFor radio change
@@ -749,30 +798,28 @@
                 ]);
                 
                 let userPhoneVerified = false;
-                let userPhoneNumber = null;
+                let familyPhoneVerified = false;
                 
+                // Check user phone verification (giống backend logic)
                 if (userStatusResponse.ok) {
                     const userStatus = await userStatusResponse.json();
                     userPhoneVerified = userStatus.verified;
-                    userPhoneNumber = userStatus.phoneNumber;
                     
-                    // Kiểm tra số điện thoại trong form có trùng với số của user đã xác thực không
-                    if (userPhoneVerified && userPhoneNumber && 
-                        normalizePhoneNumber(userPhoneNumber) === normalizePhoneNumber(phoneNumber)) {
-                        // Số điện thoại trùng với số của user đã xác thực → không cần xác thực lại
+                    // Nếu user đã verified → cho phép luôn (giống backend logic)
+                    if (userPhoneVerified) {
                         confirmBtnText.textContent = 'Đang đặt lịch...';
                         await submitBooking();
                         return;
                     }
                 }
                 
-                // Kiểm tra số điện thoại của family member
+                // Check family member phone verification
                 if (familyStatusResponse.ok) {
                     const status = await familyStatusResponse.json();
-                    // Kiểm tra số điện thoại trong form có khớp với số đã xác thực của family member không
-                    if (status.verified && status.phoneNumber && 
-                        normalizePhoneNumber(status.phoneNumber) === normalizePhoneNumber(phoneNumber)) {
-                        // Số điện thoại đã được xác thực cho family member
+                    familyPhoneVerified = status.verified;
+                    
+                    // Nếu family member đã verified → cho phép luôn
+                    if (familyPhoneVerified) {
                         confirmBtnText.textContent = 'Đang đặt lịch...';
                         await submitBooking();
                         return;
@@ -931,7 +978,22 @@
                 
                 // Hiển thị thông báo lỗi chi tiết
                 const errorMessage = result.error || 'Có lỗi xảy ra khi đặt lịch';
-                showMessage(errorMessage, 'error');
+                
+                // Kiểm tra nếu là lỗi phí hủy chưa thanh toán
+                if (errorMessage.includes('phí hủy') || errorMessage.includes('phí hủy lịch')) {
+                    // Hiển thị modal cảnh báo với thông tin chi tiết
+                    const feeMatch = errorMessage.match(/(\d+(?:\.\d+)?)/);
+                    const feeAmount = feeMatch ? new Intl.NumberFormat('vi-VN').format(parseFloat(feeMatch[1])) : '';
+                    
+                    const alertMessage = `⚠️ Bạn có phí hủy lịch chưa thanh toán!\n\n` +
+                        `Số tiền: ${feeAmount} VNĐ\n\n` +
+                        `Vui lòng thanh toán phí này bằng VNPay để đặt lịch mới.\n\n` +
+                        `(Tính năng thanh toán phí hủy đang được phát triển)`;
+                    
+                    alert(alertMessage);
+                } else {
+                    showMessage(errorMessage, 'error');
+                }
                 
                 // Nếu là lỗi phone verification, mở modal verification
                 if (errorMessage.includes('xác thực số điện thoại') || errorMessage.includes('Số điện thoại')) {
@@ -1279,7 +1341,117 @@
     }
 
     // Initialize
+    // Load unpaid cancellation fees
+    async function loadUnpaidCancellationFees() {
+        try {
+            const response = await fetch('/api/payment/unpaid-cancellation-fees', {
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (data.hasUnpaidFees && data.fees && data.fees.length > 0) {
+                    // Show alert
+                    document.getElementById('unpaidFeeAlert').classList.remove('hidden');
+                    
+                    // Display total fee
+                    const totalFee = new Intl.NumberFormat('vi-VN').format(data.totalFee);
+                    document.getElementById('totalUnpaidFee').textContent = totalFee + ' VNĐ';
+                    
+                    // Display fee list
+                    const feeListContainer = document.getElementById('unpaidFeeList');
+                    feeListContainer.innerHTML = '';
+                    
+                    data.fees.forEach((fee, index) => {
+                        const feeItem = document.createElement('div');
+                        feeItem.className = 'flex items-center justify-between p-3 bg-white dark:bg-[#1a2e21] rounded-lg border border-yellow-300 dark:border-yellow-700';
+                        const feeAmount = new Intl.NumberFormat('vi-VN').format(fee.cancellationFee);
+                        const appointmentDate = fee.appointmentDate ? new Date(fee.appointmentDate).toLocaleDateString('vi-VN') : 'N/A';
+                        const appointmentTime = fee.appointmentTime ? fee.appointmentTime.substring(0, 5) : '';
+                        
+                        feeItem.innerHTML = `
+                            <div class="flex-1">
+                                <p class="text-sm font-semibold text-[#111813] dark:text-white">
+                                    Mã đặt lịch: <span class="text-primary">${fee.bookingCode}</span>
+                                </p>
+                                <p class="text-xs text-[#61896f] mt-1">
+                                    Ngày hẹn: ${appointmentDate} ${appointmentTime ? 'lúc ' + appointmentTime : ''}
+                                </p>
+                                <p class="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                                    ${fee.cancellationReason || 'Phí hủy lịch hẹn'}
+                                </p>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-bold text-red-600 dark:text-red-400">${feeAmount} VNĐ</p>
+                            </div>
+                        `;
+                        feeListContainer.appendChild(feeItem);
+                    });
+                    
+                    // Store fees data for payment
+                    window.unpaidFeesData = data.fees;
+                } else {
+                    // Hide alert if no unpaid fees
+                    document.getElementById('unpaidFeeAlert').classList.add('hidden');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading unpaid cancellation fees:', error);
+        }
+    }
+    
+    // Pay all unpaid fees
+    async function payAllUnpaidFees() {
+        if (!window.unpaidFeesData || window.unpaidFeesData.length === 0) {
+            showMessage('Không có phí hủy nào cần thanh toán', 'error');
+            return;
+        }
+        
+        // Pay the first fee (user can pay others separately if needed)
+        // For simplicity, we'll pay them one by one
+        const firstFee = window.unpaidFeesData[0];
+        
+        try {
+            const response = await fetch('/api/payment/create-cancellation-fee-url', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ appointmentId: firstFee.appointmentId })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                if (result.paymentUrl) {
+                    // Redirect to VNPay
+                    window.location.href = result.paymentUrl;
+                } else {
+                    showMessage('Không thể tạo link thanh toán. Vui lòng thử lại.', 'error');
+                }
+            } else {
+                const error = await response.json();
+                showMessage(error.error || 'Không thể tạo link thanh toán', 'error');
+            }
+        } catch (error) {
+            console.error('Error creating payment URL:', error);
+            showMessage('Có lỗi xảy ra khi tạo link thanh toán', 'error');
+        }
+    }
+    
+    // Close unpaid fee alert
+    document.getElementById('closeUnpaidFeeAlert')?.addEventListener('click', () => {
+        document.getElementById('unpaidFeeAlert').classList.add('hidden');
+    });
+    
+    // Pay all fees button
+    document.getElementById('payAllFeesBtn')?.addEventListener('click', payAllUnpaidFees);
+    
     document.addEventListener('DOMContentLoaded', async () => {
+        // Load unpaid cancellation fees first to show alert if needed
+        await loadUnpaidCancellationFees();
+        
         await Promise.all([
             loadVaccines(),
             loadCenters(),

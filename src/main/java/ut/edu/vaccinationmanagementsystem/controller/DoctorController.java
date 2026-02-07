@@ -11,6 +11,7 @@ import ut.edu.vaccinationmanagementsystem.entity.Screening;
 import ut.edu.vaccinationmanagementsystem.entity.User;
 import ut.edu.vaccinationmanagementsystem.entity.enums.Role;
 import ut.edu.vaccinationmanagementsystem.repository.ScreeningRepository;
+import ut.edu.vaccinationmanagementsystem.repository.StaffInfoRepository;
 import ut.edu.vaccinationmanagementsystem.service.CustomOAuth2User;
 import ut.edu.vaccinationmanagementsystem.service.CustomUserDetails;
 import ut.edu.vaccinationmanagementsystem.service.UserService;
@@ -24,6 +25,9 @@ public class DoctorController {
     
     @Autowired
     private ScreeningRepository screeningRepository;
+    
+    @Autowired
+    private StaffInfoRepository staffInfoRepository;
     
     public DoctorController(UserService userService) {
         this.userService = userService;
@@ -184,6 +188,10 @@ public class DoctorController {
                     // Nếu không refresh được, vẫn dùng user từ session
                 }
             }
+            
+            // Lấy StaffInfo của bác sĩ
+            Optional<ut.edu.vaccinationmanagementsystem.entity.StaffInfo> staffInfoOpt = staffInfoRepository.findByUser(currentUser);
+            staffInfoOpt.ifPresent(staffInfo -> model.addAttribute("staffInfo", staffInfo));
             
             model.addAttribute("currentUser", currentUser);
             model.addAttribute("isAuthenticated", true);

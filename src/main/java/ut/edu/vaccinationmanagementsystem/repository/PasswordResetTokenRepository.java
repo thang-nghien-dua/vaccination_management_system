@@ -9,19 +9,11 @@ import java.util.Optional;
 
 @Repository
 public interface PasswordResetTokenRepository extends JpaRepository<PasswordResetToken, Long> {
-    /**
-     * Tìm token theo token string
-     */
+
     Optional<PasswordResetToken> findByToken(String token);
-    
-    /**
-     * Tìm token theo user
-     */
+
     Optional<PasswordResetToken> findByUser(User user);
-    
-    /**
-     * Xóa token đã hết hạn
-     */
+
     void deleteByExpiresAtBefore(java.time.LocalDateTime now);
 }
 

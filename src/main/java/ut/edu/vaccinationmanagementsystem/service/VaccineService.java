@@ -25,9 +25,6 @@ import java.util.Optional;
 import ut.edu.vaccinationmanagementsystem.entity.CenterVaccine;
 import ut.edu.vaccinationmanagementsystem.entity.VaccinationCenter;
 
-/**
- * Service xử lý business logic cho Vaccine
- */
 @Service
 @Transactional
 public class VaccineService {

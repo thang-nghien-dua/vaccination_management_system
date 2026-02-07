@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Dashboard Lễ tân - Hệ thống Tiêm chủng</title>
+    <title>Dashboard Lễ tân - VacciCare</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -146,7 +146,7 @@
                 <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">person</span>
                 <span class="text-sm">Thông tin cá nhân</span>
             </a>
-            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium relative" href="/notifications">
+            <a class="sidebar-nav-item flex items-center gap-3 px-4 py-3.5 rounded-xl text-[#61896f] dark:text-gray-300 font-medium relative" href="/receptionist/notifications">
                 <span class="material-symbols-outlined text-[#111813] dark:text-white text-xl">notifications</span>
                 <span class="text-sm">Thông báo</span>
                 <span id="notificationBadge" class="hidden absolute top-1.5 right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">0</span>
@@ -725,6 +725,17 @@
             };
         }
         
+        // Check familyMember FIRST (ưu tiên cao nhất - đây là người thân sẽ được tiêm)
+        if (apt.familyMember) {
+            return {
+                fullName: apt.familyMember.fullName || 'N/A',
+                phoneNumber: apt.familyMember.phoneNumber || 'N/A',
+                email: null,
+                dayOfBirth: apt.familyMember.dateOfBirth || null,
+                gender: apt.familyMember.gender ? (typeof apt.familyMember.gender === 'string' ? apt.familyMember.gender : apt.familyMember.gender.name || apt.familyMember.gender.toString()) : null
+            };
+        }
+        
         // Check bookedForUser (from /today and /search endpoints)
         if (apt.bookedForUser) {
             return {
@@ -733,17 +744,6 @@
                 email: apt.bookedForUser.email || null,
                 dayOfBirth: apt.bookedForUser.dayOfBirth || null,
                 gender: apt.bookedForUser.gender ? (typeof apt.bookedForUser.gender === 'string' ? apt.bookedForUser.gender : apt.bookedForUser.gender.name || apt.bookedForUser.gender.toString()) : null
-            };
-        }
-        
-        // Check familyMember
-        if (apt.familyMember) {
-            return {
-                fullName: apt.familyMember.fullName || 'N/A',
-                phoneNumber: apt.familyMember.phoneNumber || 'N/A',
-                email: null,
-                dayOfBirth: apt.familyMember.dateOfBirth || null,
-                gender: apt.familyMember.gender ? (typeof apt.familyMember.gender === 'string' ? apt.familyMember.gender : apt.familyMember.gender.name || apt.familyMember.gender.toString()) : null
             };
         }
         

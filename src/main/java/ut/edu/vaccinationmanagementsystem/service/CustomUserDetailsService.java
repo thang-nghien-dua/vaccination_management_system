@@ -13,9 +13,7 @@ import ut.edu.vaccinationmanagementsystem.entity.enums.UserStatus;
 import java.util.ArrayList;
 import java.util.Collection;
 
-/**
- * UserDetailsService để Spring Security authenticate user bằng email/password
- */
+
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
     

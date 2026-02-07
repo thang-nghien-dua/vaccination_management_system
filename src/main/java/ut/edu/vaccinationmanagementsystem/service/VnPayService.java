@@ -1,6 +1,5 @@
 package ut.edu.vaccinationmanagementsystem.service;
 
-import org.apache.commons.codec.digest.HmacUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ut.edu.vaccinationmanagementsystem.config.VnPayConfig;
@@ -18,14 +17,7 @@ public class VnPayService {
     @Autowired
     private VnPayConfig vnPayConfig;
     
-    /**
-     * Tạo URL thanh toán VNPay
-     * @param amount Số tiền (VND)
-     * @param orderInfo Thông tin đơn hàng
-     * @param orderId Mã đơn hàng (booking code)
-     * @param ipAddress IP của khách hàng
-     * @return URL thanh toán VNPay
-     */
+
     public String createPaymentUrl(long amount, String orderInfo, String orderId, String ipAddress) {
         String vnp_TmnCode = vnPayConfig.getTmnCode();
         String vnp_HashSecret = vnPayConfig.getHashSecret();
@@ -91,12 +83,7 @@ public class VnPayService {
         
         return vnp_Url + "?" + queryUrl;
     }
-    
-    /**
-     * Xác thực chữ ký từ VNPay callback (sử dụng raw query string)
-     * @param queryString Raw query string từ request (chưa decode)
-     * @return true nếu chữ ký hợp lệ
-     */
+
     public boolean verifySignatureFromQueryString(String queryString) {
         if (queryString == null || queryString.isEmpty()) {
             return false;
@@ -151,12 +138,7 @@ public class VnPayService {
         
         return calculatedHash.equals(vnp_SecureHash.toUpperCase());
     }
-    
-    /**
-     * Xác thực chữ ký từ VNPay callback (sử dụng Map params - giữ lại để tương thích)
-     * @param params Các tham số từ VNPay callback (đã được Spring decode)
-     * @return true nếu chữ ký hợp lệ
-     */
+
     public boolean verifySignature(Map<String, String> params) {
         String vnp_SecureHash = params.get("vnp_SecureHash");
         if (vnp_SecureHash == null || vnp_SecureHash.isEmpty()) {
@@ -194,9 +176,7 @@ public class VnPayService {
         return calculatedHash.equals(vnp_SecureHash);
     }
     
-    /**
-     * Helper method để tính HMAC SHA512 và trả về hex string
-     */
+
     private String hmacSha512(String key, String data) {
         try {
             Mac mac = Mac.getInstance("HmacSHA512");

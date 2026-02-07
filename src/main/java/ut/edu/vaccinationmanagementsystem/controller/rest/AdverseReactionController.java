@@ -64,7 +64,8 @@ public class AdverseReactionController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
             }
             
-            List<AdverseReaction> reactions = adverseReactionRepository.findAll();
+            // Sử dụng query với JOIN FETCH để load tất cả relationships
+            List<AdverseReaction> reactions = adverseReactionRepository.findAllWithRelationships();
             
             // Lọc theo trung tâm (ngoại trừ ADMIN)
             if (currentUser.getRole() != Role.ADMIN) {
@@ -133,29 +134,40 @@ public class AdverseReactionController {
                 map.put("notes", reaction.getNotes());
                 map.put("treatment", reaction.getTreatment());
                 map.put("occurredAt", reaction.getOccurredAt());
-                map.put("resolved", reaction.getResolved());
+                map.put("resolved", reaction.getResolved() != null ? reaction.getResolved() : false);
                 
-                // User info
-                if (reaction.getVaccinationRecord() != null && reaction.getVaccinationRecord().getUser() != null) {
-                    User user = reaction.getVaccinationRecord().getUser();
-                    Map<String, Object> userInfo = new HashMap<>();
-                    userInfo.put("id", user.getId());
-                    userInfo.put("fullName", user.getFullName());
-                    userInfo.put("email", user.getEmail());
-                    map.put("user", userInfo);
-                }
-                
-                // Vaccine info
-                if (reaction.getVaccinationRecord() != null && reaction.getVaccinationRecord().getVaccine() != null) {
-                    Map<String, Object> vaccineInfo = new HashMap<>();
-                    vaccineInfo.put("id", reaction.getVaccinationRecord().getVaccine().getId());
-                    vaccineInfo.put("name", reaction.getVaccinationRecord().getVaccine().getName());
-                    map.put("vaccine", vaccineInfo);
-                }
-                
-                // Vaccination record info
+                // User info - luôn thêm user info nếu có vaccinationRecord
                 if (reaction.getVaccinationRecord() != null) {
                     map.put("vaccinationRecordId", reaction.getVaccinationRecord().getId());
+                    
+                    // User info
+                    if (reaction.getVaccinationRecord().getUser() != null) {
+                        User user = reaction.getVaccinationRecord().getUser();
+                        Map<String, Object> userInfo = new HashMap<>();
+                        userInfo.put("id", user.getId());
+                        userInfo.put("fullName", user.getFullName());
+                        userInfo.put("email", user.getEmail());
+                        map.put("user", userInfo);
+                    } else {
+                        // Nếu không có user, vẫn thêm null để frontend không bị lỗi
+                        map.put("user", null);
+                    }
+                    
+                    // Vaccine info
+                    if (reaction.getVaccinationRecord().getVaccine() != null) {
+                        Map<String, Object> vaccineInfo = new HashMap<>();
+                        vaccineInfo.put("id", reaction.getVaccinationRecord().getVaccine().getId());
+                        vaccineInfo.put("name", reaction.getVaccinationRecord().getVaccine().getName());
+                        map.put("vaccine", vaccineInfo);
+                    } else {
+                        // Nếu không có vaccine, vẫn thêm null
+                        map.put("vaccine", null);
+                    }
+                } else {
+                    // Nếu không có vaccinationRecord, vẫn thêm null để frontend không bị lỗi
+                    map.put("vaccinationRecordId", null);
+                    map.put("user", null);
+                    map.put("vaccine", null);
                 }
                 
                 // Handler info

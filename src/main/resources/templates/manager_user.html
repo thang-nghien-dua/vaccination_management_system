@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Quản lý Người dùng Hệ thống - Hệ thống Quản lý Tiêm chủng</title>
+    <title>Quản lý Người dùng Hệ thống - VacciCare</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap"
         rel="stylesheet" />
@@ -53,15 +53,6 @@
                 class="sticky top-0 z-10 flex items-center justify-between bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-[#f0f4f2] dark:border-white/10 px-8 py-4">
                 <div class="flex flex-1 items-center gap-4">
                     <h2 class="text-xl font-bold text-[#111813] dark:text-white">Quản lý Người dùng</h2>
-                </div>
-                <div class="flex items-center gap-4 pl-4">
-                    <button class="relative p-2 rounded-lg bg-[#f0f4f2] dark:bg-white/5 text-[#111813] dark:text-white">
-                        <span class="material-symbols-outlined text-[20px]">notifications</span>
-                        <span
-                            class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-background-dark"></span>
-                    </button>
-                    <div class="h-6 w-px bg-[#f0f4f2] dark:bg-white/10"></div>
-                    <p class="text-sm font-medium text-[#61896f] uppercase tracking-widest">Hôm nay: 24/05/2024</p>
                 </div>
             </header>
             <section class="p-8 space-y-6">
@@ -136,24 +127,9 @@
                         </table>
                     </div>
                     <div
-                        class="px-6 py-4 bg-gray-50 dark:bg-white/5 border-t border-[#f0f4f2] dark:border-white/10 flex items-center justify-between">
-                        <p id="paginationText" class="text-[11px] font-bold text-[#61896f] uppercase tracking-wider">
-                            Đang tải...</p>
-                        <div class="flex gap-2">
-                            <button
-                                class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                                disabled="">
-                                <span class="material-symbols-outlined text-sm">chevron_left</span>
-                            </button>
-                            <button class="p-2 rounded-lg bg-primary text-[#111813] font-bold text-xs px-4">1</button>
-                            <button
-                                class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors text-xs px-4">2</button>
-                            <button
-                                class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors text-xs px-4">3</button>
-                            <button
-                                class="p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors">
-                                <span class="material-symbols-outlined text-sm">chevron_right</span>
-                            </button>
+                        class="px-6 py-4 bg-gray-50 dark:bg-white/5 border-t border-[#f0f4f2] dark:border-white/10 flex items-center justify-end">
+                        <div class="flex gap-2" id="usersPaginationButtons">
+                            <!-- Pagination buttons will be generated dynamically -->
                         </div>
                     </div>
                 </div>
@@ -223,6 +199,7 @@
                             });
                         }
 
+                        currentPage = 1; // Reset về trang đầu khi search
                         renderUsers();
                         updatePagination();
                     } catch (error) {
@@ -312,16 +289,65 @@
                 // Update pagination
                 function updatePagination() {
                     const totalPages = Math.ceil(allUsers.length / pageSize);
-                    const start = (currentPage - 1) * pageSize + 1;
-                    const end = Math.min(currentPage * pageSize, allUsers.length);
 
-                    const paginationText = document.getElementById('paginationText');
-                    if (paginationText) {
-                        paginationText.textContent = `Hiển thị ${start}-${end} của ${allUsers.length} người dùng`;
+                    // Update pagination buttons
+                    const paginationContainer = document.getElementById('usersPaginationButtons');
+                    if (!paginationContainer) return;
+
+                    // Clear existing buttons
+                    paginationContainer.innerHTML = '';
+
+                    // Previous button
+                    const prevBtn = document.createElement('button');
+                    prevBtn.className = 'p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors disabled:opacity-50';
+                    prevBtn.disabled = currentPage === 1;
+                    prevBtn.innerHTML = '<span class="material-symbols-outlined text-sm">chevron_left</span>';
+                    prevBtn.onclick = () => {
+                        if (currentPage > 1) {
+                            currentPage--;
+                            renderUsers();
+                            updatePagination();
+                        }
+                    };
+                    paginationContainer.appendChild(prevBtn);
+
+                    // Page number buttons
+                    const maxVisiblePages = 5;
+                    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                    if (endPage - startPage < maxVisiblePages - 1) {
+                        startPage = Math.max(1, endPage - maxVisiblePages + 1);
                     }
 
-                    // Update pagination buttons (simplified for now)
-                    // TODO: Add pagination button handlers
+                    for (let i = startPage; i <= endPage; i++) {
+                        const pageBtn = document.createElement('button');
+                        pageBtn.className = `p-2 rounded-lg font-bold text-xs px-4 transition-colors ${
+                            i === currentPage
+                                ? 'bg-primary text-[#111813]'
+                                : 'bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50'
+                        }`;
+                        pageBtn.textContent = i.toString();
+                        pageBtn.onclick = () => {
+                            currentPage = i;
+                            renderUsers();
+                            updatePagination();
+                        };
+                        paginationContainer.appendChild(pageBtn);
+                    }
+
+                    // Next button
+                    const nextBtn = document.createElement('button');
+                    nextBtn.className = 'p-2 rounded-lg bg-white dark:bg-white/10 border border-[#f0f4f2] dark:border-white/10 hover:bg-gray-50 transition-colors disabled:opacity-50';
+                    nextBtn.disabled = currentPage === totalPages;
+                    nextBtn.innerHTML = '<span class="material-symbols-outlined text-sm">chevron_right</span>';
+                    nextBtn.onclick = () => {
+                        if (currentPage < totalPages) {
+                            currentPage++;
+                            renderUsers();
+                            updatePagination();
+                        }
+                    };
+                    paginationContainer.appendChild(nextBtn);
                 }
 
                 // Placeholder functions for buttons
